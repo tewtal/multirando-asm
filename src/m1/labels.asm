@@ -25,7 +25,7 @@ APUSq0Length = $0920
 APUSq1Length = $0922
 APUTriLength = $0924
 APUNoiLength = $0926
-
+APUIOTemp = $0928
 
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02

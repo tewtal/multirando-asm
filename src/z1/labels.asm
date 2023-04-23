@@ -556,6 +556,7 @@ APUSq0Length = $0920
 APUSq1Length = $0922
 APUTriLength = $0924
 APUNoiLength = $0926
+APUIOTemp = $0928
 
 struct Z1ATTR $7E0B30
     .TopLeft: skip 1

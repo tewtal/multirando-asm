@@ -1,10 +1,25 @@
 ; This file contains the boot code for both the SNES CPU and SA-1 CPU as well as vectors and ROM headers
 
-org $00ffc0
-    db "MOTHER BRAIN   "
+; org $00ffc0
+;     db "MOTHER BRAIN   "
 
-org $00ffd5
-    db $23, $35, $0D, $07, $00, $33, $00
+; org $00ffd5
+;     db $23, $35, $0D, $06, $00, $33, $00
+
+org $00ffe6
+    dw snes_brk
+
+org $00ffea
+    dw !IRAM_NMI
+
+org $00ffee
+    dw !IRAM_IRQ
+
+org $00fffa
+    dw !IRAM_NMI
+
+org $00fffe
+    dw !IRAM_IRQ
 
 org $00ffec
     dw snes_reset
@@ -22,11 +37,11 @@ sa1_reset:
     jml init
 sa1_nmi:
 sa1_irq:
-    jml sa1_nmi
+    rti
 
 org $00fe00
-snes_nmi:
-    rti
+snes_brk:
+    jml snes_brk
 
 snes_reset:
     sei
@@ -40,9 +55,20 @@ snes_reset:
     tcs
     phk
     plb
-    
+
     jsr sa1_setup
+    jsr randomizer_setup
     jml snes_main
+
+randomizer_setup:
+    %a16()
+    lda #$00ff
+    sta !SRAM_CURRENT_GAME
+    lda #$0000
+    sta !SRAM_SAVING
+    %a8()
+    
+    rts
 
 sa1_setup:    
     sep #$20    ; Initialize SA-1 ROM Mapping    
@@ -65,14 +91,12 @@ sa1_setup:
 
     lda #$80
     sta $2226
-    sta $2227   ; Write-enable BW-RAM
 
     lda #$00
     sta $2228
 
     lda #$ff
     sta $2229
-    sta $222a   ; Write-enable I-RAM
 
     rep #$30
     lda sa1_vectors

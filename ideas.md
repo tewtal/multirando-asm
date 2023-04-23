@@ -42,7 +42,7 @@ Mapping:
         Bank C -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
         Bank D -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
         Bank E -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
-        Bank F -> Slot 7 (HiROM) (Metroid 1 / Overload Data)
+        Bank F -> Slot 7 (HiROM) (Metroid 1 / Mother Brain Data)
     Super Metroid
         Bank C -> Slot 2 (HiROM) (Regular SM LoROM Banks C0-DF ends up as HiROM C0-CF here)
         Bank D -> Slot 3 (HiROM) (1MB of HiROM at D0-DF for extended SM code/data)
@@ -59,9 +59,10 @@ Mapping:
         Bank E -> Slot 6 (LoROM) (Zelda 1 code/data + extra randomizer code/data at LoROM banks 80-9F)
     
     Metroid 1
-        Bank E -> Slot 7 (LoROM) (Metroid 1 code/data + extra randomizer code/data at LoROM banks 80-9F)
+        Bank E -> Slot 7 (LoROM) (Metroid 1 code/data + extra randomizer code/data at LoROM banks 80-9F + Mother Brain data)                                                
+                                 (Note: Currently banks 90-9F (F8-FF hirom) are reserved for common code / data, leaving banks 88-8F free for M1 rando code)
 
-At boot, copy the SA-1 code from Slot 7 to BW-RAM $408000 and resume SA-1 execution from there.
+At boot, copy the SA-1 code from Slot 7 to BW-RAM $40E000 and resume SA-1 execution from there.
 This is needed since we can't keep a static block of ROM mapped in all cases due to ALTTP requiring some special mirroring to
 be compatible with the base rom ASM.
 
@@ -77,8 +78,8 @@ Mapping:
     Zelda 1
         $406000-$407FFF -> $6000-$7FFF  (Regular Z1 SRAM/Work RAM)
     Metroid 1
-        $408000-$407FFF -> $6000-$7FFF  (Regular M1 Work RAM)
+        $408000-$409FFF -> $6000-$7FFF  (Regular M1 Work RAM)
     
     Mother Brain
         $40A000-$40DFFF -> Unmapped     (16kb of extra SRAM for Mother Brain use: stats, timers, temporary item buffers etc)
-        $40E000-$40FFFF -> Unmapped     (8kb of Overload code, the SA-1 runs from here, copied from ROM at boot)
+        $40E000-$40FFFF -> Unmapped     (8kb of code, the SA-1 runs from here, copied from ROM at boot)

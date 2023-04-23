@@ -79,15 +79,15 @@ org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 !B7 = ((!BASE_BANK+$7)<<16)
 
 ; Patch APU status calls
-org !B0+$982B : sta $0915
+org !B0+$982B : jsr WriteAPUControl
 ; org !B0+$9830 : sta $0915
-org !B0+$9928 : sta $0915
-org !B0+$9BA6 : sta $0915
+org !B0+$9928 : jsr WriteAPUControl
+org !B0+$9BA6 : jsr WriteAPUControl
 ; org !B0+$9BE1 : sta $0915
-org !B0+$9BE8 : sta $0915
-org !B0+$9D4B : sta $0915
+org !B0+$9BE8 : jsr WriteAPUControl
+org !B0+$9D4B : jsr WriteAPUControl
 ; org !B0+$9D5C : sta $0915
-org !B7+$E467 : sta $0915
+org !B7+$E467 : jsr WriteAPUControl
 
 ; Hook writes to Square Wave Channel 1
 org !B0+$9900 : jsr WriteAPUSq0Ctrl0_X

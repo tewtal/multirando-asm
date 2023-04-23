@@ -1,5 +1,16 @@
 sa1rom
 
+!VERSION_MAJOR = 0
+!VERSION_MINOR = 1
+!VERSION_BUILD = 0
+!VERSION_REV_1 = 0
+!VERSION_REV_2 = 0
+
+!PRERELEASE = 1
+
+; Defines
+incsrc "defines.asm"
+
 ; Macros
 incsrc "macros.asm"
 

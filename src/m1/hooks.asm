@@ -85,7 +85,7 @@ org (!BASE_BANK<<16)+$9449
 %hook($B384, "jmp LoadSFXRegisters")
 
 ; Hook initial status register write
-%hook($C0A3, "sta $0915")
+%hook($C0A3, "jsr WriteAPUControl")
 
 ; Hook writes to Square Wave Channel 1
 %hook($B440, "jsr WriteAPUSq0Ctrl0")

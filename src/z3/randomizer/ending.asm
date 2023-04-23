@@ -1,9 +1,6 @@
 ; prevent ending without beating both games
 ;
 
-!SRAM_ALTTP_COMPLETED = $409506
-!SRAM_SM_COMPLETED = $409402
-
 alttp_check_ending:
     lda.b #$01
     sta.l !SRAM_ALTTP_COMPLETED
@@ -48,4 +45,4 @@ alttp_setup_credits:
     jsl spc_reset
 
     ; Call credits
-    jml mb_credits_init  
+    jml credits_init  

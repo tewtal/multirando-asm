@@ -18,6 +18,7 @@
 # Mother Brain
  - [x] Set up base SA-1 configuration to allow for all games
  - [x] Allow a single NES game to boot using the correct mapping
+ - [x] Implement basic main menu
  - [ ] Implement game switching
  - [ ] Implement game monitoring/statistic services
  - [ ] Implement more things

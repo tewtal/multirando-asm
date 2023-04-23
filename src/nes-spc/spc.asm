@@ -1,98 +1,183 @@
+print "spc init driver start = ", pc
 spc_init_driver:
     pha : phx : phy : phb : php
-    sep #$20
-    jsr spc_wait_boot
+    
+    rep #$30
+    ldy #spc_driver
+    phk : plb
+    jsr send_apu_data
 
-    ldx #spc_driver_end-spc_driver      ; Get spc driver size in bytes
-    ldy #$1000
-    jsr spc_begin_upload   
-
--
-    phx : tyx
-    lda.l spc_driver+$4, x
-    plx
-    jsr spc_upload_byte
-    dex
-    bne -
-
-    sep #$20
-    rep #$10
-
-    ldy #$1000
-    jsr spc_execute
     plp : plb : ply : plx : pla
     rtl
 
-spc_wait_boot:
-    lda #$AA
-    -   cmp $2140
-        bne -
+;;; SPC Upload Code Borrowed from Super Metroid ;;;
+;;; $8059: Send APU data ;;;
+send_apu_data:
+{
+;; Parameters:
+;;     Y: Address of data
+;;     DB: Bank of data
 
-    ; Clear in case it already has $CC in it
-    ; (this actually occurred in testing)
-    sta $2140
+; Data format:
+;     ssss dddd [xx xx...] (data block 0)
+;     ssss dddd [xx xx...] (data block 1)
+;     ...
+;     0000 aaaa
+; Where:
+;     s = data block size in bytes
+;     d = destination address
+;     x = data
+;     a = entry address. Ignored by SPC engine after first APU transfer
 
-    lda #$BB
-    -   cmp $2141
-        bne -
+; The xx data can cross bank boundaries, but the data block entries otherwise can't (i.e. s, d, a and 0000) unless they're word-aligned
 
-    rts
+; Wait until APU sets APU IO 0..1 = AAh BBh
+; Kick = CCh
+; For each data block:
+;    APU IO 2..3 = destination address
+;    APU IO 1 = 1 (arbitrary non-zero value)
+;    APU IO 0 = kick
+;    Wait until APU echoes kick back through APU IO 0
+;    Index = 0
+;    For each data byte
+;       APU IO 1 = data byte
+;       APU IO 0 = index
+;       Wait until APU echoes index back through APU IO 0
+;       Increment index
+;    Increment index (and again if resulting in 0)
+;    Kick = index
+; Send entry address through APU IO 2..3
+; APU IO 1 = 0
+; APU IO 0 = kick
+; (Optionally wait until APU echoes kick back through APU IO 0)
 
-spc_begin_upload:
-    sty $2142
+        PHP
+        REP #$30
+        LDA.w #$3000             ;\
+        STA.l $000641               ;|
+                                  ;|
+.apuWait 
+        LDA.w #$BBAA                ;|
+        CMP.l $002140               ;|
+        BEQ .apuReady                   ;} Wait until [APU IO 0..1] = AAh BBh
+        LDA.l $000641               ;|
+        DEC A                     ;|
+        STA.l $000641               ;|
+        BNE .apuWait                   ;/
+.crash
+        BRA .crash                   ; If exceeded 3000h attempts: crash
 
-    ; Send command
-    lda $2140
-    clc
-    adc #$22
-    bne +       ; special case fully verified
-        inc
-    +
-    sta $2141
-    sta $2140
+.apuReady
+        SEP #$20
+        LDA.b #$CC                  ; Kick = CCh
+        BRA .processDataBlock     ; Go to BRANCH_PROCESS_DATA_BLOCK
 
-    ; Wait for acknowledgement
-    -   cmp $2140
-        bne -
+; BRANCH_UPLOAD_DATA_BLOCK
+.uploadDataBlock
+        LDA.w $0000,y               ;\
+        JSR .incY                 ;} Data = [[Y++]]
+        XBA                       ;/
+        LDA.b #$00                  ; Index = 0
+        BRA .uploadData           ; Go to BRANCH_UPLOAD_DATA
 
-    ; Initialize index
-    ldy.w #0
+; LOOP_NEXT_DATA
+.loopNextData
+        XBA                       ;\
+        LDA.w $0000,y               ;|
+        JSR .incY                 ;} Data = [[Y++]]
+        XBA
+-                                 ;/
+        CMP.l $002140               ;\
+        BNE -                     ;} Wait until APU IO 0 echoes
+        INC A                     ; Increment index
 
-    rts
+; BRANCH_UPLOAD_DAT             
+.uploadData
+        REP #$20
+        STA.l $002140               ; APU IO 0..1 = [index] [data]
+        SEP #$20
+        DEX                       ; Decrement X (block size)
+        BNE .loopNextData                   ; If [X] != 0: go to LOOP_NEXT_DATA
+-
+        CMP.l $002140               ;\
+        BNE -                     ;} Wait until APU IO 0 echoes
 
-spc_upload_byte:
-    sta $2141
+.ensureKick       
+        ADC.b #$03                  ; Kick = [index] + 4
+        BEQ .ensureKick                     ; Ensure kick != 0
 
-    ; Signal that it's ready
-    tya
-    sta $2140
-    iny
+; BRANCH_PROCESS_DATA_BLOCK
+.processDataBlock
+        PHA
+        REP #$20
+        LDA.w $0000,y               ;\
+        JSR .incY2                ;} X = [[Y]] (block size)
+        TAX                       ;} Y += 2
+        LDA.w $0000,y               ;\
+        JSR .incY2                 ;} APU IO 2..3 = [[Y]] (destination address)
+        STA.l $002142               ;} Y += 2
+        SEP #$20
+        CPX.w #$0001                ;\
+        LDA.b #$00                  ;|
+        ROL A                     ;} If block size = 0: APU IO 1 = 0 (EOF), else APU IO 1 = 1 (arbitrary non-zero value)
+        STA.l $002141               ;/
+        ADC.b #$7F               ; Set overflow if block size != 0, else clear overflow
+        PLA                    ;\
+        STA.l $002140               ;} APU IO 0 = kick
+        PHX
+        LDX.w #$1000                ;\
 
-    ; Wait for acknowledgement
-    -   cmp $2140
-        bne -
+-                                  ;|
+        DEX                       ;} Wait until APU IO 0 echoes
+        BEQ .ret                  ;} If exceeded 1000h attempts: return
+        CMP.l $002140               ;|
+        BNE -                     ;/
+        
+        PLX
+        BVS .uploadDataBlock      ; If block size != 0: go to BRANCH_UPLOAD_DATA_BLOCK
+        SEP #$20
+        STZ.w $2141               
+        STZ.w $2142               
+        STZ.w $2143               
+        PLP
+        RTS
+.ret
+        SEP #$20
+        STZ.w $2141
+        STZ.w $2142
+        STZ.w $2143
+        PLX
+        PLP
+        RTS
+}
 
-    rts
 
-spc_execute:
-    sty $2142
+;;; $8100: Increment Y twice, bank overflow check ;;;
+.incY2
+{
+; Only increments Y once if overflows bank first time (which is a bug scenario)
+        INY
+        BEQ .next
+}
 
-    stz $2141
 
-    lda $2140
-    clc
-    adc #$22
-    sta $2140
+;;; $8103: Increment Y, bank overflow check ;;;
+.incY
+{
+        INY
+        BEQ .next                 
+        RTS
+.next
+        INC $02                   ; Increment $02
+        PEI ($01)                 ;\
+        PLB                    ;} DB = [$02]
+        PLB                    ;/
+        LDY.w #$8000             ; Y = 8000h
+        RTS
+}
 
-    ; Wait for acknowledgement
-    -   cmp $2140
-        bne -
 
-    ldy #$0000
-    sty $2142
-    sty $2140
-    rts
-
+print "spc-driver = ", pc
 spc_driver:
 arch spc700-inline
 org $1000
@@ -124,7 +209,14 @@ startpos start
 
 		sound_ctrl	=	$55   ; $4015
 		no4016		=	$56   ; $4016
-
+		; 0x01 = Reset square 0
+		; 0x02 = Reset square 1
+		; 0x04 = Reset triangle
+		; 0x08 = Reset noise
+		; 0x10 = 
+		; 0x20 = Mono
+		; 0x40 = Square 0 sweep
+		; 0x80 = Square 1 sweep
 ;========================================
 ;       SPC Memory
 ;----------------------------------------
@@ -169,6 +261,7 @@ startpos start
 		decay3volume		=	$8B
 		decay3rate			=	$8C
 		temp_add			=	$8D
+                tri_sample                      =       $8E
 
 ;========================================
 
@@ -381,7 +474,7 @@ nextsq0:
 
         call check_timer3
 
-        mov a,$56
+        mov a,no4016
         and a,#%00000001
         beq no_reset
 
@@ -604,7 +697,7 @@ nextsq1:
         and a,#%00010000
         bne decay_disabled2
 
-        mov a,$56
+        mov a,no4016
         and a,#%00000010
         beq no_reset2
         bra no_reset2
@@ -706,9 +799,8 @@ tri_enabled:
 
         mov a,pcm_raw
         lsr a
-        lsr a
         mov temp_add,a
-        mov a,#$3F
+        mov a,#$7F
 
         setc
         sbc a,temp_add
@@ -774,21 +866,27 @@ notimer:
         mov a,(temp1)+y
         mov $F2,#$22
 
-        setc
-        cmp a,#0
-        beq nomess1
-        cmp a,#1
-        beq nomess1
-        sbc a,#2
-nomess1:
         mov $F3,a
-
         inc y
         mov a,(temp1)+y
+        and a,#$1f
         mov $F2,#$23
-        sbc a,#0
         mov $F3,a
 
+        ; Change sample
+        mov a,(temp1)+y
+        and a,#$e0
+        xcn a
+        lsr a
+        adc a,#triangle_sample_num&255	; Assume carry clear from LSR
+        cmp a,tri_sample
+        beq triangle_skip1
+                mov tri_sample,a
+                mov $F2,#$24			; Sample # reg
+                mov $F3,a
+                mov $F2,#$4C			; Key on
+                mov $F3,#$04
+triangle_skip1:
 
 ;=====================================
 
@@ -940,7 +1038,7 @@ check_timer3:
         jmp no_decay1
 decay1:
 
-        mov a,$56
+        mov a,no4016
         and a,#%00000001
         beq no_decay_reset
 
@@ -1062,7 +1160,7 @@ no_decay1:
         jmp no_decay2
 decay2:
 
-        mov a,$56
+        mov a,no4016
         and a,#%00000010
         beq no_decay_reset2
 
@@ -1190,7 +1288,7 @@ no_decay2:
         and a,#%00001000
         beq no_decay3
 
-        mov a,$56
+        mov a,no4016
         and a,#%00001000
         beq no_decay_reset3
 
@@ -1295,9 +1393,9 @@ needed:
 timer3_ongoing:        
 
         mov $F2,#$20    ; set volume
-        mov $F3,#$3F
+        mov $F3,#$7F
         mov $F2,#$21
-        mov $F3,#$3F
+        mov $F3,#$7F
 
 not_needed:
         ret
@@ -1725,7 +1823,7 @@ clear2:
         mov $F3,y
         clrc
         adc a,#$10
-        cmp a,#$8C
+        cmp a,#$6C
         bne clear2
 
         mov a,#$0D
@@ -1796,7 +1894,7 @@ set_directory:
         ;mov !$0341,a
         ;mov !$0343,a
 
-		mov	x, #$43
+		mov	x, #$5f
 set_directory_loop:
 			mov	a,set_directory_lut+x
 			mov	$0200+x,a
@@ -1810,7 +1908,8 @@ set_directory_lut:
 		dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
 		dw	pulse2,pulse2, pulse2d,pulse2d, pulse2c,pulse2c, pulse2b,pulse2b
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
-		dw	triang,triang
+                dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
+                dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
 
 			triangle_sample_num	 =	$10
 
@@ -1970,7 +2069,7 @@ pulse2e: incsrc "pl1-2.asm"
 pulse3e: incsrc "pl1-3.asm"
 
 freqtable: incsrc "snestabl.asm"
-tritable: incsrc "tritabl2.asm"
+tritable: incsrc "tritabl3.asm"
 
 
 
@@ -1981,7 +2080,19 @@ tritable: incsrc "tritabl2.asm"
 ;        incsrc "pl2.asm"
 
 
-triang: incsrc "tri5.asm"
+; triang: incsrc "tri5.asm"
 
-arch 65816
+tri_samp0: incsrc "tri6_sl3.asm"
+tri_samp1: incsrc "tri6_sl2.asm"
+tri_samp2: incsrc "tri6_sl1.asm"
+tri_samp3: incsrc "tri6.asm"
+tri_samp4: incsrc "tri6_sr1.asm"
+tri_samp5: incsrc "tri6_sr2.asm"
+tri_samp6: incsrc "tri6_sr3.asm"
+tri_samp7: incsrc "tri6_sr4.asm"
+
 spc_driver_end:
+print "spc driver end = ", pc
+dw $0000
+dw $1000
+arch 65816

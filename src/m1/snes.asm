@@ -408,7 +408,6 @@ print "tm = ", pc
 
 ; This routine is called with X/Y as arguments to where the pointer to draw is located
 ; We'll pre-process this string into SNES format before sending commands to the PPU
-print pc
 PreparePPUProcess:
     phx : phy
     stx $00
@@ -1088,101 +1087,6 @@ ClearNameTable:
     PLP : PLY : PLX
     RTL
 
-HandleSquareChannelLength:
-    LDA $903, X
-    AND #%00000111
-    STA $920
-    LDA $903, X
-    AND #%11111000   
-    LSR #3
-    CMP #$00
-    BEQ .End
-                    ; Decrement counter and move on
-    DEC A
-    BEQ .TurnOff
-    DEC A
-    BEQ .TurnOff
-    ASL #3
-    ORA $920
-    STA $903, X
-    BRA .End
-
-.TurnOff
-    ORA $920
-    STA $903, X
-    LDA.l .Table, X
-    AND $915
-    STA $915
-
-.End
-    RTS
-
-.Table
-    db $FE, $00, $00, $FE
-    db $FD, $00, $00, $FD
-
-HandleTriChannelLength:
-    LDA $90B
-    AND #%10000000
-    STA $920
-    AND #%01111111
-    CMP #$00
-    BEQ .End
-
-    DEC A
-    BEQ .TurnOff
-    DEC A
-    BEQ .TurnOff
-  ;  DEC A
-  ;  BEQ .TurnOff
-  ;  DEC A
-  ;  BEQ .TurnOff
-    ORA $920
-    STA $90B
-    BRA .End
-
-.TurnOff
-    ORA $920
-    STA $90B
-    
-    LDA #$FB
-    AND $915
-    STA $915
-
-.End
-    RTS
-
-HandleNoiseChannelLength:
-    LDA $90F
-    AND #%00000111
-    STA $920
-    LDA $90F
-    AND #%11111000   
-    LSR #3
-    CMP #$00
-    BEQ .Silence
-                    ; Decrement counter and move on
-    DEC A
-    BEQ .TurnOff
-    DEC A
-    BEQ .TurnOff
-    ASL #3
-    ORA $920
-    STA $90F
-    BRA .End
-
-.TurnOff
-    ORA $920
-    STA $90F
-
-.Silence
-    LDA #$F7
-    AND $915
-    STA $915
-
-.End
-    RTS
-
 SoundEmulateLengthCounters:
     sep #$30
     lda $0915
@@ -1269,9 +1173,9 @@ SnesUpdateAudio:
 
     ; This isn't great but fixes some SFX
     ; but makes the triangle channel never stop
-    ; LDA $908
-    ; ORA #$80
-    ; STA $908
+    LDA $908
+    ORA #$80
+    STA $908
 
     JSR SoundEmulateLengthCounters
 

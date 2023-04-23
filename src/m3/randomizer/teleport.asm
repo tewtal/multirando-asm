@@ -152,7 +152,6 @@ transition_to_zelda:
     lda #$8f
     sta $002100                 ; Enable PPU force blank
 
-    print pc
     jsl zelda_spc_reset         ; Kill the SM music engine and put the SPC in IPL upload mode
                                 ; Gotta do this before switching RAM contents
 
@@ -177,9 +176,9 @@ transition_to_zelda:
 
     ; Write Z1 NMI to I-RAM
     lda #$105c
-    sta $0037f0
+    sta.l !IRAM_NMI
     lda #$0008
-    sta $0037f2    
+    sta.l !IRAM_NMI+2  
 
     sep #$30
 
@@ -203,7 +202,6 @@ zelda_spc_reset:
     sta $12
     sta $14
 
-    print pc
     jsl $80800a
     db alttp_spc_data, (alttp_spc_data>>8)+$80, alttp_spc_data>>16
 

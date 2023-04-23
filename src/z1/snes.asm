@@ -493,7 +493,6 @@ print "tm = ", pc
 ; This routine is called with X/Y as arguments to where the pointer to draw is located
 ; We'll pre-process this string into SNES format before sending commands to the PPU
 
-print pc
 PreparePPUProcess:
     phx : phy
     stx $00
@@ -1074,6 +1073,7 @@ ProcessPPUString:
     lda PPUCNT1ZP : jsr WritePPUCTRL1
     rtl
 
+print "soundemu = ", pc
 SoundEmulateLengthCounters:
     sep #$30
     lda $0915
@@ -1208,8 +1208,8 @@ SnesUpdateAudio:
     CPX #$17
     BNE --
 
-    LDA #$0F
-    STA $915
+    ; LDA #$0F
+    ; STA $915
 
     stz $0916
 

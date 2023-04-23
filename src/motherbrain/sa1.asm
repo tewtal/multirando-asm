@@ -7,24 +7,36 @@ init:
     rep #$38
     lda #$0000
     tcd
-    lda #$1fff
+    lda #$01ff
     tcs
     rep #$20
     pea $0000 : plb :  plb
     
-    lda #$37f0
-    sta $220c ; Set NMI Vector to $37f0 (I-RAM)
-
-    lda #$37f4
-    sta $220e ; Set IRQ Vector to $37f4 (I-RAM)
-    
     sep #$20
-    
-    lda #$50 : sta $2209  ; Set NMI to be used from SA-1 vector
-    jmp main
 
+    lda #$ff
+    sta $222a   ; Write-enable I-RAM
+
+    lda #$80
+    sta $2227   ; Write-enable BW-RAM
+
+    lda #$00 : sta $2209  ; Set NMI/IRQ to be used from SNES
+
+    rep #$30
+
+
+    ; Wait for the main CPU to become ready
+-
+    lda.w $37fe
+    cmp.w #$cafe
+    bne -
+
+    jml menu_init
+
+; The menu will kick the SA-1 back here when a game is loaded and ready making the SA-1 available for IRQ commands
+; Todo: Implement IRQ commands
+; One of them might be to load the menu system
 main:
     jmp main
-
 
     

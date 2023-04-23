@@ -45,6 +45,7 @@ MMCWriteReg3:
 
 ; PPU Update routines    
 WritePPUCTRL:
+    sta PPUCNT0ZP
     pha
     and #$80
     sta $4200
@@ -52,6 +53,7 @@ WritePPUCTRL:
     rts
 
 WritePPUCTRL1:
+    sta PPUCNT1ZP
     pha
     and #$18
     beq .blank
@@ -235,9 +237,8 @@ SnesTransferPatternBlock_Indexed:
     PLY : PLX
     lda PPUCNT1ZP : jsr WritePPUCTRL1
     RTS
-
+print "apu-routines = ", pc
 ; APU Update routines
-print pc
 LoadSFXRegisters:
     lda $e0
     cmp #$00
@@ -430,7 +431,7 @@ WriteAPUSq1Ctrl1:
 
 WriteAPUSq1Ctrl1_X:
     xba
-    lda #$40
+    lda #$80
     tsb.w APUBase+$16
     xba
     stx.w APUBase+$05
@@ -438,7 +439,7 @@ WriteAPUSq1Ctrl1_X:
 
 WriteAPUSq1Ctrl1_Y:
     xba
-    lda #$40
+    lda #$80
     tsb.w APUBase+$16
     xba
     sty.w APUBase+$05
@@ -534,6 +535,46 @@ WriteAPUNoiseCtrl3:
     txa
     plx
     rts
+
+WriteAPUControl:
+    sta.w APUIOTemp
+    xba
+    lda.w APUIOTemp
+    eor.b #$ff
+    and.b #$1f
+    trb.w APUBase+$15
+    trb.w APUExtraControl
+    lsr.w APUIOTemp
+    bcs +
+        stz.w APUBase+$03
+        stz.w APUSq0Length
++
+    lsr.w APUIOTemp
+    bcs +
+        stz.w APUBase+$07
+        stz.w APUSq1Length
++
+    lsr.w APUIOTemp
+    bcs +
+        stz.w APUBase+$0B
+        stz.w APUTriLength
++
+    lsr.w APUIOTemp
+    bcs +
+        stz.w APUBase+$0F
+        stz.w APUNoiLength
++
+    lsr.w APUIOTemp
+    bcc +
+        lda.b #$10
+        tsb.w APUBase+$15
+        bne +
+            tsb.w APUExtraControl
++
+    xba
+    rts
+
+
 
 Sound__EmulateLengthCounter_length_d3_mixed:
 fillbyte $06 : fill 8

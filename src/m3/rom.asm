@@ -24,3 +24,30 @@ endmacro
 
 %include_sm_lorom()
 %include_sm_hirom()
+
+; Write header here to place it in the correct place
+org $80ffc0
+    db "MOTHER BRAIN   "
+
+org $80ffd5
+    db $23, $35, $0D, $06, $00, $33, $00
+
+org $80ffea
+    dw !IRAM_NMI
+
+org $80ffee
+    dw !IRAM_IRQ
+
+org $80fffa
+    dw !IRAM_NMI
+
+org $80fffe
+    dw !IRAM_IRQ
+
+org $80ffec
+    dw mb_snes_reset
+
+org $80fffc
+    dw mb_snes_reset
+
+

@@ -389,6 +389,9 @@ AddReceivedItemExpandedGetItem:
 			JMP .done
 	+
 	.done
+	
+	jsl AddReceivedItemExpandedGetItem_extended	; Check for extended items
+	
 	PLX
 	LDA $02E9 : CMP.b #$01 ; thing we wrote over
 RTL

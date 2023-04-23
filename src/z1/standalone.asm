@@ -75,7 +75,6 @@ IsrReset:
 
 IsrNmi:
     JML [$0811]
-print pc
 
 incsrc "labels.asm"
 
