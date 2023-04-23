@@ -54,6 +54,7 @@ Init_Primary:
 	STA.l !ONEMIND_ID
 	
 	LDA.b #$10 : STA $BC ; set default player sprite bank
+	
 	LDA.b #$81 : STA $4200 ; thing we wrote over, turn on NMI & gamepad
 RTL
 ;--------------------------------------------------------------------------------

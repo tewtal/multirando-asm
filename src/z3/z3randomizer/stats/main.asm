@@ -5,13 +5,13 @@
 !BGE = "BCS"
 
 org $238000
-incsrc "creditsnew.asm"
+incsrc creditsnew.asm
 
 FontGfx:
 if !FEATURE_NEW_TEXT
-	incbin "font.2bpp"
+	incbin font.2bpp
 else
-	incbin "font.gb"
+	incbin font.gb
 endif
 FontGfxEnd:
 
@@ -84,7 +84,7 @@ BitMasks:
     dw $7FFF
 
 macro AddStat(address, type, shiftRight, bits, digits, xPos, lineNumber)
-    db (<xPos><<2)|(<type><<9)|(<lineNumber>>>8)
+    db <xPos><<2|<type><<9|<lineNumber>>>8
     db <lineNumber>
     db <bits><<4|<shiftRight>
     db <digits><<5
@@ -199,7 +199,7 @@ FindLine:
 !FRAMES_PER_SECOND = 60
 !FRAMES_PER_MINUTE = 60*60
 !FRAMES_PER_HOUR = 60*60*60
-!MAX_FRAME_COUNT = (59*60)+(59*60)+(59*60)+99
+!MAX_FRAME_COUNT = 59*60+59*60+59*60+99
 
 macro CountUnits(framesPerUnit, unitCounter)
     STZ <unitCounter>
@@ -391,7 +391,7 @@ RenderCreditsStatCounter:
     LDA.b [!StatsPtr]
     STA !ValueHigh
     
-    CMP.w #((!MAX_FRAME_COUNT)>>16)+1
+    CMP.w #!MAX_FRAME_COUNT>>16+1
     !BGE ++
     
     ; == Convert total frames into hours, minutes, seconds and frames ==
@@ -546,7 +546,7 @@ LoadModifiedFont:
     LDA.w #FontGfx : STA $00
     
     ; going to write 0x1000 bytes (0x800 words)
-    LDX.w #FontGfxEnd-(FontGfx/2)-1
+    LDX.w #FontGfxEnd-FontGfx/2-1
     
 .nextWord
 
@@ -632,10 +632,10 @@ DrawEndingItems:
 RTS
 
 FontTable:
-    incbin "fonttable.bin"
+    incbin fonttable.bin
 
 CreditsStats:
-incsrc "statConfig.asm"
+incsrc statConfig.asm
 dw $FFFF
 
 org $0eedd9

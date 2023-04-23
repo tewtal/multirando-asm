@@ -1,6 +1,6 @@
 MSUCode = $00277E
 
-pushpc
+;@ pushpc
 
 
 ; Change track 15 (unused) to point to 13 (Death Mountain) so dark woods can be track 15
@@ -14,8 +14,8 @@ pullpc
 
 arch spc700
 
-pushpc
-pushbase
+;@ pushpc
+;@ pushbase
 org $19FE41 ; SPC 0A73
 	JMP MSUCode
 
@@ -68,7 +68,7 @@ SpecialCommand_Mute:
 
 warnpc $1A9B91
 
-pullbase
-pullpc
+;@ pullbase
+;@ pullpc
 
 arch 65816
