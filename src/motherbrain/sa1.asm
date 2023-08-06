@@ -21,6 +21,7 @@ init:
     sta $2227   ; Write-enable BW-RAM
 
     lda #$00 : sta $2209  ; Set NMI/IRQ to be used from SNES
+    lda #$80 : sta $220a  ; Enable IRQ from SNES
 
     rep #$30
 
@@ -37,6 +38,28 @@ init:
 ; Todo: Implement IRQ commands
 ; One of them might be to load the menu system
 main:
-    jmp main
+    phk : plb
+    cli
+
+    - : jmp -
+
+; IRQ triggered (should only be from SNES side)
+sa1_handle_irq:
+    pha : phx : phy : php : phb
+    phk : plb
+
+    sep #$30
+    lda #$80 : sta.l $00220b    ; ACK IRQ
+    lda.l $002301 ; Load message from SNES
+    beq .end
+    dec : asl : tax
+    pea $4040 : plb : plb
+    jsr (irq_routines, x)
+.end
+    plb : plp : ply : plx : pla
+    rtl
+
+irq_routines:
+    dw handle_transition
 
     

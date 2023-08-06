@@ -8,7 +8,7 @@ macro include_sm_lorom()
         org !b
         incbin "../../resources/sm.sfc":($000000+(!c*$8000))-($000000+((!c+1)*$8000))
         !a #= !a+1
-    endwhile
+    endif
 endmacro
 
 macro include_sm_hirom()
@@ -19,7 +19,7 @@ macro include_sm_hirom()
         org !b
         incbin "../../resources/sm.sfc":($200000+(!c*$10000))-($200000+((!c+1)*$10000))
         !a #= !a+1
-    endwhile
+    endif
 endmacro
 
 %include_sm_lorom()

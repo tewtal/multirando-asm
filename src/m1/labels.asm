@@ -1,31 +1,33 @@
 ; Snes Port Labels
-PPUAddress = $0800
-PPUAddressLo = $0800
-PPUAddressHi = $0801
+m1_PPUAddress = $0800
+m1_PPUAddressLo = $0800
+m1_PPUAddressHi = $0801
+m1_NMIJumpBank = $0813
 
-NMIJumpBank = $0813
+m1_TableBankTemp = $0820
 
-BankSwitchBank = $0FF2
-BankSwitchAddr = $0FF0
 
-LastWritten = $0B08
-TransferCount = $0B0A
-TransferAddress = $0B0C
-TransferNT = $0B10
-TransferTmp = $0B12
-TransferRLE = $0B14
-TransferFlags = $0B16
-TransferTarget = $0B18
-TransferSourceSet = $0B20
-PalIdx = $0B0E
+m1_BankSwitchBank = $0FF2
+m1_BankSwitchAddr = $0FF0
 
-APUBase = $0900
-APUExtraControl = $0916
-APUSq0Length = $0920
-APUSq1Length = $0922
-APUTriLength = $0924
-APUNoiLength = $0926
-APUIOTemp = $0928
+m1_LastWritten = $0B08
+m1_TransferCount = $0B0A
+m1_TransferAddress = $0B0C
+m1_TransferNT = $0B10
+m1_TransferTmp = $0B12
+m1_TransferRLE = $0B14
+m1_TransferFlags = $0B16
+m1_TransferTarget = $0B18
+m1_TransferSourceSet = $0B20
+m1_PalIdx = $0B0E
+
+m1_APUBase = $0900
+m1_APUExtraControl = $0916
+m1_APUSq0Length = $0920
+m1_APUSq1Length = $0922
+m1_APUTriLength = $0924
+m1_APUNoiLength = $0926
+m1_APUIOTemp = $0928
 
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02
@@ -54,22 +56,24 @@ struct OAM $7E2000
     .Attr: skip 1
 endstruct
 
-SnesPPUDataString = $7E3002
-SnesPPUDataStringPtr = $7E3000
+m1_SnesPPUDataString = $7E3002
+m1_SnesPPUDataStringPtr = $7E3000
 
 ; Internal M1 RAM Labels
-MirrorCntrl = $fa
-ScrollY = $fc
-ScrollX = $fd
-PPUCNT1ZP = $fe
-PPUCNT0ZP = $ff
-Sprite00RAM = $0200
-NMIStatus = $1a
-ScrollDir = $49
-TempScrollDir = $4a
-PPUDataPending = $1B	; 1=not PPU data pending, 1=data pending.
-PPUStrIndex = $07A0	    ; # of bytes of data in PPUDataString. #$4F bytes max.
-PPUDataString = $07A1	; Thru $07F0. String of data bytes to be written to PPU.
+m1_MirrorCntrl = $fa
+m1_ScrollY = $fc
+m1_ScrollX = $fd
+m1_PPUCNT1ZP = $fe
+m1_PPUCNT0ZP = $ff
+m1_Sprite00RAM = $0200
+m1_NMIStatus = $1a
+m1_ScrollDir = $49
+m1_TempScrollDir = $4a
+m1_PPUDataPending = $1B	; 1=not PPU data pending, 1=data pending.
+m1_PPUStrIndex = $07A0	    ; # of bytes of data in PPUDataString. #$4F bytes max.
+m1_PPUDataString = $07A1	; Thru $07F0. String of data bytes to be written to PPU.
 
 ; Internal M1 Functions
 GetRoomNum = $E720
+
+m1_ItemBitArray = $7E00

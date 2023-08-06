@@ -619,3 +619,7 @@ ScrollXDMA = $0A42
 VScrollAddrTmp = $0A44
 VScrollSplit = $0A46
 VScrollSplitTest = $0A48
+
+; Randomizer Labels
+ExitRoomTemp = $0A50
+ExitRoomTable = $0A52

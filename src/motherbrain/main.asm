@@ -24,6 +24,7 @@ org $FFE000
 base $40E000
 incsrc "snes.asm"
 incsrc "sa1.asm"
+incsrc "transition.asm"
 namespace off
 
 incsrc "config.asm"

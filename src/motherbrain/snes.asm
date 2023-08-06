@@ -2,11 +2,43 @@
 ; It will then wait for the SA-1 to issue commands that it'll execute during NMI (or force-blank)
 print "snes main = ", pc
 
-SNES_CMD_QUEUE = $3600
-SNES_CMD_PTR = $37e0
+SNES_CMD_QUEUE = $003600
+SNES_CMD_PTR = $0037e0
+
+snes_transition:
+	sep #$20
+	pea $0000 : plb : plb
+    
+    lda #$00
+    sta.l $004200                 ; Disable NMI and Joypad autoread
+    sta.l $00420c                 ; Disable H-DMA
+
+    lda #$8f
+    sta.l $002100                 ; Enable PPU force blank
+
+	rep #$30
+	ldx.w #$317f : txs	; Move stack to I-RAM so DMA to WRAM doesn't blow things up
+						; Setting the stack pointer back to something is up to the games transition-in routine
+
+	stz $37fe		; Clear SNES ready flag 
+
+	lda.w #$CAFE
+	sta.w $37fe		; Tell the SA-1 we're ready to process commands
+	
+-
+	lda.w #$BABE
+	cmp.w $37fe		; Wait for the SA-1 to be ready
+	bne -
+
+	jsr snes_handle_cmd_queue	; Process SA-1 command list
+
+	stz.w $37e6
+
+	jml [$37e2]	; Transition command lists should always include a jump target
 
 snes_main:
 	rep #$30
+	pea $0000 : plb : plb
 	
 	; Update the SA-1 I-RAM NMI handler to point to our NMI handler
 	lda.w #$5c5c
@@ -41,12 +73,39 @@ snes_main:
 	beq -
 
 	stz.w $37e6
-	jmp [$37e2]
+	jml [$37e2]
 
 snes_nmi_handler:
 	pha : phx : phy : php
 	rep #$30
+	stz $4200 ; disable NMIs to prevent re-entry
 	
+	jsr snes_handle_cmd_queue
+
+	sep #$20
+-
+	lda $4212
+	and.b #$01
+	bne -
+	
+	rep #$20
+	lda $4218
+	sta $37e8
+	eor $37ea
+	and $37e8
+	sta $37ec
+	lda $37e8
+	sta $37ea
+	stz $37fa
+
+	lda $4210
+	lda #$0081
+	sta $4200
+
+	plp : ply : plx : pla
+    rti
+
+snes_handle_cmd_queue:
 	lda.w SNES_CMD_PTR
 	cmp.w #SNES_CMD_QUEUE
 	beq .end
@@ -74,6 +133,8 @@ snes_nmi_handler:
 	beq .cgram_dma
 	cmp.w #$0008
 	beq .jml_target
+	cmp.w #$0009
+	beq .wram_from_dma
 	bra .end
 
 .vram_dma:
@@ -108,29 +169,14 @@ snes_nmi_handler:
 	inx #2
 	jsr snes_jml_target
 	bra .loop
-
+.wram_from_dma
+	inx #2
+	jsr snes_wram_from_dma
+	bra .loop
 .end
 	lda.w #SNES_CMD_QUEUE
 	sta SNES_CMD_PTR
-
-	sep #$20
--
-	lda $4212
-	and.b #$01
-	bne -
-	
-	rep #$20
-	lda $4218
-	sta $37e8
-	eor $37ea
-	and $37e8
-	sta $37ec
-	lda $37e8
-	sta $37ea
-	stz $37fa
-
-	plp : ply : plx : pla
-    rti
+	rts
 
 ; <source addr>, <source bank>, <dest addr>, <size>
 snes_vram_dma:
@@ -188,6 +234,31 @@ snes_wram_dma:
 	rep #$30
 	txa : clc : adc.w #$000A : tax
 	rts
+
+; <source addr>, <source bank>, <dest addr>, <dest bank>, <size>
+snes_wram_from_dma:
+	lda.w $0000, x
+	sta $2181
+	lda.w $0002, x
+	sta $2183
+	lda.w $0004, x
+	sta $4302
+	lda.w $0006, x
+	sta $4304
+	lda.w $0008, x
+	sta $4305
+
+	sep #$20
+	lda.b #$80
+	sta $4300
+	sta $4301
+	lda.b #$01
+	sta $420b
+
+	rep #$30
+	txa : clc : adc.w #$000A : tax
+	rts
+
 
 ; <value>, <dest addr>
 snes_bus_write:

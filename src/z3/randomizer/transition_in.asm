@@ -1,7 +1,6 @@
 ; Transition into Zelda 3
 
-; exit id in !SRAM_ALTTP_EXIT
-; darkworld flag in !SRAM_ALTTP_DARKWORLD
+print "ttz = ", pc
 transition_to_zelda:
     sei                         ; Disable IRQ's
     
@@ -17,53 +16,31 @@ transition_to_zelda:
 
     lda #$8f
     sta $002100                 ; Enable PPU force blank
-
-    ; TODO: Putting the SPC into IPC-mode should be the responsibility of the game we're
-    ; coming from, not the one we're going to
-
-    ; jsl zelda_spc_reset         ; Kill the SM music engine and put the SPC in IPL upload mode
-    ;                             ; Gotta do this before switching RAM contents
-
--
-    bit $4212                   ; Wait for a fresh NMI
-    bmi -
-
--
-    bit $4212
-    bpl -
-
-    ldx.w #zelda_vram>>16       ; Put Zelda VRAM bank in X
-    jsl copy_to_vram            ; Call the DMA routine to copy Zelda template VRAM from ROM
-
-    ldx.w #zelda_wram>>16       ; Put Zelda VRAM bank in X
-    jsl copy_to_wram            ; Call the DMA routine to copy Zelda template VRAM from ROM
     
     %ai16()
     
-    ldx #$01ec
+    ldx #$01ff
     txs                         ; Adjust stack pointer
 
     lda #$0000                  ; Set the "game flag" to Zelda so IRQ's/NMI runs using the 
     sta !SRAM_CURRENT_GAME      ; correct game
 
-    jsr zelda_copy_sram         ; Copy SRAM back to RAM
+    ;jsr zelda_copy_sram         ; Copy SRAM back to RAM
+    
     jsl zelda_fix_checksum
-    jsl zelda_copy_sm_items     ; Copy SM items to temp buffer
+    ;jsl zelda_copy_sm_items     ; Copy SM items to temp buffer
     jsr zelda_spc_load          ; Load Zelda's music engine
     jsr zelda_blank_cgram       ; Blank out CGRAM
     jsr zelda_restore_dmaregs   ; Restore ALTTP DMA regs
     
-    jsl zelda_restore_randomizer_ram
+    ;jsl zelda_restore_randomizer_ram
 
-    lda !SRAM_ALTTP_EXIT
-    sta $a0                     ; Store links house as exit
-
-    lda !SRAM_ALTTP_DARKWORLD
-    sta $7ef3ca                 ; Store lightworld/darkworld flag (0x0040 = dark world)
+    lda !IRAM_TRANSITION_DESTINATION_ID
+    sta $a0                     ; Store the transition outlet id
 
     %a8()
     sta $7b
-    sta $a063ca
+    sta $4033ca
     cmp.b #$40
     bne +
     lda #$01
@@ -114,9 +91,6 @@ transition_to_zelda:
 
     lda #$ff
     sta $4201
-
-    ;lda $13
-    ;sta $2100
 
     lda $1c
     sta $212c
@@ -169,7 +143,7 @@ transition_to_zelda:
 
     lda $4210                   ; Acknowledge any pending IRQ's
     
-    pea $0707
+    pea $0000
     plb
 
     lda $a0
@@ -192,42 +166,31 @@ transition_to_zelda:
 
     %ai16()
 
-    ldx #$0000                  ; Restore overworld area and coordinate data
--
-    lda.l !SRAM_ALTTP_OVERWORLD_BUF,x
-    sta.l $7ec140,x
-    inx
-    inx
-    cpx #$0032
-    bne -
-
-
     lda #$0000
     ldx #$00ff
     ldy #$0000
 
+    lda.w #$0000
+    sta.l !NMI_AUX
+
     %ai8()
-    jml $02b6fb                 ; Jump directly to pre-overworld module
 
-; zelda_spc_reset:
-;     pha
-;     php
-;     %a8()
-    
-;     lda #$ff                    ; Send N-SPC into "upload mode"
-;     sta $2140
+    lda #$08
+    sta $10
+    lda #$01
+    sta $11
 
-;     rep #$30
-;     lda #$0000
-;     sta $12
-;     sta $14
+    lda #$48
+    sta $010e
+    lda #$01
+    sta $010a
 
-;     jsl $80800a
-;     db alttp_spc_data, (alttp_spc_data>>8)+$80, alttp_spc_data>>16
+    ; lda #$05
+    ; sta $10
+    ; lda #$00
+    ; sta $11
 
-;     plp
-;     pla
-;     rtl
+    jml $008034
 
 zelda_spc_load:
     pha
@@ -279,7 +242,7 @@ zelda_copy_sram:
     ;inc
     ;inc
     lda #$0000
-    sta $a07ffe     ; Always set save slot to 1 for now
+    sta $403ffe     ; Always set save slot to 1 for now
     
     sep #$20
     %ai16()
@@ -289,15 +252,15 @@ zelda_copy_sram:
     ldy #$0000
     ldx #$0000
 -
-    LDA $a06000,X
+    LDA $402000,X
     STA $F000,Y
-    LDA $a06100,X
+    LDA $402100,X
     STA $F100,Y
-    LDA $a06200,X
+    LDA $402200,X
     STA $F200,Y
-    LDA $a06300,X
+    LDA $402300,X
     STA $F300,Y
-    LDA $a06400,X
+    LDA $402400,X
     STA $F400,Y
     inx
     inx
@@ -334,8 +297,8 @@ zelda_fix_checksum:
 
     ldx #$0000              ; Copy main SRAM to backup SRAM
 -
-    lda.l $a06000,x
-    sta.l $a06f00,x
+    lda.l $402000,x
+    sta.l $402f00,x
     inx : inx
     cpx #$04fe
     bne -
@@ -344,7 +307,7 @@ zelda_fix_checksum:
     lda #$0000
 -
     clc
-    adc $a06000,x
+    adc $402000,x
     inx
     inx
     cpx #$04fe
@@ -355,8 +318,8 @@ zelda_fix_checksum:
     sec
     sbc $00
     ;sta $7EF4fe
-    sta $a064fe
-    sta $a073fe
+    sta $4024fe
+    sta $4033fe
     pla
     plp
     plx

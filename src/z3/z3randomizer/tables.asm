@@ -2688,11 +2688,45 @@ db $FF, $4E, $FF, $FF, $FF, $FF, $FF, $FF ; 0x188-0x18F
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x190-0x197
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x198-0x19F
 
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1A0-0x1A7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1A8-0x1AF
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1B0-0x1B7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1B8-0x1BF
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1C0-0x1C7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1C8-0x1CF
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1D0-0x1D7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1D8-0x1DF
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1E0-0x1E7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1E8-0x1EF
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1F0-0x1F7
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1F8-0x1FF
+
+
+db $86, $02, $FF, $FF, $FF, $FF, $FF, $FF ; 0x200-0x207
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x208-0x20F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x210-0x217
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x218-0x21F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x220-0x227
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x228-0x22F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x230-0x237
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x238-0x23F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x240-0x247
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x248-0x24F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x250-0x257
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x258-0x25F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x260-0x267
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x268-0x26F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x270-0x277
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x278-0x27F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x280-0x287
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x288-0x28F
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x290-0x297
+db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x298-0x29F
 
 ;--------------------------------------------------------------------------------
-; Exit data table pointers - 0x186CA0
+; Exit data table pointers - 0x186DA0
 ;--------------------------------------------------------------------------------
-org $30ECA0
+org $30EDA0
 dl NewOutletData_overworld_id
 dl NewOutletData_exit_vram_addr
 dl NewOutletData_vertical_scroll
@@ -2710,6 +2744,7 @@ dl NewOutletData_door_graphic_location
 ;--------------------------------------------------------------------------------
 ; 0x186D00 - 186FFE (unused)
 ;--------------------------------------------------------------------------------
+warnpc $30efff
 org $30EFFF ; PC 0x186FFF
 BallNChainDungeon:
 db $02

@@ -9,3 +9,10 @@ org $00e7b2 ; - bank00.asm : 5847
 
 org $00e7de
     Decomp_spr_high_extended_return:
+
+org $02d70f
+    jml check_teleport_in
+
+;#_02E214: STA.l $7EC017
+org $02E214
+    jml check_teleport_out

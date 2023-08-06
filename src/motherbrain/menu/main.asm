@@ -6,9 +6,6 @@
 ; RAM Menu
 ; ---------
 
-SNES_CMD_QUEUE = $003600
-SNES_CMD_PTR = $0037e0
-
 !ram_tilemap_buffer = $40D800
 
 !WRAM_MENU_START = $40D000

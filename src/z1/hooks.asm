@@ -16,7 +16,7 @@ macro zhook(addr, code)
             <code>          ; for any other hook, use JML/JSL etc...
             !a #= !a+1
         endif
-    endwhile
+    endif
 endmacro
 
 ; Hook graphic tiles upload routines

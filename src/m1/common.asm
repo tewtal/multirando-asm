@@ -1,3 +1,28 @@
+LongJumpToRoutine_common:    
+    php
+    rep #$30
+
+    pha
+    lda $04, s
+    inc
+    sta $d0
+    lda $05, s
+    sta $d1
+
+    lda [$d0]
+    sta $d0
+
+    lda $04, s
+    inc #2
+    sta $04, s
+    pla
+    
+    sep #$30
+    pea .ret-1
+    jmp ($00d0)
+.ret
+    plp
+    rtl
 
 ; Replace the NES NMI start with a SNES-specific one and allow hooking of NMI before any standard code
 NMIStart:
@@ -35,6 +60,32 @@ WritePPUCTRL1:
 +
     sta $2100
     pla
+    rts
+
+; This method will jump to a pointer found in a table pointed to by the long
+; address after the call to this routine
+ChooseRoutineExtended:
+    phy : phx
+    asl : tax
+
+    rep #$30
+    ldy.w #$0001
+    lda.b ($03, s), y 
+    sta.b $d0
+    iny
+    lda.b ($03, s), y
+    sta.b $d1
+
+    txy
+    lda.b [$d0], y
+    sta.b $0c
+    sep #$30
+    plx : ply
+    pla : pla   ; Adjust stack
+    jmp ($000c)
+
+CustomItemHandler_common:
+    jsl CustomItemHandler
     rts
 
 ; APU Update routines

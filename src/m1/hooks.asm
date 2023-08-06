@@ -17,7 +17,7 @@ macro hook(addr, code)
             endif
             !a #= !a+1
         endif
-    endwhile
+    endif
 endmacro
 
 ; Hook NMI start/end

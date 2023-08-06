@@ -33,11 +33,16 @@ sa1_vectors:
     dw sa1_nmi
     dw sa1_irq
 
+org $00ffa8
+base $0030f0
 sa1_reset:
     jml init
 sa1_nmi:
-sa1_irq:
     rti
+sa1_irq:
+    jsl sa1_handle_irq
+    rti
+base off
 
 org $00fe00
 snes_brk:
@@ -147,6 +152,14 @@ sa1_setup:
 	inx
     cpx #$2000
 	bne -   
+
+    ldx #$0000      ; Copy SA-1 vectors to IRAM
+-
+    lda.l $00ffa8, x
+    sta.l $0030f0, x
+    inx #2
+    cpx #$0010
+    bne -
 
     sep #$20
     lda #$00

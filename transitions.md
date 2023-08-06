@@ -4,28 +4,36 @@ To make it easier to handle all the transition data from the randomizer end, it'
 
 Having some more complexity at runtime isn't too bad since transitions between games shouldn't be too common and it's already pretty slow, so adding a few hundred cycles isn't going to do much of a difference. (And some of this can possibly be run on the SA-1 for improved speed too, and should probably be run on the SA-1 to be able to easily swap NMI/IRQ and banks without crashing)
 
-What data would be required in a table to easily support this then
 
-- From Game (maybe have these tables split by game for easier access)
+Each game has a transition table populated by the randomizer that's checked on entering a door/cave/etc matching the games specific type of entrance data
+For example SM would have a table where the check is listed by door ID, and Z3 would have it listed by inlet-id.
 
-- From Id
-- To Game
-- To Id (This could be a per-game unique id (z3 entrance, m3 door ptr and so on), or it could be some randomizer id to be translated later)
-- Type (Some enum of types of transition valid for all games)
-- Direction
-- Metadata PTR (Pointer to additional metadata for the target entrance required for loading properly) 
+Each game specific table would have simply
+- Entry ID
+- Game ID
+- Destination ID
+
+Where destination ID's are a unique pointer to a table containing destination data needed for a transition to that destination for the game we're transitioning to.
+
+Then each game will have their own destination table that specifies the data required to enter the game through that destination.
+And the destination table would be pre-generated static data for each possible destination that can be entered.
 
 
+So it'd be something like:
+- destination Id
+- ... Data required to entrance 
 
-# SA-1 transition code example
-- Put a from ID in IRAM somewhere (along with possible extra parameters)
-- Trigger SA-1 IRQ Command to process transition
-- Jump the SNES CPU to a BW-RAM block containing a function for transition support
-  This function will start by doing things like disabling IRQ/NMI:s and so on on the main cpu and then waiting for further instructions
+This means that to add a transition only the inlet data is require to be written in a simple table, and we could for example use a "magic" inlet to trigger scanning the table itself so
+that it's only done for actual transitions.
 
-- While the transition is happening, the SA-1 will modify some variable to have the SNES CPU execute things like
-  DMA:ing blocks to VRAM/WRAM, updating PPU variables and whatever is needed to process the transition
 
-- When that's done, the SNES CPU is guided to a routine that will continue execution in the new game
+# Transitioning
+
+To make this simple, let's just have each game save its own save data, write back item buffers, jump the SPC to the IPL and then finally trigger an SA-1 IRQ message
+to tell the SA-1 to take over control for a bit and handle switching between games (remap IRQ/NMI, remap BW-RAM, switch ROM banks and more).
+And then when that's finally done, have the SA-1 go back into waiting mode and issue a jump to the "incoming transition" code for that specific game and then let the game
+specific transition code take it from there.
+
+This means that basically we only need to save "Game Id" and "destination Id" somewhere in I-RAM/BW-RAM to carry over between transitions. I-RAM is probably best suited for this.
 
 

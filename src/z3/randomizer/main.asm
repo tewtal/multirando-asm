@@ -12,9 +12,9 @@ org $A68000
 incsrc "items.asm"
 incsrc "ending.asm"
 incsrc "spc.asm"
-incsrc "transition.asm"
+incsrc "transition_in.asm"
+incsrc "transition_out.asm"
 ;incsrc "skiptitle.asm"
-incsrc "newgame.asm"
 
 print "Z3 Randomizer Extras End = ", pc
 
@@ -26,6 +26,10 @@ org $A7A000
 GFX_SM_Items_2:
     incbin data/newitems_sm_2.gfx
 warnpc $A7FFFF
+
+org $A88000
+incsrc "transition_tables.asm"
+warnpc $A8FFFF
 
 ; Banks B8-BE seems to be free as well in ALTTPR
 ; Use this for the WRAM/VRAM dumps used for game transitions

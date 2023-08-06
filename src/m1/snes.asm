@@ -122,6 +122,17 @@ SnesOamPrepare:
     LDA.l AttributeTable, X
     PLX
     STA.w OAM.Attr, Y
+
+    LDA.w OAMNES.Attr, X
+    AND.b #$04
+    BEQ .noExtended
+
+    LDA.w OAM.Attr, Y
+    ORA.b #$09
+    STA.w OAM.Attr, Y
+
+.noExtended
+
     ;LDA.w OAMNES.Index, X
     ;AND #$01
     ;ORA.w OAM.Attr, Y
@@ -161,7 +172,7 @@ SnesOamDMA:
     STA $420B
 
 
-    LDA #$00
+    LDA #$18
     STA $2101
 
     LDA #$11
@@ -176,7 +187,7 @@ SnesOamDMA:
 ; It also overwrites the NMI code in I-RAM so that it uses the correct bank when entering NMI
 MMCWriteReg3:
     CLC : ADC #!BASE_BANK
-    STA NMIJumpBank
+    STA m1_NMIJumpBank
     PHA : PLB
     STA BankSwitchBank
     REP #$20
@@ -230,7 +241,7 @@ WriteScroll:
 
 ; We'll use a similar string format for the SNES, but optimized for SNES use
 ;
-; TTTT = Data type (0000 = End of data, 0001 = TileMap, 0002 = TileAttr, 0003 = CGRAM, 0004 = Data (DMA))
+; TTTT = Data type (0000 = End of data, 0001 = TileMap, 0002 = TileAttr, 0003 = CGRAM, 0004 = Data (DMA), 0005 = Indirect VRAM DMA)
 ; AAAA = VRAM address or CGRAM Index
 ; FFFF = Flags (PPU increment etc)
 ; LLLL = Length (0000 = $00 terminated data)
@@ -264,7 +275,10 @@ SnesProcessPPUString:
 +   cmp #$0003
     bne +
     jmp .CGRAM
-+   bra .Data
++   cmp #$0004
+    bne +
+    jmp .Data
++   bra .IndirectDMA
 
 .Data
     ; Data chunk ready for DMA
@@ -307,6 +321,42 @@ SnesProcessPPUString:
     tya
     clc : adc TransferCount
     tay
+
+    rep #$30
+    jmp .loop
+
+.IndirectDMA
+    print "ind = ",pc
+    ; Data chunk ready for DMA
+    lda ($00), y    ; Target
+    iny #4
+    sta $002116
+
+    lda ($00), y    ; Length
+    iny #2
+    sta $004315
+
+    lda ($00), y    ; Source addr
+    iny #2
+    sta $004312
+
+    sep #$20
+
+    lda #$80
+    sta $002115
+
+    lda #$01
+    sta $004310
+
+    lda #$18
+    sta $004311       ; DMA Target
+
+    lda ($00), y
+    iny #2
+    sta $004314       ; Source bank
+
+    lda #$02
+    sta $00420b      ; Execute DMA
 
     rep #$30
     jmp .loop
@@ -439,7 +489,7 @@ SnesPPUPrepare:
     stz.w TransferSourceSet
     bra ++  
 +
-    lda.w #PPUDataString
+    lda.w #m1_PPUDataString
     sta $00
     lda #$007E
     sta $02
