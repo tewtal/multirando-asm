@@ -5,6 +5,19 @@ transition_from_z1:
     ; TODO: Copy temporary item buffers to the other games respective SRAM (this needs to be done on save as well)
     ; TODO: Do any other maintenance that needs to be done to properly clear ALTTP state and prepare for the next game
 
+    %ai16()
+
+    ; TODO: Change to DMA
+    ; Backup RAM to BW-RAM so we can restore it on transition in
+
+    ldx #$0000
+-
+    lda.w $0000, x
+    sta.l $40C800, x
+    inx #2
+    cpx.w #$0800
+    bne -
+
     %i16()
     %a8()
 
@@ -27,6 +40,53 @@ transition_from_z1:
     lda #$81
     sta.l $002200             ; Trigger IRQ with message 1 to SA-1 (transition to new game)
     jml mb_snes_transition    ; Jump the SNES CPU into BW-RAM routines that let the SA-1 control it
+
+check_cave_transition_out:
+    phx : phy : php
+    rep #$30
+    lda.w #transition_table_out
+    sta.w ExitRoomTable    
+    jsr check_cave_transition
+    plp : ply : plx
+    rtl
+
+check_cave_transition_in:
+    phx : phy : php
+    rep #$30
+    lda.w #transition_table_in
+    sta.w ExitRoomTable
+    jsr check_cave_transition
+    plp : ply : plx
+    lda $AB45, X : sta $02
+    rtl
+
+check_cave_transition:
+    lda.b $eb
+    ; Force the room Id to 8-bit
+    and.w #$00ff
+    sta.w ExitRoomTemp
+
+    ldx.w ExitRoomTable
+-
+    lda.l transition_table_in&$ff0000, x
+    beq .exit
+    cmp.w ExitRoomTemp
+    beq .transition_found
+    txa : clc : adc #$0008 : tax
+    bra -
+
+.transition_found
+    lda.l transition_table_in&$ff0000+2, x
+    sta !IRAM_TRANSITION_GAME_ID
+    lda.l transition_table_in&$ff0000+4, x
+    sta !IRAM_TRANSITION_DESTINATION_ID
+    lda.l transition_table_in&$ff0000+6, x
+    sta !IRAM_TRANSITION_DESTINATION_ARGS
+
+    jml transition_from_z1
+
+.exit    
+    rts
 
 check_dungeon_transition:
     phx : phy : php

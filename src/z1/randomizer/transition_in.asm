@@ -18,6 +18,7 @@ transition_to_z1:
     lda #$00 : sta $2101
     lda #$11 : sta $212C
     lda #$00 : sta $212d
+    
     jsl SetupScrollHDMA
 
     ; Clear SNES port buffers
@@ -76,7 +77,7 @@ transition_to_z1:
     ; Enable NMI and clear pending interrupts
     cli : lda.l $004210
     lda.b #$81 : sta.l $004200
-    lda PPUCNT0ZP : ora #$80 : sta PPUCNT0ZP
+    lda PPUCNT0ZP : ora #$80 : and #$fc : sta PPUCNT0ZP
 
     ; Set rendering to off
     lda #$0f : sta PPUCNT1ZP
@@ -85,6 +86,12 @@ transition_to_z1:
     stz.b CurVScroll
     stz.b CurHScroll
     jsl UpdateScrollHDMA
+
+    stz.w ScrollYDMA
+    stz.w ScrollXDMA
+
+    lda #$00 : sta $210d
+    lda #$00 : sta $210d
 
     ; Jump the game into its loop and wait for NMI to pick up
     jml $85E45B

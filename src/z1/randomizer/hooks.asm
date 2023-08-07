@@ -2,13 +2,14 @@
 ; $EB = RoomId (of the overworld room we're coming from, and will exit to)
 ; LDA $AB45, X : STA $02
 org $85AB4F
-    lda $AB45, X
+    ;lda $AB45, X
+    jsl check_cave_transition_in : nop
 
 ; Exiting a Cave
 ; $EB = RoomId (of the overworld room we're coming from, and will exit to)
 ; JMP $EA2B
 org $85B157
-    jmp $ea2b
+    jmp CheckCaveTransitionOut_common
 
 ; Entering or exiting dungeon - hook this, this also runs when exiting a dungeon
 ; $10 (current level) will be $00 when exiting (and $01+ when entering depending on dungeon)

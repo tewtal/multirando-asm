@@ -263,6 +263,11 @@ SnesTransferPatternBlock_Indexed:
     PLY : PLX
     lda PPUCNT1ZP : jsr WritePPUCTRL1
     RTS
+
+CheckCaveTransitionOut_common:
+    jsl check_cave_transition_out
+    jmp $ea2b
+
 print "apu-routines = ", pc
 ; APU Update routines
 LoadSFXRegisters:
