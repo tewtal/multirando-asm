@@ -368,6 +368,10 @@ xfer:
 		jmp square0
 
 to_reset:
+                ; Key off all notes
+                mov     $F2,#$5C
+                mov     $F3,#$FF
+
 		mov	$F1,#$B0
 		jmp $ffc0
 

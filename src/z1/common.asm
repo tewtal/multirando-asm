@@ -1,3 +1,29 @@
+LongJumpToRoutine_common:    
+    php
+    rep #$30
+
+    pha
+    lda $04, s
+    inc
+    sta $d0
+    lda $06, s
+    sta $d2
+
+    lda [$d0]
+    sta $d0
+
+    lda $04, s
+    inc #2
+    sta $04, s
+    pla
+    
+    sep #$30
+    phb : phk : plb
+    pea .ret-1
+    jmp ($00d0)
+.ret
+    plb : plp
+    rtl
 
 ; Replace the NES NMI start with a SNES-specific one and allow hooking of NMI before any standard code
 NMIStart:

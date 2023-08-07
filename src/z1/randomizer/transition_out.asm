@@ -54,12 +54,17 @@ check_dungeon_transition:
     lda.l transition_table_in&$ff0000, x
     beq .exit
     cmp.w ExitRoomTemp
-    bne -
+    beq .transition_found
+    txa : clc : adc #$0008 : tax
+    bra -
 
+.transition_found
     lda.l transition_table_in&$ff0000+2, x
     sta !IRAM_TRANSITION_GAME_ID
     lda.l transition_table_in&$ff0000+4, x
     sta !IRAM_TRANSITION_DESTINATION_ID
+    lda.l transition_table_in&$ff0000+6, x
+    sta !IRAM_TRANSITION_DESTINATION_ARGS
 
     jml transition_from_z1
 

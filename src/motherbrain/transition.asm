@@ -1,7 +1,7 @@
 ; Handles transitions between two games
 ; This code will always live in BW-RAM and can't be swapped out by SA-1 MMC bank switching
 ; so it's always safe to execute in
-
+print "handle transition = ", pc
 handle_transition:
     rep #$30
     pea $4040 : plb : plb
@@ -51,8 +51,8 @@ handle_transition:
 transition_tables:
     dw sm_transition_table
     dw z3_transition_table
-    dw m1_transition_table
     dw z1_transition_table
+    dw m1_transition_table
     dw transition_tables_end
 
 sm_transition_table:
@@ -119,11 +119,54 @@ z3_transition_table:
 
     dw $0000
 
+z1_transition_table:
+    ; Update SA-1 bank registers
+    dw $0006, $0080, $2220
+    dw $0006, $0086, $2222
+    dw $0006, $0080, $2221
+    dw $0006, $0007, $2223
 
-m1_transition_table:
+    ; Set BW-RAM mapping at 6000-7FFF
+    dw $0006, $0003, $2224
+
+    ; Restore WRAM from BW-RAM backup
+    dw $0003, $C800, $0040, $0000, $0000, $0800
+
+    ; Copy common routines from ROM -> RAM
+    dw $0003, $8000, $0087, $1000, $0000, $1000
+
+    ; Set up IRQ/NMI handlers
+    dw $0004, $105c, !IRAM_NMI
+    dw $0004, $0008, !IRAM_NMI+2
+
+    ; Done with transition setup, jump to entry point on the SNES side
+    dw $0008, z1_transition_to_z1&$ffff, z1_transition_to_z1>>16
+
     dw $0000
 
-z1_transition_table:
+m1_transition_table:
+    ; Update SA-1 bank registers
+    dw $0006, $0080, $2220
+    dw $0006, $0087, $2222
+    dw $0006, $0080, $2221
+    dw $0006, $0007, $2223
+
+    ; Set BW-RAM mapping at 6000-7FFF
+    dw $0006, $0004, $2224
+
+    ; Restore WRAM from BW-RAM backup
+    dw $0003, $D000, $0040, $0000, $0000, $0800
+
+    ; Copy common routines from ROM -> RAM
+    dw $0003, $8000, $0087, $1000, $0000, $1000
+
+    ; Set up IRQ/NMI handlers
+    dw $0004, $105c, !IRAM_NMI
+    dw $0004, $0008, !IRAM_NMI+2
+
+    ; Done with transition setup, jump to entry point on the SNES side
+    dw $0008, m1_transition_to_m1&$ffff, m1_transition_to_m1>>16
+
     dw $0000
 
 transition_tables_end:

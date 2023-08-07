@@ -8,7 +8,7 @@
 
 !ram_tilemap_buffer = $40D800
 
-!WRAM_MENU_START = $40D000
+!WRAM_MENU_START = $003400
 
 !ram_cm_stack_index = $0037fc
 !ram_cm_menu_stack = !WRAM_MENU_START+$00         ; 16 bytes
@@ -77,11 +77,9 @@
 
 !sram_ctrl_menu = !WRAM_MENU_START+$9C
 
-; ^ FREE SPACE ^ up to +$CE
-
 ; Reserve 48 bytes for CGRAM cache
 ; Currently first 22 bytes and last 2 bytes are used
-!ram_cgram_cache = !WRAM_MENU_START+$D0
+!ram_cgram_cache = !WRAM_MENU_START+$A0
 
 !DP_MenuIndices = $00 ; 0x4
 !DP_CurrentMenu = $04 ; 0x4

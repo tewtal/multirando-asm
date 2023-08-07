@@ -81,5 +81,8 @@ Mapping:
         $408000-$409FFF -> $6000-$7FFF  (Regular M1 Work RAM)
     
     Mother Brain
-        $40A000-$40DFFF -> Unmapped     (16kb of extra SRAM for Mother Brain use: stats, timers, temporary item buffers etc)
-        $40E000-$40FFFF -> Unmapped     (8kb of code, the SA-1 runs from here, copied from ROM at boot)
+        $40A000-$40C7FF -> Randomizer   (12kb of extra SRAM for Mother Brain use: stats, timers, temporary item buffers etc)
+        $40C800-$40FFFF -> Z1 NES RAM   (2kb backup of Z1 NES RAM State)
+        $40D000-$40D7FF -> M1 NES RAM   (2kb backup of M1 NES RAM State)
+        $40D800-$40DFFF -> SA-1 WRAM    (Used by menu code and more)
+        $40E000-$40FFFF -> Code         (8kb of code, the SA-1 runs from here, copied from ROM at boot)

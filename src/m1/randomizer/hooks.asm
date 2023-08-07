@@ -24,7 +24,17 @@ org $859598
 %hook($EE0F, "lda [$00], y")
 %hook($EE20, "lda [$00], y")
 %hook($EF00, "lda [$00], y")
+
+; Hook all the extra special handlers that reads from the item tables
+%hook($EC0F, "lda [$00], y")            ; Elevator
+%hook($EDF8, "jsr GetEnemyData_long")   ; Squeept
+org $839CF6 : lda [$00], y              ; Cannon
+org $839D07 : lda [$00], y              ; Cannon
+org $839D3D : lda [$00], y              ; Zebetite
+org $839D79 : lda [$00], y              ; Rinka
+%hook($EEF4, "jsr LoadDoor_long")       ; Door
 ; ============================================================================
+
 
 ; ============================================================================
 ; Allow new item types to support out-of-game items easily
@@ -35,6 +45,9 @@ org $859598
 %hook($EE2E, "jsl StorePowerUpYCoord_extended : nop")
 %hook($DE74, "jsl GetFramePtrTable_extended : nop #6")
 %hook($DDC4, "jsl GetEnemyFramePtrTable_extended : nop #13")
+%hook($DF04, "jsl StoreSpriteAttributes_extended : nop")
+%hook($DBB0, "jsl PickupItem_extended : bcs $20")
+%hook($DB73, "jsl UpdatePaletteEffect_extended : nop #5")
 %hook($DCC7, "lda [$CC], y")
 %hook($DE08, "lda [$CC], y")
 %hook($DE11, "lda [$CC], y")
@@ -46,7 +59,9 @@ org $859598
 %hook($DF52, "lda [$CC], y")
 %hook($DF5F, "lda [$CC], y")
 %hook($E03A, "lda [$CC], y")
-%hook($DF04, "jsl StoreSpriteAttributes_extended : nop")
-%hook($DBB0, "jsl PickupItem_extended : bcs $20")
-%hook($DB73, "jsl UpdatePaletteEffect_extended : nop #5")
 ; ============================================================================
+
+; ============================================================================
+; Cross-game transitions
+; ============================================================================
+%hook($8B74, "jsl SamusInDoor_extended : nop")

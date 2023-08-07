@@ -15,7 +15,7 @@ incsrc "hooks.asm"
 org $878000
 base $7E1000
 incsrc "common.asm"
-warnpc $872000
+warnpc $871000
 
 ; Include SNES port functions that doesn't have to be in the common code area
 org $879000
@@ -23,10 +23,10 @@ incsrc "labels.asm"
 incsrc "init.asm"
 incsrc "snes.asm"
 
-
 ; Include randomizer additions
 org $888000
 incsrc "randomizer/main.asm"
 
+; Don't use more than up to bank $8F for this if possible, the rest of this bank is global data
 
 namespace off

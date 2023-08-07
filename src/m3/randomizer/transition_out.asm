@@ -4,12 +4,6 @@ base off
 org $82e2fa
     jsl sm_check_transition
 
-org $d00000
-sm_transition_table:
-    ;  door,  game,  destination, extra
-    dw $8976, $0001, $0201, $0000
-    dw $0000
-
 org $d01000
 sm_check_transition:
     phx
@@ -43,6 +37,8 @@ sm_do_transition:
     sta !IRAM_TRANSITION_GAME_ID
     lda.l sm_transition_table+$4,x
     STA !IRAM_TRANSITION_DESTINATION_ID
+    lda.l sm_transition_table+$6,x
+    sta !IRAM_TRANSITION_DESTINATION_ARGS    
     
     jsl $8085c6                     ; Save map data
 

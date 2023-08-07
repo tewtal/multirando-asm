@@ -6,8 +6,8 @@ LongJumpToRoutine_common:
     lda $04, s
     inc
     sta $d0
-    lda $05, s
-    sta $d1
+    lda $06, s
+    sta $d2
 
     lda [$d0]
     sta $d0
@@ -18,10 +18,11 @@ LongJumpToRoutine_common:
     pla
     
     sep #$30
+    phb : phk : plb
     pea .ret-1
     jmp ($00d0)
 .ret
-    plp
+    plb : plp
     rtl
 
 ; Replace the NES NMI start with a SNES-specific one and allow hooking of NMI before any standard code
@@ -87,6 +88,78 @@ ChooseRoutineExtended:
 CustomItemHandler_common:
     jsl CustomItemHandler
     rts
+
+GetEnemyData_long:
+    lda [$00],y                     ;Get 1st byte again.
+    and #$F0                        ;Get object slot that enemy will occupy.
+    tax                             ;
+    jsr $EB7a                       ;($EB7A)Check if object slot is already in use.
+    bne .exit                       ;Exit if object slot taken.
+    iny                             ;
+    lda [$00],y                     ;Get enemy type.
+    jsr GetEnemyType_long           ;($EB28)Load data about enemy.
+    ldy #$02                        ;
+    lda [$00],y                     ;Get enemy initial position(%yyyyxxxx).
+    jsr $EB4D
+    pha
+.ret
+    pla
+.exit
+    lda #$03                        ;Number of bytes to add to ptr to find next room item.
+    rts
+
+GetEnemyType_long:
+    pha                             ;Store enemy type.
+    and #$C0                        ;If MSB is set, the "tough" version of the enemy  
+    sta $040F,x                     ;is to be loaded(more hit points, except rippers).
+    asl                             ;
+    bpl ++                          ;If bit 6 is set, the enemy is either Kraid or Ridley.
+    lda $74                         ;Load current area Samus is in(to check if Kraid or-->
+    and #$06                        ;Ridley is alive or dead).
+    lsr                             ;Use InArea to find status of Kraid/Ridley statue.
+    tay                             ;
+    lda $687A,y                     ;Load status of Kraid/Ridley statue.
+    beq +                           ;Branch if Kraid or Ridley needs to be loaded.
+    pla                             ;
+    pla                             ;Mini boss is dead so pull enemy info and last address off-->
+    jmp GetEnemyData_long_ret       ;stack so next enemy/door item can be loaded.
+
++   lda #$01                        ;Samus is in Kraid or Ridley's room and the-->
+    sta $6987                       ;mini boss is alive and needs to be loaded.
+
+++  pla                             ;Restore enemy type data.
+    and #$3F                        ;Keep 6 lower bits to use as index for enemy data tables.
+    sta $6B02,x                     ;Store index byte.
+    rts
+
+LoadDoor_long:
+    iny
+    lda [$00],y                     ;Get door type.
+    jmp $EB95
+
+InitTransitionData:
+    phy
+    ; Clear nametables
+    jsr $C158
+    ply
+
+    ; Get bank and perform a bank switch 
+    jsr $C4E2
+
+    ; Copy room pointers
+    jsr $C8B0
+
+    ; Destroy enemies
+    jsr $C8BB
+
+    ; Erase all sprites
+    jsr $C1A3
+
+    ; Restart music
+    jsr $D92C
+
+    rtl
+
 
 ; APU Update routines
 LoadSFXRegisters:

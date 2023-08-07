@@ -52,19 +52,21 @@ check_teleport_in:
     cmp.w $a0
     bne .next
 
-    lda.l transition_table_in+$6, x
+    lda.l transition_table_in+$2, x
     cmp.l $7ec140
     beq .found_room
 
 .next
-    txa : clc : adc.w #$0008 : tax
+    txa : clc : adc.w #$000A : tax
     bra .check_room
 
 .found_room
-    lda.l transition_table_in+$2, x
-    sta.l !IRAM_TRANSITION_GAME_ID
     lda.l transition_table_in+$4, x
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.l transition_table_in+$6, x
     sta.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.l transition_table_out+$8, x
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS    
     jml transition_from_zelda
     
 .end
@@ -88,14 +90,16 @@ check_teleport_out:
     cmp.w $a0
     beq .found_room
 
-    txa : clc : adc.w #$0008 : tax
+    txa : clc : adc.w #$000A : tax
     bra .check_room
 
 .found_room
-    lda.l transition_table_out+$2, x
-    sta.l !IRAM_TRANSITION_GAME_ID
     lda.l transition_table_out+$4, x
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.l transition_table_out+$6, x
     sta.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.l transition_table_out+$8, x
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS
     jml transition_from_zelda
     
 .end

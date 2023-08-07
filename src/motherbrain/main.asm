@@ -7,6 +7,13 @@ sa1rom 0,0,0,7      ; Set main configuration
 org $FC0000
 namespace menu
 incsrc "menu/main.asm"
+warnpc $FC8000
+namespace off
+
+org $FC8000
+namespace data
+incsrc "data.asm"
+warnpc $FD0000
 namespace off
 
 org $FE0000

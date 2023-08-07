@@ -6,6 +6,7 @@ incsrc "sa1rom.asm"
 incsrc "randomizer/newgame.asm"
 incsrc "randomizer/transition_out.asm"
 incsrc "randomizer/transition_in.asm"
+incsrc "randomizer/transition_tables.asm"
 
 
 org $d10000
