@@ -623,3 +623,21 @@ VScrollSplitTest = $0A48
 ; Randomizer Labels
 ExitRoomTemp = $0A50
 ExitRoomTable = $0A52
+
+; Dynamic items
+DynamicItemIndexes = $0A60
+
+; VRAM related
+DynamicItemSlots = $0A68
+DynamicItemAttrs = $0A70
+
+; Index to the current next slot to be loaded
+DynamicItemIndex = $0A80
+
+; Returns the index into DynamicItemSlots for the item id provided
+DynamicItemSlot = $0A82
+
+; Cave things
+CaveItemTemp = $0A90
+CaveItemTempFlags = $0A91
+CaveItemTempPrice = $0A92

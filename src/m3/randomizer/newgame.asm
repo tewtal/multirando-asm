@@ -62,7 +62,9 @@ introskip_doorflags:
     ;jsl stats_clear_values  ; Clear SM stats
     jsl sm_alttp_new_game      ; Setup new game for ALTTP
     ;jsl sm_copy_alttp_items ; Copy alttp items into temporary SRAM buffer
-    jsl sm_fix_z3_checksum  ; Fix alttp checksum    
+    jsl sm_fix_z3_checksum  ; Fix alttp checksum 
+    
+    jsl mb_CopyItemBuffers  ; Copy all games items into temporary SRAM buffer
 
 ;     ; Clear multiworld seed data and reinitialize on new game.
 ;     lda config_multiworld

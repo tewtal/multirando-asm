@@ -50,8 +50,6 @@ sm_do_transition:
     sta.l $806168                   ; Set these values to 0 to force load from the ship if samus dies
     jsl sm_fix_checksum             ; Fix SRAM checksum (otherwise SM deletes the file on load)
 
-    ; TODO: Copy temporary item buffers to the other games respective SRAM (this needs to be done on save as well)
-    ; TODO: Do any other maintenance that needs to be done to properly clear SM state and prepare for the next game
 
     sei                         ; Disable IRQ's
     

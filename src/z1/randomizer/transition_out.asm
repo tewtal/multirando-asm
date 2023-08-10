@@ -1,8 +1,6 @@
 transition_from_z1:    
     sei
     
-    ; TODO: Save Z1 SRAM and all state that needs to be saved properly
-    ; TODO: Copy temporary item buffers to the other games respective SRAM (this needs to be done on save as well)
     ; TODO: Do any other maintenance that needs to be done to properly clear ALTTP state and prepare for the next game
 
     %ai16()
@@ -35,11 +33,11 @@ transition_from_z1:
     sta $002100                 ; Enable PPU force blank
 
     lda #$f5
-    sta $002140                   ; Reset SPC
+    sta $002140                 ; Reset SPC
 
     lda #$81
-    sta.l $002200             ; Trigger IRQ with message 1 to SA-1 (transition to new game)
-    jml mb_snes_transition    ; Jump the SNES CPU into BW-RAM routines that let the SA-1 control it
+    sta.l $002200               ; Trigger IRQ with message 1 to SA-1 (transition to new game)
+    jml mb_snes_transition      ; Jump the SNES CPU into BW-RAM routines that let the SA-1 control it
 
 check_cave_transition_out:
     phx : phy : php

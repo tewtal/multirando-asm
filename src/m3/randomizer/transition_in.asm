@@ -1,5 +1,14 @@
 ; Handles an incoming transition into SM
 
+org $818003
+    jml sm_save_hook
+
+org $81807F
+    jml sm_save_done_hook
+
+org $818087
+    jml sm_load_hook
+
 org $d04000
 transition_to_sm:
     ; SPC has been reset and NMI/IRQ hooks are set to SM
@@ -93,98 +102,43 @@ sm_spc_load:
     dl $cf8000                  ; the whole full music engine and samples.
     rts
 
-; sm_save_hook:
-;     phb : phx : phy : pha
-;     pea $7e00
-;     plb
-;     plb
-;     lda #$0001
-;     sta.l !SRAM_SAVING
-;     jsl sm_save_alttp_items
-;     jsl stats_save_sram
-;     jsl mw_save_sram
-;     pla
-;     jml $81800b
+sm_save_hook:
+    phb : phx : phy : pha
 
-; sm_save_done_hook:
-;     lda #$0000
-;     sta.l !SRAM_SAVING
-;     ply : plx : clc : plb : plp
-;     rtl
 
-; sm_load_hook:
-;     phb : phx : phy
-;     pea $7e00
-;     plb
-;     plb
-;     jsl sm_copy_alttp_items
-;     jsl stats_load_sram
-;     jsl mw_load_sram
-;     jml $81808f
+    pea $7e00
+    plb
+    plb
 
-sm_copy_alttp_items: ; Copies ALTTP items into a temporary SRAM buffer used when SM writes data to ALTTP (so that when Samus dies, alttp progress doesn't stay)
-    pha
-    phx
-    php
-    %a16()
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_START+$300,x    ; copy 300-3FF from ALTTP SRAM
-    sta.l !SRAM_ALTTP_ITEM_BUF,X      ; save to temporary buffer
-    inx : inx
-    cpx #$0100
-    bne -
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_START+$420,x    ; copy 420-467 from ALTTP SRAM (reference z3/randomizer/stats.asm)
-    sta.l !SRAM_ALTTP_STATS_BUF,x     ; save to temporary buffer
-    inx : inx
-    cpx #$0048
-    bne -
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_START+$4E0,x    ; copy 4E0-4EF from ALTTP SRAM for dungeon small key count
-    sta.l !SRAM_ALTTP_SMALLKEY_BUF,x  ; save to temporary buffer
-    inx : inx
-    cpx #$0010
-    bne -
+    lda #$0001
+    sta.l !SRAM_SAVING
 
-    plp
-    plx
+    lda #$0000
+    jsl mb_RestoreItemBuffers ; Save all found items to actual SRAM
+    
+    ;jsl sm_save_alttp_items
+    ;jsl stats_save_sram
+    ;jsl mw_save_sram
     pla
+    jml $81800b
+
+sm_save_done_hook:
+    lda #$0000
+    sta.l !SRAM_SAVING
+    ply : plx : clc : plb : plp
     rtl
 
-sm_save_alttp_items: ; Restores ALTTP items to the real SRAM
-    pha
-    phx
-    php
-    %a16()
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_ITEM_BUF,X      ; save to temporary buffer
-    sta.l !SRAM_ALTTP_START+$300,x    ; copy 300-3FF from ALTTP SRAM
-    inx : inx
-    cpx #$0100
-    bne -
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_STATS_BUF,x     ; copy from temporary buffer
-    sta.l !SRAM_ALTTP_START+$420,x    ; save to 420-467 in ALTTP SRAM
-    inx : inx
-    cpx #$0048
-    bne -
-    ldx #$0000
--
-    lda.l !SRAM_ALTTP_SMALLKEY_BUF,x  ; copy from temporary buffer
-    sta.l !SRAM_ALTTP_START+$4E0,x    ; save to 4E0-4EF from ALTTP SRAM for dungeon small key count
-    inx : inx
-    cpx #$0010
-    bne -
+sm_load_hook:
+    phb : phx : phy
+    pea $7e00
+    plb
+    plb
 
-    plp
-    plx
-    pla
-    rtl
+    jsl mb_CopyItemBuffers   ; Copy back original item buffers (overwriting any items we found without saving)
+    ;jsl sm_copy_alttp_items
+    ;jsl stats_load_sram
+    ;jsl mw_load_sram
+    jml $81808f
 
 copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)
 

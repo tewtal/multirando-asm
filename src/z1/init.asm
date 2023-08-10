@@ -35,6 +35,7 @@ SnesBoot:
     BNE -
 
     SEP #$30
+    jsl UploadItemPalettes
     JML (!BASE_BANK<<16)+$FF76 ; Startup
 
 SnesInit:

@@ -132,12 +132,6 @@ SnesOamPrepare:
     STA.w OAM.Attr, Y
 
 .noExtended
-
-    ;LDA.w OAMNES.Index, X
-    ;AND #$01
-    ;ORA.w OAM.Attr, Y
-    ;STA.w OAM.Attr, Y
-    ;STA.w OAM.Attr+$4, Y
     BRA .Next
 
 .Clear

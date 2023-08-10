@@ -16,3 +16,6 @@ org $02d70f
 ;#_02E214: STA.l $7EC017
 org $02E214
     jml check_teleport_out
+
+org $0089be
+	jml zelda_save_done_hook

@@ -1,3 +1,4 @@
+CommonBankStart:
 LongJumpToRoutine_common:    
     php
     rep #$30
@@ -681,3 +682,5 @@ db $01
 .val3
 dw $0000
 db $00
+
+CommonBankEnd:

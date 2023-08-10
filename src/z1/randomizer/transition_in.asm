@@ -3,6 +3,10 @@ transition_to_z1:
     ; At this point, we have WRAM restored from backup
     ; and the common routines copied back to $1000
 
+    ;
+    ; Any items found for this game is also already copied to RAM/SRAM by the SA-1 during the transition
+    ; 
+
     %ai16()
     sei
     phk : plb
@@ -11,15 +15,20 @@ transition_to_z1:
     jsl spc_init_driver
 
     sep #$30
-    lda #$8f : sta $2100
-    lda #$21 : sta $2107
-    lda #$01 : sta $210B
-    lda #$01 : sta $2105
-    lda #$00 : sta $2101
-    lda #$11 : sta $212C
-    lda #$00 : sta $212d
+    lda #$8f : sta.l $002100
+    lda #$21 : sta.l $002107
+    lda #$01 : sta.l $00210B
+    lda #$01 : sta.l $002105
+    lda #$00 : sta.l $002101
+    lda #$11 : sta.l $00212C
+    lda #$00 : sta.l $00212d
+    
+    lda #$00 : sta.l $002130
+    lda #$00 : sta.l $002131
+
     
     jsl SetupScrollHDMA
+    jsl UploadItemPalettes
 
     ; Clear SNES port buffers
     rep #$30
@@ -67,12 +76,17 @@ transition_to_z1:
     lda.b #$01 : sta.b $5A
 +
 
+    ; Load demo patterns
+    jsl $811000 : dw $8D47
+
     ; Load common patterns
     jsl $821000 : dw $8012
 
     ; Set game mode
     lda #$02 : sta $12
-    stz $11
+    stz $11     
+    stz $13     ; Clear submode
+    stz $E3     ; Clear sprite 0 flag
 
     ; Enable NMI and clear pending interrupts
     cli : lda.l $004210

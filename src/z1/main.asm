@@ -15,10 +15,10 @@ incsrc "hooks.asm"
 org $878000
 base $7E1000
 incsrc "common.asm"
-warnpc $871000
+warnpc $879000
 
 ; Include SNES port functions that doesn't have to be in the common code area
-org $889000
+org $888000
 incsrc "labels.asm"
 incsrc "init.asm"
 incsrc "snes.asm"

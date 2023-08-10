@@ -25,10 +25,10 @@ transition_to_zelda:
     lda #$0000                  ; Set the "game flag" to Zelda so IRQ's/NMI runs using the 
     sta !SRAM_CURRENT_GAME      ; correct game
 
-    ;jsr zelda_copy_sram         ; Copy SRAM back to RAM
-    
-    jsl zelda_fix_checksum
-    ;jsl zelda_copy_sm_items     ; Copy SM items to temp buffer
+    ; These things should already be handled by the SA-1
+    ; jsr zelda_copy_sram         ; Copy SRAM back to RAM    
+    ; jsl zelda_fix_checksum
+
     jsr zelda_spc_load          ; Load Zelda's music engine
     jsr zelda_blank_cgram       ; Blank out CGRAM
     jsr zelda_restore_dmaregs   ; Restore ALTTP DMA regs
@@ -228,54 +228,6 @@ zelda_spc_load:
     pla
     rts
 
-zelda_copy_sram:
-    pha
-    phx
-    phy
-    php
-    phb
-
-    rep #$20
-    
-    ;lda $C8
-    ;asl a
-    ;inc
-    ;inc
-    lda #$0000
-    sta $403ffe     ; Always set save slot to 1 for now
-    
-    sep #$20
-    %ai16()
-    pea $7e7e
-    plb
-    plb
-    ldy #$0000
-    ldx #$0000
--
-    LDA $402000,X
-    STA $F000,Y
-    LDA $402100,X
-    STA $F100,Y
-    LDA $402200,X
-    STA $F200,Y
-    LDA $402300,X
-    STA $F300,Y
-    LDA $402400,X
-    STA $F400,Y
-    inx
-    inx
-    iny
-    iny
-    cpy #$0100
-    bne -
-
-    plb
-    plp
-    ply
-    plx
-    pla
-    rts
-
 zelda_blank_cgram:
     lda #$0000
     sta $2121
@@ -287,44 +239,6 @@ zelda_blank_cgram:
     bne -
     rts
 
-zelda_fix_checksum:
-    pha
-    phx
-    php
-    %ai16()
-    lda $00
-    pha
-
-    ldx #$0000              ; Copy main SRAM to backup SRAM
--
-    lda.l $402000,x
-    sta.l $402f00,x
-    inx : inx
-    cpx #$04fe
-    bne -
-
-    ldx #$0000
-    lda #$0000
--
-    clc
-    adc $402000,x
-    inx
-    inx
-    cpx #$04fe
-    bne -
-
-    sta $00
-    lda #$5a5a
-    sec
-    sbc $00
-    ;sta $7EF4fe
-    sta $4024fe
-    sta $4033fe
-    pla
-    plp
-    plx
-    pla
-    rtl
 
 zelda_restore_dmaregs:
     php
@@ -340,48 +254,6 @@ zelda_restore_dmaregs:
     plp
     rts
 
-zelda_copy_sm_items:        
-    pha
-    phx
-    php
-    %ai16()
-    ldx #$0000
--
-    lda.l !SRAM_SM_START,x        
-    sta.l !SRAM_SM_ITEM_BUF,X      ; save to temporary buffer
-    inx : inx
-    cpx #$0080
-    bne -
-
-    plp
-    plx
-    pla
-    rtl
-
-zelda_save_sm_items:        ; Restores SM items to the real SRAM
-    pha
-    phx
-    phy
-    php
-
-    %ai16()
-    ldx #$0000
--
-    lda.l !SRAM_SM_ITEM_BUF,X    
-    sta.l !SRAM_SM_START,x       
-    inx : inx
-    cpx #$0080
-    bne -
-
-    ; TODO: Fix this code and make sure the checksum is updated
-    ;jsl sm_fix_checksum     ; Update SM checksum so the savefile doesn't get deleted
-
-    plp
-    ply
-    plx
-    pla
-    rtl
-
 zelda_save_start_hook:
     ; The save routine will be disrupted by NMI if this takes too long.
     ; Avoid doing anything time consuming here.
@@ -390,7 +262,8 @@ zelda_save_start_hook:
     rtl
 
 zelda_save_done_hook:
-    jsl zelda_save_sm_items
+    lda #$0001
+    jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
     ; TODO: Fix when adding multiworld
     ; jsl mw_save_sram
     lda #$0000

@@ -214,6 +214,29 @@ SnesOamPrepare:
     ORA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr+$4, Y
+    
+    ; Check bit 2 to see if this is an "extended" sprite using
+    ; 16-color sprites and custom 8x16 layout
+    LDA.w Z1OAMNES.Attr, X
+    AND.b #$04
+    BEQ .noExtended
+
+    LDA.w Z1OAM.Attr, Y
+    ORA.b #$09
+    STA.w Z1OAM.Attr, Y
+    STA.w Z1OAM.Attr+$4, Y
+
+    LDA.w Z1OAMNES.Index, X
+    AND.b #$03
+    BNE .odd
+    ; For an extended sprite with index 0, 4, 8 etc, set the index of
+    ; the other sprite to Index+2
+    LDA.w Z1OAM.Index+$4, Y : INC : STA.w Z1OAM.Index+$4, Y
+    BRA .noExtended
+.odd
+    LDA.w Z1OAM.Index, Y : DEC : STA.w Z1OAM.Index, Y
+
+.noExtended
     BRA .Next
 
 .Clear
@@ -314,7 +337,7 @@ EmulateMMC1:
 
 ; We'll use a similar string format for the SNES, but optimized for SNES use
 ;
-; TTTT = Data type (0000 = End of data, 0001 = TileMap, 0002 = TileAttr, 0003 = CGRAM, 0004 = Data (DMA))
+; TTTT = Data type (0000 = End of data, 0001 = TileMap, 0002 = TileAttr, 0003 = CGRAM, 0004 = Data (DMA), 0005 = Indirect VRAM DMA)
 ; AAAA = VRAM address or CGRAM Index
 ; FFFF = Flags (PPU increment etc)
 ; LLLL = Length (0000 = $00 terminated data)
@@ -348,7 +371,10 @@ SnesProcessPPUString:
 +   cmp #$0003
     bne +
     jmp .CGRAM
-+   bra .Data
++   cmp #$0004
+    bne +
+    jmp .Data
++   bra .IndirectDMA
 
 .Data
     ; Data chunk ready for DMA
@@ -391,6 +417,42 @@ SnesProcessPPUString:
     tya
     clc : adc TransferCount
     tay
+
+    rep #$30
+    jmp .loop
+
+.IndirectDMA
+    print "ind = ",pc
+    ; Data chunk ready for DMA
+    lda ($00), y    ; Target
+    iny #4
+    sta $002116
+
+    lda ($00), y    ; Length
+    iny #2
+    sta $004315
+
+    lda ($00), y    ; Source addr
+    iny #2
+    sta $004312
+
+    sep #$20
+
+    lda #$80
+    sta $002115
+
+    lda #$01
+    sta $004310
+
+    lda #$18
+    sta $004311       ; DMA Target
+
+    lda ($00), y
+    iny #2
+    sta $004314       ; Source bank
+
+    lda #$02
+    sta $00420b      ; Execute DMA
 
     rep #$30
     jmp .loop
@@ -1009,22 +1071,28 @@ PreparePalette:
     iny #2
 
     lda TransferAddress
-    and #$00f0
+    and #$001c
     asl #2
     cmp #$0040
     bcc +
     clc : adc #$0040
 +
-    sta TransferTmp
+    sta TransferTmp  ; Palette offset
     lda TransferAddress
     and #$0003
-    sta PalIdx  ; Store offset into row
-    lda TransferAddress
-    and #$00fc
-    asl #2
-    clc : adc PalIdx
     clc : adc TransferTmp
     sta PalIdx
+
+    ; sta TransferTmp
+    ; lda TransferAddress
+    ; and #$0003
+    ; sta PalIdx  ; Store offset into row
+    ; lda TransferAddress
+    ; and #$00fc
+    ; asl #2
+    ; clc : adc PalIdx
+    ; clc : adc TransferTmp
+    ; sta PalIdx
     lda TransferCount
     and #$003f
     sta TransferCount
@@ -1226,5 +1294,5 @@ db $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $0
 db $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46 
 db $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6 
 db $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86 
-db $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4
+db $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6; , $E0, $E2, $E4
 db $E6, $E0, $E2, $E4, $E6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4    

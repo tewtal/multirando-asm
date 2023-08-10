@@ -3,6 +3,10 @@ transition_to_m1:
     ; At this point, we have WRAM restored from backup
     ; and the common routines copied back to $1000
 
+    ;
+    ; Any items found for this game is also already copied to RAM/SRAM by the SA-1 during the transition
+    ; 
+
     %ai16()
     sei
     phk : plb

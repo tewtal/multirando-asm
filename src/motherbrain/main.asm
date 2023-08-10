@@ -32,6 +32,8 @@ base $40E000
 incsrc "snes.asm"
 incsrc "sa1.asm"
 incsrc "transition.asm"
+incsrc "randomizer/main.asm"
+print "MotherBrain ends = ", pc
 namespace off
 
 incsrc "config.asm"
