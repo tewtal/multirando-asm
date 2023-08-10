@@ -16,6 +16,10 @@ transition_from_z1:
     cpx.w #$0800
     bne -
 
+    ; Set previous game id
+    lda.w #$0002
+    sta.l !IRAM_TRANSITION_GAME_PREV_ID
+
     %i16()
     %a8()
 
@@ -55,7 +59,7 @@ check_cave_transition_in:
     sta.w ExitRoomTable
     jsr check_cave_transition
     plp : ply : plx
-    lda $AB45, X : sta $02
+    lda.w $AB45, X : sta $02
     rtl
 
 check_cave_transition:
@@ -86,6 +90,7 @@ check_cave_transition:
 .exit    
     rts
 
+print "cdt = ", pc
 check_dungeon_transition:
     phx : phy : php
     rep #$30
@@ -95,18 +100,17 @@ check_dungeon_transition:
 
     lda.w #transition_table_in
     sta.w ExitRoomTable
-    lda $6bad ; Room ID we're going to (in case of entering)
+    lda.w $6bad ; Room ID we're going to (in case of entering)
     bra .check_room
 .check_overworld_transition
     lda.w #transition_table_out
     sta.w ExitRoomTable
-    lda $eb ; Room ID we're coming from (in case of exiting)
-.check_room
-    
+    lda.b $eb ; Room ID we're coming from (in case of exiting)
+.check_room    
     ; Force the room Id to 8-bit
     and.w #$00ff
+    ora.w #$8000
     sta.w ExitRoomTemp
-
     ldx.w ExitRoomTable
 -
     lda.l transition_table_in&$ff0000, x

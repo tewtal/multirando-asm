@@ -179,9 +179,10 @@ copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)
     lda #$02
     sta $420b       ; Start DMA
 
+    ; ---------------
+
     ldx #$8000
     stx $2181       ; WRAM target address $8000
-
     
     ldx #$8000
     stx $2181       ; WRAM target address $8000
@@ -189,17 +190,17 @@ copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)
     lda #$00
     stx $2183       ; WRAM target bank (7e)
     
-    inc $4314       ; Copy from next bank
-
     ldx #$8000
     stx $4315       ; Size (32768 bytes)
 
-    ldx #$0000
+    ldx #$8000
     stx $4312       ; Store source address
 
     lda #$02
     sta $420b       ; Start DMA
 
+    ; ----------------
+    
     ldx #$0000
     stx $2181       ; WRAM target address $8000
     lda #$01
@@ -215,18 +216,18 @@ copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)
 
     lda #$02
     sta $420b       ; Start DMA
+
+    ; -----------
 
     ldx #$8000
     stx $2181       ; WRAM target address $8000
     lda #$01
     sta $2183       ; WRAM bank 2 (7f)
   
-    inc $4314       ; Copy from next bank
-
     ldx #$8000
     stx $4315       ; Size (32768 bytes)
 
-    ldx #$0000
+    ldx #$8000
     stx $4312       ; Store source address
 
     lda #$02
@@ -282,7 +283,7 @@ copy_to_vram:       ; Copies 2 banks of ROM to VRAM (starting bank in X)
     lda #$02
     sta $420b       ; Start DMA
 
-    inc $4314       ; Next bank
+    ; ----
     
     ldx #$4000
     stx $2116       ; WRAM address
@@ -290,7 +291,7 @@ copy_to_vram:       ; Copies 2 banks of ROM to VRAM (starting bank in X)
     ldx #$8000
     stx $4315       ; Size (32768 bytes)
 
-    ldx #$0000
+    ldx #$8000
     stx $4312       ; Store source address
 
     lda #$02

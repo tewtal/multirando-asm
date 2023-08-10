@@ -18,6 +18,9 @@ transition_from_m1:
     cpx.w #$0800
     bne -
 
+    ; Set previous game id
+    lda.w #$0003
+    sta.l !IRAM_TRANSITION_GAME_PREV_ID
 
     %i16()
     %a8()

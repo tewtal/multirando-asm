@@ -52,7 +52,8 @@ transition_to_z1:
 
     ; Store the overworld map exit id
     lda.l !IRAM_TRANSITION_DESTINATION_ID
-    sta.b $526
+    sta.w $526
+    sta.b $EB
 
     ; Store the level id in $10 (high byte of destination id)
     lda.l !IRAM_TRANSITION_DESTINATION_ID+$1

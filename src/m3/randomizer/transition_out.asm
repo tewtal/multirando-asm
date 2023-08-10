@@ -50,6 +50,10 @@ sm_do_transition:
     sta.l $806168                   ; Set these values to 0 to force load from the ship if samus dies
     jsl sm_fix_checksum             ; Fix SRAM checksum (otherwise SM deletes the file on load)
 
+    ; Set previous game id
+    lda.w #$0000
+    sta.l !IRAM_TRANSITION_GAME_PREV_ID
+
 
     sei                         ; Disable IRQ's
     

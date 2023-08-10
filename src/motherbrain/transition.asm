@@ -26,10 +26,10 @@ handle_transition:
     ; before handling control over to the SNES where it'll execute the
     ; command list and start the next game
 
-    ; Copy the items we found for the game we're transitioning to into the actual SRAM
+    ; Copy all items to the actual SRAM buffers (except for the game we just left)
     ; and fix checksums if needed
-    lda !IRAM_TRANSITION_GAME_ID
-    jsl RestoreItemBuffer
+    lda.l !IRAM_TRANSITION_GAME_PREV_ID
+    jsl RestoreItemBuffers
 
     ; Take a snapshot of all games SRAM/WRAM and save it to our temporary item buffers
     jsl CopyItemBuffers

@@ -14,8 +14,12 @@ transition_from_zelda:
     jsl $00894a                           ; Autosave ALTTP state
     jsr zelda_save_randomizer_ram
 
-    ; TODO: Copy temporary item buffers to the other games respective SRAM (this needs to be done on save as well)
     ; TODO: Do any other maintenance that needs to be done to properly clear ALTTP state and prepare for the next game
+
+    %ai16()
+    ; Set previous game id
+    lda.w #$0001
+    sta.l !IRAM_TRANSITION_GAME_PREV_ID
 
     %i16()
     %a8()

@@ -1,34 +1,4 @@
 ;
-; Common code to handle updating inventory for non-active games
-;
-
-; This covers SRAM (from RAM $7E:D7C0 -> $7E:D870) with padding
-!SM_BUFFER_START #= !SRAM_ITEM_BUFFER
-!SM_BUFFER_END #= !SM_BUFFER_START+$0100
-
-; This covers SRAM from $0300 to $4FD (with padding)
-!ALTTP_BUFFER_START #= !SM_BUFFER_END
-!ALTTP_BUFFER_END #= !ALTTP_BUFFER_START+$0200
-
-!ALTTP_INVENTORY_SWAP #= !ALTTP_BUFFER_START+$8C
-!ALTTP_INVENTORY_SWAP_2 #= !ALTTP_BUFFER_START+$8E
-
-; This covers RAM from ($657) to $757 (with padding)
-!Z1_BUFFER_START #= !ALTTP_BUFFER_END
-!Z1_BUFFER_END #= !Z1_BUFFER_START+$0100
-
-; This covers SRAM from $6876 to $6882 (with padding)
-!M1_BUFFER_START #= !Z1_BUFFER_END
-!M1_BUFFER_END #= !M1_BUFFER_START+$0100
-
-; Temp buffer for item data
-!INVENTORY_TEMP_1 #= !M1_BUFFER_END
-!INVENTORY_TEMP_2 #= !INVENTORY_TEMP_1+$0002
-!INVENTORY_TEMP_3 #= !INVENTORY_TEMP_2+$0002
-
-print "SRAM buffer ends at ", hex(!M1_BUFFER_END)
-
-;
 ; Copies all item buffers from regular SRAM into our buffers
 ;
 CopyItemBuffers:
@@ -72,7 +42,9 @@ CopyItemBuffers:
 ;
 ; Restores all item buffers except for the game in A
 ; Used when we're saving in a game to also save the state
-; in all other games
+; in all other games.
+;
+; Also used during transitions to write back state to all games
 ;
 RestoreItemBuffers:
     php
@@ -254,12 +226,12 @@ WriteItemToInventory:
     and.w #$00ff
     pha                                 ; Save item id
     asl #3 : tax                        ; Multiply by 8 to get offset
-    lda.w ItemData, x                     ; Get the Game Id
+    lda.w ItemData, x                   ; Get the Game Id
     
     asl : tay
     lda ItemBufferOffsets, y            ; Get the SRAM offset into Y
-    sec : sbc.w #!SRAM_ITEM_BUFFER         ; Subtract the SRAM buffer start
-    clc : adc.w ItemData+2, x             ; Add the item offset to the SRAM offset
+    sec : sbc.w #!SRAM_ITEM_BUFFER      ; Subtract the SRAM buffer start
+    clc : adc.w ItemData+2, x           ; Add the item offset to the SRAM offset
     tay
 
     ; X = pointer to item data
@@ -647,7 +619,7 @@ CheckItemSwap:
     pla
     rts
 
-; Takes progressive item id in A, and return new upgrade item id in A
+; Return new upgraded item id in A
 UpgradeProgressiveItem:
     phy
 
@@ -668,9 +640,42 @@ UpgradeProgressiveItem:
     ply
     rts
 
-; Takes a potentially progressive item id in A, and return the base item id in A
-CheckProgressiveItem:
-    ; TODO: Implement this
+; Takes an item id in A, and returns the upgrade item id in A
+CheckProgressiveItemLong:
+    phy : phx : php : phb : pha
+    phk : plb
+
+    %ai16()
+
+    asl #3 : tax                        ; Multiply by 8 to get offset
+    lda.w ItemData, x                   ; Get the Game Id
+    
+    asl : tay
+    lda.w ItemBufferOffsets, y            ; Get the SRAM offset into Y
+    sec : sbc.w #!SRAM_ITEM_BUFFER      ; Subtract the SRAM buffer start
+    clc : adc.w ItemData+2, x           ; Add the item offset to the SRAM offset
+    tay
+
+    lda ItemData+4, x                   ; Get the item type
+    cmp #$0018
+    bne .notProgressive
+
+    pla
+    jsr UpgradeProgressiveItem
+    plb : plp : plx : ply
+    rtl
+
+.notProgressive
+    ; If it's not progressive, return the same item id
+    pla : plb : plp : plx : ply
+    rtl
+
+CheckItemGame:
+    phx : php
+    %ai16()
+    asl #3 : tax                        ; Multiply by 8 to get offset
+    lda.l ItemData, x                   ; Get the Game Id
+    plp : plx
     rtl
 
 
