@@ -5,10 +5,10 @@
 ;
 
 ; Replace link's house item for testing
-pushpc
-org $01E9BC
-    db $d0
-pullpc
+; pushpc
+; org $01E9BC
+;     db $d0
+; pullpc
 
 AddReceivedItemExpanded_extended:
     phx

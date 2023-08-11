@@ -58,7 +58,7 @@ brinstar_item_table:
     ;Maru Mari.
     db $0E
     dw .row_12
-    db $02, $06, $02, $01, $96, $00
+    db $02, $06, $02, $04, $96, $00
 
     ;Energy tank.
     db $09, $FF, $02, $08, $12, $00

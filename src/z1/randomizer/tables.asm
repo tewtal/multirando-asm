@@ -172,7 +172,7 @@ Anim_ItemFrameTiles_extended:
     db $00, $00, $00, $00, $00, $00, $00, $4F ; 38-3f
 
 CaveShopItems_extended:
-    db $2F, $40, $2F
+    db $2F, $01, $2F
     db $20, $2F, $1A
     db $2F, $02, $2F
     db $2F, $03, $2F
