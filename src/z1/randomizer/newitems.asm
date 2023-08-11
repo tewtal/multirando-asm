@@ -21,6 +21,8 @@ UploadItemPalettes:
 ; Class in A
 ; Item Id in X
 TakeItem_SetItemValueFF_extended:
+    pha
+    lda.l ItemIdToDescriptor_extended, x
     cmp #$40
     bcc .notExtended
 
@@ -30,12 +32,13 @@ TakeItem_SetItemValueFF_extended:
     txa
     sec : sbc #$30
     jsl mb_WriteItemToInventory
+    pla
     sec
     rtl
 
 ; Run original code and return
 .notExtended
-    lda #$FF                   
+    pla
     cpy #$07
     bne +
     cmp #$03
@@ -144,7 +147,9 @@ PrepDynamicItem:
     and #$00ff
 
     ; Get the ROM address containing the item data to be uploaded
-    sec : sbc #$0030 : asl #2 : tax
+    sec : sbc #$0030 
+    jsl mb_CheckProgressiveItemLong
+    asl #2 : tax
     
     ; Store Attribute data
     lda.l ItemData+$2, x 

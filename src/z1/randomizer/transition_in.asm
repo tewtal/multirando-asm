@@ -60,7 +60,8 @@ transition_to_z1:
     sta.b $10
 
     ; Transition args (low byte) =
-    ; xxxxxxSC
+    ; xxxxxDSC
+    ; D = Entering a dungeon
     ; S = Make link walk up stairs
     ; C = Exit from cave (otherwise link appears in the middle)
 
@@ -75,6 +76,12 @@ transition_to_z1:
     and.b #$02
     beq +
     lda.b #$01 : sta.b $5A
++
+    ; Entering a dungeon
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #$04
+    beq +
+    lda.b #$00 : sta.b $5A
 +
 
     ; Load demo patterns

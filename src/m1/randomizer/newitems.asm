@@ -42,8 +42,12 @@ GetFramePtrTable_extended:
     cmp.w #$00ff
     beq .normal_item
 
-    asl #5
-    clc : adc.w #FrameDataTable_extended
+    ; Get pointer to FrameDataTable graphics string
+    phx
+    asl #2 : tax
+    lda.l ItemData+$2, x
+    plx
+
     cpx.w #$0008
     bne +
     clc : adc.w #$0010
@@ -174,10 +178,12 @@ CustomItemHandler:
     sta [$d0], y
     iny #2
 
-    ; Load item id
-    lda $0748, x
-    ; Multiply with $80
-    asl #7 : clc : adc #new_item_graphics
+    ; Load item id and get the pointer to the graphics data
+    lda.w $0748, x
+    and.w #$00ff
+    asl #2 : tax
+    lda.l ItemData, x
+
     sta [$d0], y
     iny #2
     lda #(new_item_graphics>>16)

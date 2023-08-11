@@ -51,12 +51,12 @@ org $81B19C
 ;    CMP #$03
 ;    BCC :+
 ;    LDA #$02
-org $81AC59
+org $81AC5B
     jsl TakeItem_SetItemValueFF_extended
     bcc +
     rts
 +
-    bra $05
+    bra $03
 
 ; ========================================================================
 ; Shops

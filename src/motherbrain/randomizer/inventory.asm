@@ -437,11 +437,11 @@ WriteItemToInventory:
 .alttpDungeonKey
     %a8()
     lda.w ItemData+6, x                 ; Get the item value
-    clc : adc.w !SRAM_ITEM_BUFFER, y      ; Add the key value
+    clc : adc.w !SRAM_ITEM_BUFFER, y    ; Add the key value
     sta.w !SRAM_ITEM_BUFFER, y          ; Write the key to the SRAM buffer
 
     lda.w ItemData+2, x                 ; Get the offset
-    cmp.w #$007C
+    cmp.b #$7C
     bne ..notHyruleCastle
     lda.w !SRAM_ITEM_BUFFER, y          ; Get the hyrule castle keys
     sta.w !SRAM_ITEM_BUFFER+$1, y       ; Write to sewer keys
@@ -651,7 +651,7 @@ CheckProgressiveItemLong:
     lda.w ItemData, x                   ; Get the Game Id
     
     asl : tay
-    lda.w ItemBufferOffsets, y            ; Get the SRAM offset into Y
+    lda.w ItemBufferOffsets, y          ; Get the SRAM offset into Y
     sec : sbc.w #!SRAM_ITEM_BUFFER      ; Subtract the SRAM buffer start
     clc : adc.w ItemData+2, x           ; Add the item offset to the SRAM offset
     tay
