@@ -5,6 +5,7 @@
 ; in:	A - Loot ID
 ; out:	A - Sprite GFX ID
 ;--------------------------------------------------------------------------------
+print "GetSpriteId = ", pc
 GetSpriteID:
 	JSR AttemptItemSubstitution
 	CMP.b #$16 : BEQ .bottle ; Bottle

@@ -20,11 +20,19 @@ print "Z3 Randomizer Extras End = ", pc
 
 org $A78000
 GFX_SM_Items:
-    incbin data/newitems_sm.gfx
+    incbin ../../data/newitems_sm.gfx
 
 org $A7A000
 GFX_SM_Items_2:
-    incbin data/newitems_sm_2.gfx
+    incbin ../../data/newitems_sm_2.gfx
+
+org $A7C000
+GFX_M1Z1_Items:
+    incbin ../../data/alttpitems_z1m1.gfx
+
+org $A7E000
+GFX_Z1_Items_2:
+    incbin ../../data/alttpitems_z1_2.gfx
 warnpc $A7FFFF
 
 org $A88000

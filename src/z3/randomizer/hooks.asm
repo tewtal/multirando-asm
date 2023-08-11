@@ -19,3 +19,6 @@ org $02E214
 
 org $0089be
 	jml zelda_save_done_hook
+
+org $00d552
+    jsl GetAnimatedSpriteBufferPointer_CopyId

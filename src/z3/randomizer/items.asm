@@ -3,195 +3,97 @@
 ; This file contains the code and data to extend the regular ALTTPR itemset
 ; with new items for SM for example
 ;
-; This most likely needs to be a smarter implementation
-; at some point with fully dynamic items to support all the M1 and Z1 items as well
-; as multiworld support
-;
-; But let's leave it at this for now since we'll start with SMZ3 support
-;
-;
+
+; Replace link's house item for testing
+pushpc
+org $01E9BC
+    db $d0
+pullpc
+
+AddReceivedItemExpanded_extended:
+    phx
+    phy
+    php
+
+    %ai16()
+    ; Check if the item belongs to this game
+    lda $02d8
+    and #$00ff
+    jsl mb_CheckItemGame
+    cmp.w #$0001
+    beq .alttpItem
+
+    ; Do things here with items before receiving them
+    ; if we need to do things for some reason
+    
+    plp : ply : plx
+    sec
+    rtl
+
+.alttpItem
+    plp : ply : plx
+    clc
+    rtl
 
 AddReceivedItemExpandedGetItem_extended:
     phx
     phy
     php
+
     %ai16()
     pha
+    lda $02d8       ; Get item Id
+    and #$00ff
+
+    ; Check if the item belongs to this game
+    jsl mb_CheckItemGame
+    cmp.w #$0001
+    beq .alttpItem
+
+    ; Ok, this is an "out-of-game" item, so we need to handle it
     lda $02d8
     and #$00ff
-    cmp #$00b0
-    bcs +
-    jmp .no_item
-+
+    jsl mb_WriteItemToInventory         ; Write item to out-of-game inventory
+    
+    pla : plp : ply : plx
     sec
-    sbc #$00b0
-    asl : asl : asl
-    tax
-
-    lda.l alttp_sm_item_table+2,x     ; Load item type
-    beq .equipment
-    cmp #$0001
-    beq .tank
-    cmp #$0002
-    beq .empty_tank
-    cmp #$0003
-    beq .spazplaz
-    cmp #$0004
-    beq .ammo
-    cmp #$0005 : bne + : brl .keycard : +
-    jmp .no_item
-
-.equipment
-    lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,x     ; Load value
-    pha
-    tyx
-    ora.l !SRAM_SM_ITEM_BUF,x
-    sta.l !SRAM_SM_ITEM_BUF,x
-    pla
-    ora.l !SRAM_SM_ITEM_BUF+$2,x
-    sta.l !SRAM_SM_ITEM_BUF+$2,x    
-    bra .end
-
-.spazplaz
-    lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,x     ; Load value
-    tyx
-    ora.l !SRAM_SM_ITEM_BUF+$2,x
-    sta.l !SRAM_SM_ITEM_BUF+$2,x    
-    bra .end
-
-.tank
-    lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,X     ; Load value
-    tyx
+    rtl
+.alttpItem
+    pla : plp : ply : plx
     clc
-    adc.l !SRAM_SM_ITEM_BUF+$2,x
-    sta.l !SRAM_SM_ITEM_BUF+$2,x
-    lda.l !SRAM_SM_ITEM_BUF+$2,x
-    sta.l !SRAM_SM_ITEM_BUF,x             ; Refill Samus health fully when grabbing an e-tank 
-    bra .end
-
-.empty_tank
-    lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,X     ; Load value
-    tyx
-    clc
-    adc.l !SRAM_SM_ITEM_BUF,x
-    sta.l !SRAM_SM_ITEM_BUF,x
-    bra .end
-.ammo
-    lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,X     ; Load value
-    pha
-    tyx
-    clc
-    adc.l !SRAM_SM_ITEM_BUF,x
-    sta.l !SRAM_SM_ITEM_BUF,x
-    pla
-    clc
-    adc.l !SRAM_SM_ITEM_BUF+$2,x
-    sta.l !SRAM_SM_ITEM_BUF+$2,x
-    bra .end
-.keycard
-     lda.l alttp_sm_item_table,x       ; Load SRAM offset
-    tay
-    lda.l alttp_sm_item_table+4,x      ; Load value
-    tyx
-    ora.l !SRAM_SM_ITEM_BUF,x
-    sta.l !SRAM_SM_ITEM_BUF,x
-    bra .end   
-.end
-    %ai16()
-    ; jsl sm_fix_checksum        ; Correct SM's savefile checksum
-    ; No need to fix checksum here since items don't save to the real SRAM anymore
-
-.no_item
-    pla
-    plp
-    ply
-    plx
     rtl
 
-alttp_sm_item_table:
-    ;  offset type   value  extra
-    dw $0000, $0000, $4000, $0000      ; Grapple
-    dw $0000, $0000, $8000, $0000      ; X-Ray
-    dw $0000, $0000, $0001, $0000      ; Varia Suit
-    dw $0000, $0000, $0002, $0000      ; Springball
-    dw $0000, $0000, $0004, $0000      ; Morphball
-    dw $0000, $0000, $0008, $0000      ; Screw attack
-    dw $0000, $0000, $0020, $0000      ; Gravity suit
-    dw $0000, $0000, $0100, $0000      ; Hi-Jump
-    dw $0000, $0000, $0200, $0000      ; Space Jump
-    dw $0000, $0000, $1000, $0000      ; Bomb
-    dw $0000, $0000, $2000, $0000      ; Speed booster
-    
-    dw $0004, $0000, $1000, $0000      ; Charge beam
-    dw $0004, $0000, $0002, $0000      ; Ice beam
-    dw $0004, $0000, $0001, $0000      ; Wave beam
-    dw $0004, $0003, $0004, $0000      ; Spazer
-    dw $0004, $0003, $0008, $0000      ; Plasma
-
-;  $c0
-    dw $0020, $0001,   100, $0000      ; E-Tank
-    dw $0032, $0002,   100, $0000      ; Reserve-tank
-
-    dw $0024, $0004,     5, $0000      ; Missiles
-    dw $0028, $0004,     5, $0000      ; Super Missiles
-    dw $002c, $0004,     5, $0000      ; Power Bombs
-
-;  $c5
-    dw $0072, $0005, $0001, $0000      ; Kraid Boss Token
-    dw $0072, $0005, $0002, $0000      ; Phantoon Boss Token
-    dw $0072, $0005, $0004, $0000      ; Draygon Boss Token
-    dw $0072, $0005, $0008, $0000      ; Ridley Boss Token
-    dw $0000, $ffff, $0000, $0000      ; c9
-    dw $0074, $0005, $0001, $0000      ; Brinstar Map
-    dw $0074, $0005, $0002, $0000      ; Wrecked Ship Map
-    dw $0074, $0005, $0004, $0000      ; Maridia Map
-    dw $0074, $0005, $0008, $0000      ; Lower Norfair Map
-    dw $0000, $ffff, $0000, $0000      ; ce
-    dw $0000, $ffff, $0000, $0000      ; cf
-
-; $d0
-    dw $0070, $0005, $0001, $0000      ; keycard 0
-    dw $0070, $0005, $0002, $0000      ; keycard 1
-    dw $0070, $0005, $0004, $0000      ; keycard 2
-    dw $0070, $0005, $0008, $0000      ; keycard 3
-    dw $0070, $0005, $0010, $0000      ; keycard 4
-    dw $0070, $0005, $0020, $0000      ; keycard 5
-    dw $0070, $0005, $0040, $0000      ; keycard 6
-    dw $0070, $0005, $0080, $0000      ; keycard 7
-    dw $0070, $0005, $0100, $0000      ; keycard 8
-    dw $0070, $0005, $0200, $0000      ; keycard 9
-    dw $0070, $0005, $0400, $0000      ; keycard a 
-    dw $0070, $0005, $0800, $0000      ; keycard b
-    dw $0070, $0005, $1000, $0000      ; keycard c 
-    dw $0070, $0005, $2000, $0000      ; keycard d
-    dw $0070, $0005, $4000, $0000      ; keycard e 
-    dw $0070, $0005, $8000, $0000      ; keycard f
 
 GetAnimatedSpriteGfxFile_extended:
     CMP.b #$50 : BCC .end
     CMP.b #$70 : BCS +
         LDY.b #$F0 : BRA .end
-    + 
-        CMP.b #$90 : BCS .end
+    +
+    CMP.b #$90 : BCS +
         LDY.b #$F1 : BRA .end
-
+    +
+    CMP.b #$B0 : BCS +
+        LDY.b #$F2 : BRA .end
+    +
+    CMP.b #$D0 : BCS .end
+        LDY.b #$F3 : BRA .end        
     .end
     RTL
 
+GetAnimatedSpriteBufferPointer_CopyId:
+    AND.w #$00FF
+    ASL
+    STA.w !IRAM_ALTTP_GFX_POINTER
+    RTL
+
 GetAnimatedSpriteBufferPointer_extended:
-    CPX.b #$A0 : BCC .end
+    PHP
+    REP #$30
+    LDX.w !IRAM_ALTTP_GFX_POINTER
+    CPX.w #$00A0 : BCC .end
 	LDA.b $00 : CLC : ADC.l GetAnimatedSpriteBufferPointer_table_extended-$A0, X
 .end
+    PLP
     RTL
 
 GetAnimatedSpriteBufferPointer_table_extended:
@@ -207,6 +109,23 @@ GetAnimatedSpriteBufferPointer_table_extended:
     dw $0600, $0630, $0660, $0690, $06C0, $06F0, $0720, $0750
     dw $0900, $0930, $0960, $0990, $09C0, $09F0, $0A20, $0A50
     dw $0C00, $0C30, $0C60, $0C90, $0CC0, $0CF0, $0D20, $0D50
+    
+    ; Unused
+    dw $0600, $0600, $0600, $0600, $0600, $0600, $0600, $0600
+
+    ;#$90 - Metroid 1 Graphics + Zelda 1 Graphics #1
+    dw $0600, $0630, $0660, $0690, $06C0, $06F0, $0720, $0750
+    dw $0900, $0930, $0960, $0990, $09C0, $09F0, $0A20, $0A50
+    dw $0C00, $0C30, $0C60, $0C90, $0CC0, $0CF0, $0D20, $0D50
+
+    dw $0600, $0600, $0600, $0600, $0600, $0600, $0600, $0600
+    
+    ;#$B0 - Zelda 1 Graphics #2
+    dw $0600, $0630, $0660, $0690, $06C0, $06F0, $0720, $0750
+    dw $0900, $0930, $0960, $0990, $09C0, $09F0, $0A20, $0A50
+    dw $0C00, $0C30, $0C60, $0C90, $0CC0, $0CF0, $0D20, $0D50
+
+    dw $0600, $0600, $0600, $0600, $0600, $0600, $0600, $0600
 
 Decomp_spr_high_extended:
 	cpy #$f0
@@ -229,13 +148,65 @@ Decomp_spr_high_extended:
 	jml Decomp_spr_high_extended_return
 
 .bank
-	db GFX_SM_Items>>16, GFX_SM_Items_2>>16, $00, $00, $00, $00, $00, $00
+	db GFX_SM_Items>>16, GFX_SM_Items_2>>16, GFX_M1Z1_Items>>16, GFX_Z1_Items_2>>16, $00, $00, $00, $00
 .high
-	db GFX_SM_Items>>8, GFX_SM_Items_2>>8, $00, $00, $00, $00, $00, $00
+	db GFX_SM_Items>>8, GFX_SM_Items_2>>8,GFX_M1Z1_Items>>8, GFX_Z1_Items_2>>8, $00, $00, $00, $00
 .low
-	db GFX_SM_Items, GFX_SM_Items_2, $00, $00, $00, $00, $00, $00
+	db GFX_SM_Items, GFX_SM_Items_2, GFX_M1Z1_Items, GFX_Z1_Items_2, $00, $00, $00, $00
 
 pushpc
+org GetSpriteID_gfxSlots+$62
+    ;62-65 (M1)
+    db $99, $90, $9A, $92
+
+org GetSpriteID_gfxSlots+$68
+    ;68-69 (M1)
+    db $91, $93
+
+org GetSpriteID_gfxSlots+$6C
+    ;6C-6F (M1)
+    db $9C, $9B, $98, $95
+
+org GetSpriteID_gfxSlots+$70
+    ;70-71 (Keycards)
+    db $65, $66
+
+org GetSpriteID_gfxSlots+$7B
+    ;7B (Keycards)
+    db $67
+
+org GetSpriteID_gfxSlots+$7E
+    ;7E (Keycards)
+    db $67
+
+org GetSpriteID_gfxSlots+$80
+    ;80-81 (Keycards)
+    db $65, $66
+
+org GetSpriteID_gfxSlots+$8B
+    ;8B (Keycards)
+    db $67
+
+org GetSpriteID_gfxSlots+$8E
+    ;8E-8F (Keycards)
+    db $65, $67
+
+org GetSpriteID_gfxSlots+$90
+    ;90-91 (Keycards)
+    db $65, $66
+
+org GetSpriteID_gfxSlots+$9B
+    ;9B (Keycards)
+    db $67
+
+org GetSpriteID_gfxSlots+$9E
+    ;9E-9F (Keycards)
+    db $65, $67
+
+org GetSpriteID_gfxSlots+$A0
+    ;90-91 (Keycards)
+    db $65, $66
+
 ; Overwrite ALTTPR gfxSlots with SM items
 org GetSpriteID_gfxSlots+$B0
 	;Bx
@@ -248,10 +219,69 @@ org GetSpriteID_gfxSlots+$B0
 	db $49
 	;CAx .. 
 	db $77, $77, $77, $77, $49, $49 ; Super Metroid - Map stations	
-	;Dx
-	db $65, $66, $67, $65, $66, $67, $65, $66, $67, $65, $66, $67, $65, $67, $65, $67 ; Super Metroid Keycards
+	
+    ;Dx
+	db $A6, $9D, $BD, $B3, $9E, $9F, $BC, $A0, $A1, $BE, $A2, $A3, $BA, $BB, $00, $A5 ; Z1 Items
+    ;Ex
+	db $B4, $B1, $94, $B2, $B6, $B7, $B9, $B5, $A5, $A4, $B8, $00, $B7, $A8, $A8, $BF ; Z1 Items
+    ;Fx
+	db $B0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Z1 Items
+
+
+org GetSpritePalette_gfxPalettes+$62
+    ;62-65 (M1)
+    db $08, $08, $08, $08
+
+org GetSpritePalette_gfxPalettes+$68
+    ;68-69 (M1)
+    db $04, $08
+
+org GetSpritePalette_gfxPalettes+$6C
+    ;6C-6F (M1)
+    db $04, $0A, $08, $08
+
+org GetSpritePalette_gfxPalettes+$70
+    ;70-71 (Keycards)
+    db $04, $02
+
+org GetSpritePalette_gfxPalettes+$7B
+    ;7B (Keycards)
+    db $04
+
+org GetSpritePalette_gfxPalettes+$7E
+    ;7E (Keycards)
+    db $04
+
+org GetSpritePalette_gfxPalettes+$80
+    ;80-81 (Keycards)
+    db $04, $02
+
+org GetSpritePalette_gfxPalettes+$8B
+    ;8B (Keycards)
+    db $04
+
+org GetSpritePalette_gfxPalettes+$8E
+    ;8E-8F (Keycards)
+    db $04, $04
+
+org GetSpritePalette_gfxPalettes+$90
+    ;90-91 (Keycards)
+    db $04, $02
+
+org GetSpritePalette_gfxPalettes+$9B
+    ;9B (Keycards)
+    db $04
+
+org GetSpritePalette_gfxPalettes+$9E
+    ;9E-9F (Keycards)
+    db $04, $04
+
+org GetSpritePalette_gfxPalettes+$A0
+    ;90-91 (Keycards)
+    db $04, $02
 
 org GetSpritePalette_gfxPalettes+$B0
+
 	; $B0
 	db $02, $0A, $02, $04, $04, $08, $04, $04, $04, $02, $08, $02, $04, $04, $04, $08 ; Super Metroid	
 	; $C0
@@ -262,18 +292,185 @@ org GetSpritePalette_gfxPalettes+$B0
 	db $08	
 	; $CA ..
 	db $08, $08, $08, $08, $08, $08 ; Super Metroid - Map station item icons	
-	; $D0
-	db $04, $02, $04, $04, $02, $04, $04, $02, $04, $04, $02, $04, $04, $04, $04, $04 ; Super Metroid Keycards
+	
+    ; $D0 - Z1 Items
+	db $0A, $08, $0A, $08, $08, $08, $0A, $08, $08, $0A, $08, $08, $08, $04, $00, $0A
+	; $E0
+	db $0A, $08, $0A, $08, $08, $0A, $08, $08, $08, $08, $08, $00, $04, $08, $0A, $0A
+	; $F0
+	db $08, $00, $00, $00, $00, $00, $04, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+
+org AddReceivedItemExpanded_y_offsets+$62
+    ;62-65 (M1)
+    db -4, -4, -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$68
+    ;68-69 (M1)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$6C
+    ;6C-6F (M1)
+    db -4, -4, -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$70
+    ;70-71 (Keycards)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$7B
+    ;7B (Keycards)
+    db -4
+
+org AddReceivedItemExpanded_y_offsets+$7E
+    ;7E (Keycards)
+    db -4
+
+org AddReceivedItemExpanded_y_offsets+$80
+    ;80-81 (Keycards)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$8B
+    ;8B (Keycards)
+    db -4
+
+org AddReceivedItemExpanded_y_offsets+$8E
+    ;8E-8F (Keycards)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$90
+    ;90-91 (Keycards)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$9B
+    ;9B (Keycards)
+    db -4
+
+org AddReceivedItemExpanded_y_offsets+$9E
+    ;9E-9F (Keycards)
+    db -4, -4
+
+org AddReceivedItemExpanded_y_offsets+$A0
+    ;90-91 (Keycards)
+    db -4, -4
 
 org AddReceivedItemExpanded_y_offsets+$B0
 	db -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4 ; Unused
 	db -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4 ; Unused
 	db -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4 ; Unused
+	db -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4 ; Unused
+	db -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4 ; Unused
+
+org AddReceivedItemExpanded_x_offsets+$62
+    ;62-65 (M1)
+    db 0, 0, 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$68
+    ;68-69 (M1)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$6C
+    ;6C-6F (M1)
+    db 0, 0, 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$70
+    ;70-71 (Keycards)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$7B
+    ;7B (Keycards)
+    db 0
+
+org AddReceivedItemExpanded_x_offsets+$7E
+    ;7E (Keycards)
+    db 0
+
+org AddReceivedItemExpanded_x_offsets+$80
+    ;80-81 (Keycards)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$8B
+    ;8B (Keycards)
+    db 0
+
+org AddReceivedItemExpanded_x_offsets+$8E
+    ;8E-8F (Keycards)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$90
+    ;90-91 (Keycards)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$9B
+    ;9B (Keycards)
+    db 0
+
+org AddReceivedItemExpanded_x_offsets+$9E
+    ;9E-9F (Keycards)
+    db 0, 0
+
+org AddReceivedItemExpanded_x_offsets+$A0
+    ;90-91 (Keycards)
+    db 0, 0
+
 
 org AddReceivedItemExpanded_x_offsets+$B0
 	db  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Unused
 	db  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Unused
 	db  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Unused
+	db  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Unused
+	db  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Unused
+
+org AddReceivedItemExpanded_item_graphics_indices+$62
+    ;62-65 (M1)
+    db $99, $90, $9A, $92
+
+org AddReceivedItemExpanded_item_graphics_indices+$68
+    ;68-69 (M1)
+    db $91, $93
+
+org AddReceivedItemExpanded_item_graphics_indices+$6C
+    ;6C-6F (M1)
+    db $9C, $9B, $98, $95
+
+org AddReceivedItemExpanded_item_graphics_indices+$70
+    ;70-71 (Keycards)
+    db $65, $66
+
+org AddReceivedItemExpanded_item_graphics_indices+$7B
+    ;7B (Keycards)
+    db $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$7E
+    ;7E (Keycards)
+    db $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$80
+    ;80-81 (Keycards)
+    db $65, $66
+
+org AddReceivedItemExpanded_item_graphics_indices+$8B
+    ;8B (Keycards)
+    db $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$8E
+    ;8E-8F (Keycards)
+    db $65, $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$90
+    ;90-91 (Keycards)
+    db $65, $66
+
+org AddReceivedItemExpanded_item_graphics_indices+$9B
+    ;9B (Keycards)
+    db $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$9E
+    ;9E-9F (Keycards)
+    db $65, $67
+
+org AddReceivedItemExpanded_item_graphics_indices+$A0
+    ;90-91 (Keycards)
+    db $65, $66
 
 org AddReceivedItemExpanded_item_graphics_indices+$B0
 	db $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $5D, $5E, $5F ; Super Metroid	
@@ -283,14 +480,124 @@ org AddReceivedItemExpanded_item_graphics_indices+$B0
 	db $49 ; Super Metroid - Unused
 	db $77, $77, $77, $77 ; Super Metroid - Map Station Items
 	db $49, $49 ; Super Metroid - Unused	
-	; #$D0 - SM Items (Keycards)
-	db $65, $66, $67, $65, $66, $67, $65, $66, $67, $65, $66, $67, $65, $67, $65, $67 ; Super Metroid
+
+    ;Dx
+	db $A6, $9D, $BD, $B3, $9E, $9F, $BC, $A0, $A1, $BE, $A2, $A3, $BA, $BB, $00, $A5 ; Z1 Items
+    ;Ex
+	db $B4, $B1, $94, $B2, $B6, $B7, $B9, $B5, $A5, $A4, $B8, $00, $B7, $A8, $A8, $BF ; Z1 Items
+    ;Fx
+	db $B0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Z1 Items
+
+org AddReceivedItemExpanded_wide_item_flag+$62
+    ;62-65 (M1)
+    db $02, $02, $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$68
+    ;68-69 (M1)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$6C
+    ;6C-6F (M1)
+    db $02, $02, $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$70
+    ;70-71 (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$7B
+    ;7B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_wide_item_flag+$7E
+    ;7E (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_wide_item_flag+$80
+    ;80-81 (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$8B
+    ;8B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_wide_item_flag+$8E
+    ;8E-8F (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$90
+    ;90-91 (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$9B
+    ;9B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_wide_item_flag+$9E
+    ;9E-9F (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_wide_item_flag+$A0
+    ;90-91 (Keycards)
+    db $02, $02
 
 org AddReceivedItemExpanded_wide_item_flag+$B0
 	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02 ; Unused
 	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02 ; Unused
 	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02 ; Unused
 	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02 ; Unused
+	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02 ; Unused
+
+org AddReceivedItemExpanded_properties+$62
+    ;62-65 (M1)
+    db $04, $04, $04, $04
+
+org AddReceivedItemExpanded_properties+$68
+    ;68-69 (M1)
+    db $02, $04
+
+org AddReceivedItemExpanded_properties+$6C
+    ;6C-6F (M1)
+    db $02, $05, $04, $04
+
+org AddReceivedItemExpanded_properties+$70
+    ;70-71 (Keycards)
+    db $02, $01
+
+org AddReceivedItemExpanded_properties+$7B
+    ;7B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_properties+$7E
+    ;7E (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_properties+$80
+    ;80-81 (Keycards)
+    db $02, $01
+
+org AddReceivedItemExpanded_properties+$8B
+    ;8B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_properties+$8E
+    ;8E-8F (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_properties+$90
+    ;90-91 (Keycards)
+    db $02, $01
+
+org AddReceivedItemExpanded_properties+$9B
+    ;9B (Keycards)
+    db $02
+
+org AddReceivedItemExpanded_properties+$9E
+    ;9E-9F (Keycards)
+    db $02, $02
+
+org AddReceivedItemExpanded_properties+$A0
+    ;90-91 (Keycards)
+    db $02, $01
 
 org AddReceivedItemExpanded_properties+$B0
 	; #$B0 - SM Items
@@ -302,17 +609,129 @@ org AddReceivedItemExpanded_properties+$B0
 	db  4	
 	; #$CA ...  - SM Map stations
 	db  4, 4, 4, 4, 4, 4
-	db  2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2 ; Keycards    
+
+    ; #$D0
+	db  5, 4, 5, 4, 4, 4, 5, 4, 4, 5, 4, 4, 4, 1, 0, 5 ; Z1
+	db  5, 4, 5, 4, 4, 5, 4, 4, 4, 4, 4, 0, 2, 4, 5, 5 ; Z1
+	db  4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; Z1
+
+org AddReceivedItemExpanded_item_target_addr+($62*2)
+    ;62-65 (M1)
+    dw $F36A, $F36A, $F36A, $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($68*2)
+    ;68-69 (M1)
+    dw $F36A, $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($6C*2)
+    ;6C-6F (M1)
+    dw $F36A, $F36A, $F36A, $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($70*2)
+    ;70-71 (Keycards)
+    dw $F36A, $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($7B*2)
+    ;7B (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($7E*2)
+    ;7E (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($80*2)
+    ;80-81 (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($8B*2)
+    ;8B (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($8E*2)
+    ;8E-8F (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($90*2)
+    ;90-91 (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($9B*2)
+    ;9B (Keycards)
+    dw $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($9E*2)
+    ;9E-9F (Keycards)
+    dw $F36A, $F36A
+
+org AddReceivedItemExpanded_item_target_addr+($A0*2)
+    ;90-91 (Keycards)
+    dw $F36A, $F36A
 
 org AddReceivedItemExpanded_item_target_addr+($B0*2)
 	dw $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A ; Unused
 	dw $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A ; Unused
 	dw $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A ; Unused
 	dw $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A ; Unused
+	dw $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A, $F36A ; Unused
+
+org AddReceivedItemExpanded_item_values+$62
+    ;62-65 (M1)
+    db $FF, $FF, $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$68
+    ;68-69 (M1)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$6C
+    ;6C-6F (M1)
+    db $FF, $FF, $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$70
+    ;70-71 (Keycards)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$7B
+    ;7B (Keycards)
+    db $FF
+
+org AddReceivedItemExpanded_item_values+$7E
+    ;7E (Keycards)
+    db $FF
+
+org AddReceivedItemExpanded_item_values+$80
+    ;80-81 (Keycards)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$8B
+    ;8B (Keycards)
+    db $FF
+
+org AddReceivedItemExpanded_item_values+$8E
+    ;8E-8F (Keycards)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$90
+    ;90-91 (Keycards)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$9B
+    ;9B (Keycards)
+    db $FF
+
+org AddReceivedItemExpanded_item_values+$9E
+    ;9E-9F (Keycards)
+    db $FF, $FF
+
+org AddReceivedItemExpanded_item_values+$A0
+    ;90-91 (Keycards)
+    db $FF, $FF
 
 org AddReceivedItemExpanded_item_values+$B0
 	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; Unused
 	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; Unused
 	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; Unused
 	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; Unused    
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; Unused    
+
+
 pullpc

@@ -36,10 +36,11 @@ org $D70000
 new_item_graphics_data:
     incbin "../../data/newitems_sm.bin"
 
- org $8f8432
-     dw $efe0
- org $8f8432+$5
-     db $e0
+;  Replace terminator item for testing
+;  org $8f8432
+;      dw $efe0
+;  org $8f8432+$5
+;      db $e0
 
 ; Add our new custom item PLMs
 org $84efe0

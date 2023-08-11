@@ -189,6 +189,14 @@ RTS
 AddReceivedItemExpandedGetItem:
 	PHX
 
+	; Check for extended items - return if carry set so we can skip the rest
+	; Needed since we've put some items into ranges that will be checked here
+	; for keys and such
+	JSL AddReceivedItemExpandedGetItem_extended
+	BCC +
+	JMP .done
++
+
 	LDA $02D8 ; check inventory
 	JSL.l FreeDungeonItemNotice
 	CMP.b #$0B : BNE + ; Bow
@@ -390,8 +398,6 @@ AddReceivedItemExpandedGetItem:
 	+
 	.done
 	
-	jsl AddReceivedItemExpandedGetItem_extended	; Check for extended items
-	
 	PLX
 	LDA $02E9 : CMP.b #$01 ; thing we wrote over
 RTL
@@ -416,6 +422,11 @@ AddReceivedItemExpanded:
 {
 	PHA : PHX
 		JSL.l PreItemGet
+
+		JSL AddReceivedItemExpanded_extended
+		BCC +
+			JMP .done
+		+
 
 		LDA $02D8 ; Item Value
 		JSR AttemptItemSubstitution
