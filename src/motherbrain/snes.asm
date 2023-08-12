@@ -76,33 +76,36 @@ snes_main:
 	jml [$37e2]
 
 snes_nmi_handler:
-	pha : phx : phy : php
+	pha : phx : phy : php : phb
+	pea $0000 : plb : plb
+	
 	rep #$30
-	stz $4200 ; disable NMIs to prevent re-entry
+	lda.w #$0001
+	sta.w $4200 ; disable NMIs to prevent re-entry
 	
 	jsr snes_handle_cmd_queue
 
 	sep #$20
 -
-	lda $4212
+	lda.w $4212
 	and.b #$01
 	bne -
 	
-	rep #$20
-	lda $4218
-	sta $37e8
-	eor $37ea
-	and $37e8
-	sta $37ec
-	lda $37e8
-	sta $37ea
-	stz $37fa
+	rep #$30
+	lda.w $4218
+	sta.w $37e8
+	eor.w $37ea
+	and.w $37e8
+	sta.w $37ec
+	lda.w $37e8
+	sta.w $37ea
+	stz.w $37fa
 
-	lda $4210
-	lda #$0081
-	sta $4200
+	lda.w $4210
+	lda.w #$0081
+	sta.w $4200
 
-	plp : ply : plx : pla
+	plb : plp : ply : plx : pla
     rti
 
 snes_handle_cmd_queue:
