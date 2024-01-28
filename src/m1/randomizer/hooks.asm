@@ -46,7 +46,7 @@ org $839D79 : lda [$00], y              ; Rinka
 %hook($DE74, "jsl GetFramePtrTable_extended : nop #6")
 %hook($DDC4, "jsl GetEnemyFramePtrTable_extended : nop #13")
 %hook($DF04, "jsl StoreSpriteAttributes_extended : nop")
-%hook($DBB0, "jsl PickupItem_extended : bcs $20")
+%hook($DBB0, "jsl PickupItem_extended : bcs $2d")
 %hook($DB73, "jsl UpdatePaletteEffect_extended : nop #5")
 %hook($DCC7, "lda [$CC], y")
 %hook($DE08, "lda [$CC], y")
@@ -62,6 +62,18 @@ org $839D79 : lda [$00], y              ; Rinka
 ; ============================================================================
 
 ; ============================================================================
+; Disable reloading items from password
+; ============================================================================
+%hook($8D3D, "rts")
+
+; ============================================================================
 ; Cross-game transitions
 ; ============================================================================
 %hook($8B74, "jsl SamusInDoor_extended : nop")
+
+; ============================================================================
+; Wavy-ice patch by snarfblam
+; ============================================================================
+%hook($DBD2, "nop #8")
+%hook($D5C5, "jmp WavyIce_NewBehavior")
+%hook($F5EE, "jmp WavyIce_NewDamage")

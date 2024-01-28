@@ -2,179 +2,143 @@
 ; Randomize Heart Pieces
 ;--------------------------------------------------------------------------------
 HeartPieceGet:
-	PHX : PHY
-	LDY $0E80, X ; load item value into Y register
-	BNE +
-		; if for any reason the item value is 0 reload it, just in case
-		JSL.l LoadHeartPieceRoomValue : TAY
-	+
-	JSL.l MaybeMarkDigSpotCollected
+        PHX : PHY
+        JSL.l LoadHeartPieceRoomValue
+        JSL.l AttemptItemSubstitution
+        JSL.l ResolveLootIDLong
+        TAY
+        JSL.l MaybeMarkDigSpotCollected
+        .skipLoad
+        CPY.b #$26 : BNE .not_heart ; don't add a 1/4 heart if it's not a heart piece
+                LDA.l HeartPieceQuarter : INC A : AND.b #$03 : STA.l HeartPieceQuarter
+        .not_heart
+        JSL.l $8791B3 ; Player_HaltDashAttackLong
+        STZ.w ItemReceiptMethod ; 0 = Receiving item from an NPC or message
+        JSL.l Link_ReceiveItem
+        JSL MaybeUnlockTabletAnimation
 
-	.skipLoad
-
-	STZ $02E9 ; 0 = Receiving item from an NPC or message
-
-	CPY.b #$26 : BNE .notHeart ; don't add a 1/4 heart if it's not a heart piece
-	LDA HeartPieceQuarter : INC A : AND.b #$03 : STA HeartPieceQuarter : BNE .unfinished_heart ; add up heart quarters
-	BRA .giveItem
-
-	.notHeart
-
-	.giveItem
-	JSL.l $0791B3 ; Player_HaltDashAttackLong
-	JSL.l Link_ReceiveItem
-	CLC ; return false
-	JMP .done ; finished
-
-	.unfinished_heart
-	SEC ; return true
-	.done
-	
-    JSL MaybeUnlockTabletAnimation
-	
-	PLY : PLX
+        PLY : PLX
 RTL
 ;--------------------------------------------------------------------------------
 HeartContainerGet:
 	PHX : PHY
-	JSL.l AddInventory_incrementBossSwordLong
-	LDY $0E80, X ; load item value into Y register
-	BNE +
-		; if for any reason the item value is 0 reload it, just in case
+	JSL.l IncrementBossSword
+	LDY.w SpriteID, X : BNE +
 		JSL.l LoadHeartContainerRoomValue : TAY
 	+
-
 	BRA HeartPieceGet_skipLoad
 ;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
 DrawHeartPieceGFX:
-	PHP
-	JSL.l Sprite_IsOnscreen : BCC .offscreen
-	
-	PHA : PHY
-	LDA !REDRAW : BEQ .skipInit ; skip init if already ready
-	JSL.l HeartPieceSpritePrep
-	JMP .done ; don't draw on the init frame
-	
-	.skipInit
-	LDA $0E80, X ; Retrieve stored item type
-
-	.skipLoad
-	
-	PHA
-		JSL.l IsNarrowSprite : BCC +
-		LDA $0E60, X : ORA.b #$20 : STA $0E60, X
-	+
-	;LDA $0E60, X : ORA.b #$10 : STA $0E60, X
-	
-    PLA
-	
-	JSL.l DrawDynamicTile
-	JSL.l Sprite_DrawShadowLong 
-	
-	.done
-	PLY : PLA
-	.offscreen
-	PLP
+        PHP
+        JSL.l Sprite_IsOnscreen : BCC .offscreen
+                PHA : PHY
+                LDA.l RedrawFlag : BEQ .skipInit ; skip init if already ready
+                        JSL.l HeartPieceSpritePrep
+                        JMP .done ; don't draw on the init frame
+                .skipInit
+                LDA.w SpriteID, X ; Retrieve stored item type
+                .skipLoad
+                PHA : PHX
+                TAX
+                LDA.l SpriteProperties_standing_width,X : BNE +
+                        PLX
+                        LDA.w SpriteControl, X : ORA.b #$20 : STA.w SpriteControl, X
+                        PLA
+                        JSL.l DrawDynamicTile
+                        REP #$21
+                        LDA.b Scrap00
+                        ADC.w #$0004
+                        STA.b Scrap00
+                        SEP #$20
+                        JSL.l Sprite_DrawShadowLong
+                        BRA .done
+                +
+                PLX
+                PLA
+                JSL.l DrawDynamicTile
+                JSL.l Sprite_DrawShadowLong
+                .done
+                PLY : PLA
+        .offscreen
+        PLP
 RTL
 ;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
 DrawHeartContainerGFX:
 	PHP
 	JSL.l Sprite_IsOnscreen : BCC DrawHeartPieceGFX_offscreen
 	
 	PHA : PHY
-	LDA !REDRAW : BEQ .skipInit ; skip init if already ready
+	LDA.l RedrawFlag : BEQ .skipInit ; skip init if already ready
 	JSL.l HeartContainerSpritePrep
 	BRA DrawHeartPieceGFX_done ; don't draw on the init frame
 	
 	.skipInit
-	LDA $0E80, X ; Retrieve stored item type
+	LDA.w SpriteID, X ; Retrieve stored item type
 
 	BRA DrawHeartPieceGFX_skipLoad
 ;--------------------------------------------------------------------------------
 HeartContainerSound:
-	CPY.b #$20 : BEQ + ; Skip for Crystal
-	CPY.b #$37 : BEQ + ; Skip for Pendants
-	CPY.b #$38 : BEQ +
-	CPY.b #$39 : BEQ +
-    JSL.l CheckIfBossRoom : BCC + ; Skip if not in a boss room
-	        LDA.b #$2E
-			SEC
-		RTL
+        LDA.w ItemReceiptMethod : CMP.b #$03 : BEQ +
+        JSL.l CheckIfBossRoom : BCC + ; Skip if not in a boss room
+                LDA.b #$2E
+                SEC
+                RTL
 	+
 	CLC
 RTL
 ;--------------------------------------------------------------------------------
 NormalItemSkipSound:
-	LDA $0C5E, X ; thing we wrote over
-
-	CPY.b #$20 : BEQ + ; Skip for Crystal
-	CPY.b #$37 : BEQ + ; Skip for Pendants
-	CPY.b #$38 : BEQ +
-	CPY.b #$39 : BEQ +
-	
-	PHA
-    JSL.l CheckIfBossRoom
-	PLA
+; Out: C - skip sounds if set
+        JSL.l CheckIfBossRoom : BCS .boss_room
+                TDC
+                CPY #$17 : BEQ .skip
+                CLC
 RTL
-	+
-	CLC
-RTL
-;--------------------------------------------------------------------------------
-HeartUpgradeSpawnDecision: ; this should return #$00 to make the hp spawn
-	LDA !FORCE_HEART_SPAWN : BEQ .normal_behavior
-	
-	DEC : STA !FORCE_HEART_SPAWN
-	LDA #$00
-RTL
-	
-	.normal_behavior
-	LDA OverworldEventDataWRAM, X
+        .boss_room
+        LDA.w ItemReceiptMethod : CMP.b #$03 : BEQ +
+                .skip
+                SEC
+                RTL
+        +
+        LDA.b #$20
+        .dont_skip
+        CLC
 RTL
 ;--------------------------------------------------------------------------------
-SaveHeartCollectedStatus:
-	LDA !SKIP_HEART_SAVE : BEQ .normal_behavior
-	
-	DEC : STA !SKIP_HEART_SAVE
-RTL
-	
-	.normal_behavior
-	LDA OverworldEventDataWRAM, X : ORA.b #$40 : STA OverworldEventDataWRAM, X
-RTL
-;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
 HeartPieceSpritePrep:
 	PHA
 	
-	LDA ServerRequestMode : BEQ + :  : +
+	LDA.l ServerRequestMode : BEQ + :  : +
 	
-	LDA #$01 : STA !REDRAW
-	LDA $5D : CMP #$14 : BEQ .skip ; skip if we're mid-mirror
+	LDA.b #$01 : STA.l RedrawFlag
+	LDA.b LinkState : CMP.b #$14 : BEQ .skip ; skip if we're mid-mirror
 
-	LDA #$00 : STA !REDRAW
-	JSL.l LoadHeartPieceRoomValue ; load item type
-	STA $0E80, X ; Store item type
-	JSL.l PrepDynamicTile
+	LDA.b #$00 : STA.l RedrawFlag
+	JSL.l LoadHeartPieceRoomValue
+        JSL.l AttemptItemSubstitution
+        JSL.l ResolveLootIDLong
+	STA.w SpriteID, X
+	JSL.l PrepDynamicTile_loot_resolved
 	
 	.skip
 	PLA
 RTL
 ;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
 HeartContainerSpritePrep:
 	PHA
 	
-	LDA #$00 : STA !REDRAW
+	LDA.b #$00 : STA.l RedrawFlag
 	JSL.l LoadHeartContainerRoomValue ; load item type
-	STA $0E80, X ; Store item type
-	JSL.l PrepDynamicTile
+        JSL.l AttemptItemSubstitution
+        JSL.l ResolveLootIDLong
+	STA.w SpriteID, X
+	JSL.l PrepDynamicTile_loot_resolved
 	
 	PLA
 RTL
 ;--------------------------------------------------------------------------------
 LoadHeartPieceRoomValue:
-	LDA $1B : BEQ .outdoors ; check if we're indoors or outdoors
+	LDA.b IndoorsFlag : BEQ .outdoors ; check if we're indoors or outdoors
 	.indoors
 	JSL.l LoadIndoorValue
 	JMP .done
@@ -183,38 +147,37 @@ LoadHeartPieceRoomValue:
 	.done
 RTL
 ;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
 HPItemReset:
-	JSL $09AD58 ; GiveRupeeGift - thing we wrote over
-	PHA : LDA #$01 : STA !REDRAW : PLA
+	JSL $89AD58 ; GiveRupeeGift - thing we wrote over
+	PHA : LDA.b #$01 : STA.l RedrawFlag : PLA
 RTL
 ;--------------------------------------------------------------------------------
 MaybeMarkDigSpotCollected:
 	PHA : PHP
-		LDA $1B : BNE +
+		LDA.b IndoorsFlag : BNE +
 		REP #$20 ; set 16-bit accumulator
-		LDA $8A
+		LDA.b OverworldIndex
 		CMP.w #$2A : BNE +
-			LDA HasGroveItem : ORA.w #$0001 : STA HasGroveItem
+			LDA.l HasGroveItem : ORA.w #$0001 : STA.l HasGroveItem
 		+
 	PLP : PLA
 RTL
 ;--------------------------------------------------------------------------------
 macro GetPossiblyEncryptedItem(ItemLabel,TableLabel)
-	LDA IsEncrypted : BNE ?encrypted
+	LDA.l IsEncrypted : BNE ?encrypted
 		LDA.l <ItemLabel>
 		BRA ?done
 	?encrypted:
 	PHX : PHP
 		REP #$30 ; set 16-bit accumulator & index registers
-		LDA $00 : PHA : LDA $02 : PHA
+		LDA.b Scrap00 : PHA : LDA.b Scrap02 : PHA
 
-		LDA.w #<TableLabel> : STA $00
-		LDA.w #<TableLabel>>>16 : STA $02
+		LDA.w #<TableLabel> : STA.b Scrap00
+		LDA.w #<TableLabel>>>16 : STA.b Scrap02
 		LDA.w #<ItemLabel>-<TableLabel>
 		JSL RetrieveValueFromEncryptedTable
 
-		PLX : STX $02 : PLX : STX $01
+		PLX : STX.b Scrap02 : PLX : STX.b Scrap01
 	PLP : PLX
 	?done:
 endmacro
@@ -222,7 +185,7 @@ endmacro
 LoadIndoorValue:
 	PHP
 	REP #$20 ; set 16-bit accumulator
-	LDA $A0 ; these are all decimal because i got them that way
+	LDA.b RoomIndex ; these are all decimal because i got them that way
 	CMP.w #225 : BNE +
 		%GetPossiblyEncryptedItem(HeartPiece_Forest_Thieves, HeartPieceIndoorValues)
 		JMP .done
@@ -233,7 +196,7 @@ LoadIndoorValue:
 		%GetPossiblyEncryptedItem(HeartPiece_Spectacle_Cave, HeartPieceIndoorValues)
 		JMP .done
 	+ CMP.w #283 : BNE +
-		LDA $22 : XBA : AND.w #$0001 ; figure out where link is
+		LDA.b LinkPosX : XBA : AND.w #$0001 ; figure out where link is
 		BNE ++
 			%GetPossiblyEncryptedItem(HeartPiece_Circle_Bushes, HeartPieceIndoorValues)
 			JMP .done
@@ -247,10 +210,13 @@ LoadIndoorValue:
 		%GetPossiblyEncryptedItem(HeartPiece_Smith_Pegs, HeartPieceIndoorValues)
 		JMP .done
 	+ CMP.w #135 : BNE +
-		LDA StandingKey_Hera
+		LDA.l StandingKey_Hera
 		JMP .done
 	+
-	LDA.w #$0017 ; default to a normal hp
+        PHX
+        LDX.w CurrentSpriteSlot ; If we're on a different screen ID via glitches load the sprite
+        LDA.w SpriteID,X        ; we can see and are interacting with
+        PLX
 	.done
 	AND.w #$00FF ; the loads are words but the values are 1-byte so we need to clear the top half of the accumulator - no guarantee it was 8-bit before
 	PLP
@@ -267,9 +233,9 @@ RTL
 LoadOutdoorValue:
 	PHP
 	REP #$20 ; set 16-bit accumulator
-	LDA $8A
+	LDA.b OverworldIndex
 	CMP.w #$03 : BNE +
-		LDA $22 : CMP.w #1890 : !BLT ++
+		LDA.b LinkPosX : CMP.w #1890 : !BLT ++
 			%GetPossiblyEncryptedItem(HeartPiece_Spectacle, HeartPieceOutdoorValues)
 			JMP .done
 		++
@@ -285,7 +251,7 @@ LoadOutdoorValue:
 		%GetPossiblyEncryptedItem(HauntedGroveItem, HeartPieceOutdoorValues)
 		JMP .done
 	+ CMP.w #$30 : BNE +
-		LDA $22 : CMP.w #512 : !BGE ++
+		LDA.b LinkPosX : CMP.w #512 : !BGE ++
 			%GetPossiblyEncryptedItem(HeartPiece_Desert, HeartPieceOutdoorValues)
 			JMP .done
 		++
@@ -313,7 +279,10 @@ LoadOutdoorValue:
 		%GetPossiblyEncryptedItem(HeartPiece_Zora, HeartPieceOutdoorValues)
 		JMP .done
 	+
-	LDA.w #$0017 ; default to a normal hp
+        PHX
+        LDX.w CurrentSpriteSlot ; If we're on a different screen ID via glitches load the sprite
+        LDA.w SpriteID,X        ; we can see and are interacting with.
+        PLX
 	.done
 	AND.w #$00FF ; the loads are words but the values are 1-byte so we need to clear the top half of the accumulator - no guarantee it was 8-bit before
 	PLP
@@ -335,7 +304,7 @@ LoadHeartContainerRoomValue:
 LoadBossValue:
 	PHP
 	REP #$20 ; set 16-bit accumulator
-	LDA $A0 ; these are all decimal because i got them that way
+	LDA.b RoomIndex ; these are all decimal because i got them that way
 	CMP.w #200 : BNE +
 		%GetPossiblyEncryptedItem(HeartContainer_ArmosKnights, HeartContainerBossValues)
 		JMP .done
@@ -378,7 +347,7 @@ CheckIfBossRoom:
 ; Carry set if we're in a boss room, unset otherwise.
 ;--------------------------------------------------------------------------------
 	REP #$20 ; set 16-bit accumulator
-	LDA $A0 ; these are all decimal because i got them that way
+	LDA.b RoomIndex ; these are all decimal because i got them that way
 	CMP.w #200 : BEQ .done
 	CMP.w #51 : BEQ .done
 	CMP.w #7 : BEQ .done
@@ -408,9 +377,9 @@ RTL
 ;#13 - Ganon's Tower - Agahnim II
 ;#0 - Pyramid of Power - Ganon
 ;--------------------------------------------------------------------------------
-;JSL $06DD40 ; DashKey_Draw
-;JSL $06DBF8 ; Sprite_PrepAndDrawSingleLargeLong
-;JSL $06DC00 ; Sprite_PrepAndDrawSingleSmallLong ; draw first cell correctly
-;JSL $00D51B ; GetAnimatedSpriteTile
-;JSL $00D52D ; GetAnimatedSpriteTile.variable
+;JSL $86DD40 ; DashKey_Draw
+;JSL $86DBF8 ; Sprite_PrepAndDrawSingleLargeLong
+;JSL $86DC00 ; Sprite_PrepAndDrawSingleSmallLong ; draw first cell correctly
+;JSL $80D51B ; GetAnimatedSpriteTile
+;JSL $80D52D ; GetAnimatedSpriteTile.variable
 ;================================================================================

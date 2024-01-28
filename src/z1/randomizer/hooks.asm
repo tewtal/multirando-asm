@@ -58,6 +58,14 @@ org $81AC5B
 +
     bra $03
 
+; 85B847  A4 EB          LDY $EB
+; 85B849  B9 7E 6A       LDA $6A7E,Y
+; 85B84C  29 1F          AND #$1F
+; 85B84E  C9 03          CMP #$03
+; Load Room Item Id for underworld rooms
+org $85B847
+    jsl LoadRoomItemIdUW_extended : nop #5
+
 ; ========================================================================
 ; Shops
 ; ========================================================================

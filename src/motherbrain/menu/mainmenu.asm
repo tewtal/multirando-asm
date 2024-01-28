@@ -275,6 +275,14 @@ sgm_start:
     %cm_jsl("Start Game", .startgame, #$0000)
     .startgame
     ; Start the game
+    lda.l SNES_CMD_PTR : tax
+    lda.w #$0008 : sta.l $000000, x : inx #2
+    lda.w #mb_snes_run_z3 : sta.l $000000, x : inx #2
+    lda.w #mb_snes_run_z3>>16 : sta.l $000000, x : inx #2
+    lda.w #$0000 : sta.l $000000, x
+    txa : sta.l SNES_CMD_PTR
+    jml mb_main ; Return to main kernel loop      
+
     RTL
 sgm_m1:
     %cm_draw_text("-- Metroid --")

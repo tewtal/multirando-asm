@@ -225,6 +225,7 @@ WriteItemToInventory:
     %ai16()
     and.w #$00ff
     pha                                 ; Save item id
+.recheckItem
     asl #3 : tax                        ; Multiply by 8 to get offset
     lda.w ItemData, x                   ; Get the Game Id
     
@@ -243,7 +244,8 @@ WriteItemToInventory:
     cmp #$0018
     bne +
         jsr UpgradeProgressiveItem      ; Returns new item id in A
-        bra .itemCheck
+        tax : pla : txa : pha
+        bra .recheckItem
 +   cmp #$0000
     bne +
        jmp .normalItem
@@ -844,10 +846,10 @@ ItemData:
     dw $0001, $0054, $0018, $0018        ; 61 - Progressive Glove
     dw $0003, $0002, $0003, $0001        ; 62 - Bombs                  (M1)
     dw $0003, $0002, $0003, $0002        ; 63 - High Jump              (M1)
-    dw $0003, $0002, $0003, $0004        ; 64 - Long Beam              (M1)
-    dw $0003, $0002, $0003, $0008        ; 65 - Screw Attack           (M1)
-    dw $0001, $0000, $0000, $0000        ; 66 - Reserved - Progressive Bow                 (Why two here? Are both used?)
-    dw $0001, $0000, $0000, $0000        ; 67 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $0001, $0000, $0000, $0000        ; 64 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $0001, $0000, $0000, $0000        ; 65 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $0003, $0002, $0003, $0004        ; 66 - Long Beam              (M1)
+    dw $0003, $0002, $0003, $0008        ; 67 - Screw Attack           (M1)
     dw $0003, $0002, $0003, $0010        ; 68 - Morph Ball             (M1)
     dw $0003, $0002, $0003, $0020        ; 69 - Varia Suit             (M1)
     dw $0001, $0000, $0000, $0000        ; 6A - Reserved - Goal Item (Single/Triforce)

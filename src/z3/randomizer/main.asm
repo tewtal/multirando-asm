@@ -4,12 +4,11 @@
 
 incsrc "hooks.asm"
 
-; Bank A6-A8 is unused in regular ALTTPR ASM, so we'll use
-; bank A6 for code, and banks A7-A8 for data as needed
+; Bank A6 is unused in regular ALTTPR ASM, so we'll use
+; bank A6 for code, bank A7 is used for GFX
 
 
 org $A68000
-incsrc "items.asm"
 incsrc "ending.asm"
 incsrc "spc.asm"
 incsrc "transition_in.asm"
@@ -18,26 +17,12 @@ incsrc "transition_out.asm"
 
 print "Z3 Randomizer Extras End = ", pc
 
-org $A78000
-GFX_SM_Items:
-    incbin ../../data/newitems_sm.gfx
-
-org $A7A000
-GFX_SM_Items_2:
-    incbin ../../data/newitems_sm_2.gfx
-
-org $A7C000
-GFX_M1Z1_Items:
-    incbin ../../data/alttpitems_z1m1.gfx
-
-org $A7E000
-GFX_Z1_Items_2:
-    incbin ../../data/alttpitems_z1_2.gfx
-warnpc $A7FFFF
-
-org $A88000
+org $AA8000
 incsrc "transition_tables.asm"
-warnpc $A8FFFF
+warnpc $AAFFFF
+
+org $01E9BC
+    db $ca
 
 ; Banks B8-BE seems to be free as well in ALTTPR
 ; Use this for the WRAM/VRAM dumps used for game transitions

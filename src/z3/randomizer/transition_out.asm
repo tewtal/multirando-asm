@@ -69,7 +69,7 @@ check_teleport_in:
     sta.l !IRAM_TRANSITION_GAME_ID
     lda.l transition_table_in+$6, x
     sta.l !IRAM_TRANSITION_DESTINATION_ID
-    lda.l transition_table_out+$8, x
+    lda.l transition_table_in+$8, x
     sta.l !IRAM_TRANSITION_DESTINATION_ARGS    
     jml transition_from_zelda
     

@@ -1,7 +1,4 @@
 ; hooks
-
-!MULTIWORLD_ITEM_PLAYER_ID = $0000
-
 org $01E6B0
 	JSL RevealPotItem
 	RTS

@@ -1,17 +1,15 @@
-;--------------------------------------------------------------------------------
-; OnLoadOW
-;--------------------------------------------------------------------------------
-;OnLoadMap:
-;	LDA OverworldEventDataWRAM+$5B ; thing we wrote over
-;RTL
-;--------------------------------------------------------------------------------
 OnPrepFileSelect:
-	LDA $11 : CMP.b #$03 : BNE +
-		LDA.b #$06 : STA $14 ; thing we wrote over
-		RTL
-	+
-	JSL.l LoadAlphabetTilemap
-	JML.l LoadFullItemTiles
+        LDA.b GameSubMode : CMP.b #$03 : BNE +
+                LDA.b #$06 : STA.b NMISTRIPES ; thing we wrote over
+                RTL
+        +
+        PHA : PHX
+        REP #$10
+        JSL.l LoadAlphabetTilemap
+        JSL.l LoadFullItemTiles
+        SEP #$10
+        PLX : PLA
+RTL
 ;--------------------------------------------------------------------------------
 OnDrawHud:
 	JSL.l DrawChallengeTimer ; this has to come before NewDrawHud because the timer overwrites the compass counter
@@ -22,8 +20,13 @@ OnDrawHud:
 JML.l ReturnFromOnDrawHud
 ;--------------------------------------------------------------------------------
 OnDungeonEntrance:
-	STA $7EC172 ; thing we wrote over
-        JSL MaybeFlagCompassTotalEntrance
+	STA.l PegColor ; thing we wrote over
+        JSL MaybeFlagDungeonTotalsEntrance
+        LDA.w #$0001 : STA.l UpdateHUDFlag
+RTL
+;--------------------------------------------------------------------------------
+OnDungeonBossExit:
+        JSL.l StatTransitionCounter
 RTL
 ;--------------------------------------------------------------------------------
 OnPlayerDead:
@@ -35,33 +38,34 @@ OnPlayerDead:
 RTL
 ;--------------------------------------------------------------------------------
 OnDungeonExit:
-	PHA : PHP
-		SEP #$20 ; set 8-bit accumulator
-		JSL.l SQEGFix
-	PLP : PLA
+        PHA : PHP
+        SEP #$20 ; set 8-bit accumulator
+        JSL.l SQEGFix
+        PLP : PLA
 
-	STA $040C : STZ $04AC ; thing we wrote over
+        STA.w DungeonID : STZ.w Map16ChangeIndex ; thing we wrote over
 
-	PHA : PHP
-		JSL.l HUD_RebuildLong
-		JSL.l FloodGateResetInner
-		JSL.l SetSilverBowMode
-	PLP : PLA
+        PHA : PHP
+        LDA.w #$0001 : STA.l UpdateHUDFlag
+        JSL.l HUD_RebuildLong
+        JSL.l FloodGateResetInner
+        JSL.l SetSilverBowMode
+        PLP : PLA
 RTL
 ;--------------------------------------------------------------------------------
 OnQuit:
 	JSL.l SQEGFix
-	LDA.b #$00 : STA $7F5035 ; bandaid patch bug with mirroring away from text
-	LDA.b #$10 : STA $1C ; thing we wrote over
+	LDA.b #$00 : STA.l AltTextFlag ; bandaid patch bug with mirroring away from text
+	LDA.b #$10 : STA.b MAINDESQ ; thing we wrote over
 RTL
 ;--------------------------------------------------------------------------------
 OnUncleItemGet:
 	PHA
 
 	LDA.l EscapeAssist
-	BIT.b #$04 : BEQ + : STA !INFINITE_MAGIC : +
-	BIT.b #$02 : BEQ + : STA !INFINITE_BOMBS : +
-	BIT.b #$01 : BEQ + : STA !INFINITE_ARROWS : +
+	BIT.b #$04 : BEQ + : STA.l InfiniteMagic : +
+	BIT.b #$02 : BEQ + : STA.l InfiniteBombs : +
+	BIT.b #$01 : BEQ + : STA.l InfiniteArrows : +
 
 	PLA
 	JSL.l Link_ReceiveItem
@@ -82,26 +86,44 @@ OnUncleItemGet:
         +
 RTL
 ;--------------------------------------------------------------------------------
+OnAga1Defeated:
+        STA.l ProgressIndicator ; vanilla game state stuff we overwrote
+        LDA.l GanonVulnerableMode
+        CMP.b #$06 : BNE +
+                .light_speed
+                REP #$20
+                LDA.w #$0019 : STA.b GameMode
+                SEP #$20
+        +
+        LDA.b #$08 : CMP.w DungeonID : BNE +
+                ORA.l DungeonsCompleted+1 : STA.l DungeonsCompleted+1
+        +
+.exit
+RTL
+;--------------------------------------------------------------------------------
 OnAga2Defeated:
         JSL.l Dungeon_SaveRoomData_justKeys ; thing we wrote over, make sure this is first
         LDA.b #$01 : STA.l Aga2Duck
+        LDA.w DungeonID : CMP.b #$1A : BNE +
+                LDA.l DungeonsCompleted : ORA.b #$04 : STA.l DungeonsCompleted
+        +
+        LDA.b #$FF : STA.w DungeonID
         JML.l IncrementAgahnim2Sword
 ;--------------------------------------------------------------------------------
 OnFileCreation:
-        ; Copy initial SRAM state from ROM to cart SRAM
         PHB
-        LDA.w #$03D7 ; \
-        LDX.w #$B000 ;  | Copies from beginning of inital sram table up to file name
-        LDY.w #$2000 ;  | (exclusively)
-        MVN $40, $30 ; /
-                     ; Skip file name and validity value
-        LDA.w #$010C ; \
-        LDX.w #$B3E3 ;  | Rando-Specific Assignments & Game Stats block
-        LDY.w #$23E3 ;  |
-        MVN $40, $30 ; /
+        LDA.w #$03D7
+        LDX.w #$B000
+        LDY.w #$2000
+        MVN CartridgeSRAM>>16, InitSRAMTable>>16
+        ; Skip file name and validity value
+        LDA.w #$010C
+        LDX.w #$B3E3
+        LDY.w #$23E3
+        MVN CartridgeSRAM>>16, InitSRAMTable>>16 
         PLB
 
-        ; resolve instant post-aga if standard
+        ; Resolve instant post-aga if standard
         SEP #$20
         LDA.l InitProgressIndicator : BIT #$80 : BEQ +
                 LDA.b #$00 : STA.l ProgressIndicatorSRAM  ; set post-aga after zelda rescue
@@ -109,34 +131,30 @@ OnFileCreation:
         +
         REP #$20
 
-        ; Set validity value and do some cleanup. Jump to checksum.
-        LDA.w #$55AA : STA.l $4023E1
-        STZ $00
-        STZ $01
-        LDX.b $00
-        LDY.w #$0000
-        TYA
+        ; Set validity value and do some cleanup. Jump to checksum done.
+        LDA.w #$55AA : STA.l FileValiditySRAM
+        JSL.l WriteSaveChecksumAndBackup
+        STZ.b Scrap00
+        STZ.b Scrap01
 
-JML.l InitializeSaveFile_build_checksum
+JML.l InitializeSaveFile_checksum_done
 ;--------------------------------------------------------------------------------
-!RNG_ITEM_LOCK_IN = "$7F5090"
 OnFileLoad:
 	REP #$10 ; set 16 bit index registers
 	JSL.l EnableForceBlank ; what we wrote over
 
-	LDA.b #$07 : STA $210C ; Restore screen 3 to normal tile area
+	LDA.b #$07 : STA.w BG34NBA ; Restore screen 3 to normal tile area
 
 	LDA.l FileMarker : BNE +
 		JSL.l OnNewFile
 		LDA.b #$FF : STA.l FileMarker
 	+
-	LDA.w $010A : BNE + ; don't adjust the worlds for "continue" or "save-continue"
-	LDA.l $7EC011 : BNE + ; don't adjust worlds if mosiac is enabled (Read: mirroring in dungeon)
+	LDA.w DeathReloadFlag : BNE + ; don't adjust the worlds for "continue" or "save-continue"
+	LDA.l MosaicLevel : BNE + ; don't adjust worlds if mosiac is enabled (Read: mirroring in dungeon)
 		JSL.l DoWorldFix
 	+
 	JSL.l MasterSwordFollowerClear
-	LDA.b #$FF : STA !RNG_ITEM_LOCK_IN ; reset rng item lock-in
-	LDA.b #$00 : STA $7F5001 ; mark fake flipper softlock as impossible
+	LDA.b #$FF : STA.l RNGLockIn ; reset rng item lock-in
 	LDA.l GenericKeys : BEQ +
 		LDA.l CurrentGenericKeys : STA.l CurrentSmallKeys ; copy generic keys to key counter
 	+
@@ -151,106 +169,128 @@ OnFileLoad:
 	SEP #$10 ; restore 8 bit index registers
 RTL
 ;--------------------------------------------------------------------------------
-!RNG_ITEM_LOCK_IN = "$7F5090"
 OnNewFile:
 	PHX : PHP
 		; reset some values on new file that are otherwise only reset on hard reset
 		SEP #$20 ; set 8-bit accumulator
-		STZ $03C4 ; ancilla slot index
-		STZ $047A ; EG
-		STZ $0B08 : STZ $0B09 ; arc variable
-		STZ $0CFB ; enemies killed (pull trees)
-		STZ $0CFC ; times taken damage (pull trees)
-		STZ $0FC7 : STZ $0FC8 : STZ $0FC9 : STZ $0FCA : STZ $0FCB : STZ $0FCC : STZ $0FCD ; prize packs
-		LDA #$00 : STA $7EC011 ; mosaic
-		JSL InitRNGPointerTable ; boss RNG
+		STZ.w AncillaSearch
+		STZ.w LayerAdjustment ; EG
+		STZ.w ArcVariable : STZ.w ArcVariable+1
+		STZ.w TreePullKills
+		STZ.w TreePullHits
+		STZ.w PrizePackIndexes
+                STZ.w PrizePackIndexes+1
+                STZ.w PrizePackIndexes+2
+                STZ.w PrizePackIndexes+3
+                STZ.w PrizePackIndexes+4
+                STZ.w PrizePackIndexes+5
+                STZ.w PrizePackIndexes+6
+		LDA.b #$00 : STA.l MosaicLevel
+		JSL InitRNGPointerTable
 	PLP : PLX
 RTL
 ;--------------------------------------------------------------------------------
 OnInitFileSelect:
-	; LDA.b #$10 : STA $BC ; init sprite pointer - does nothing unless spriteswap.asm is included
-	; JSL.l SpriteSwap_SetSprite
-	LDA.b #$51 : STA $0AA2 ;<-- Line missing from JP1.0, needed to ensure "extra" copy of naming screen graphics are loaded.
+	LDA.b #$51 : STA.w $0AA2 ;<-- Line missing from JP1.0, needed to ensure "extra" copy of naming screen graphics are loaded.
 	JSL.l EnableForceBlank
 RTL
 ;--------------------------------------------------------------------------------
 OnLinkDamaged:
 	JSL.l IncrementDamageTakenCounter_Arb
-	;JSL.l FlipperKill
 	JML.l OHKOTimer
-
 ;--------------------------------------------------------------------------------
-OnEnterWater:
-	JSL.l RegisterWaterEntryScreen
-
-	JSL.l MysteryWaterFunction
-	LDX.b #$04
-RTL
+;OnEnterWater:
+;       JSL.l UnequipCapeQuiet ; what we wrote over
+;RTL
 ;--------------------------------------------------------------------------------
 OnLinkDamagedFromPit:
 	JSL.l OHKOTimer
 
 	LDA.l AllowAccidentalMajorGlitch
 	BEQ ++
---	LDA.b #$14 : STA $11 ; thing we wrote over
+--	LDA.b #$14 : STA.b GameSubMode ; thing we wrote over
 
 	RTL
 
-++	LDA.b $10 : CMP.b #$12 : BNE --
+++	LDA.b GameMode : CMP.b #$12 : BNE --
 
-	STZ.b $11
+	STZ.b GameSubMode
 	RTL
 ;--------------------------------------------------------------------------------
 OnLinkDamagedFromPitOutdoors:
 	JML.l OHKOTimer ; make sure this is last
-
 ;--------------------------------------------------------------------------------
-!RNG_ITEM_LOCK_IN = "$7F5090"
 OnOWTransition:
-	JSL.l FloodGateReset
-	JSL.l FlipperFlag
-	JSL.l StatTransitionCounter
-	PHP
-	SEP #$20 ; set 8-bit accumulator
-	LDA.b #$FF : STA !RNG_ITEM_LOCK_IN ; clear lock-in
-	PLP
+        JSL.l FloodGateReset
+        JSL.l StatTransitionCounter
+        PHP
+        SEP #$20 ; set 8-bit accumulator
+        LDA.b #$FF : STA.l RNGLockIn ; clear lock-in
+        LDA.b #$01 : STA.l UpdateHUDFlag
+        PLP
 RTL
 ;--------------------------------------------------------------------------------
-!DARK_DUCK_TEMP = "$7F509C"
 OnLoadDuckMap:
-	LDA !DARK_DUCK_TEMP
+	LDA.l DuckMapFlag
 	BNE +
-		INC : STA !DARK_DUCK_TEMP
-		JSL OverworldMap_InitGfx : DEC $0200
-
+		INC : STA.l DuckMapFlag
+		JSL OverworldMap_InitGfx : DEC.w SubModuleInterface
 		RTL
 	+
-	LDA.b #$00 : STA !DARK_DUCK_TEMP
+	LDA.b #$00 : STA.l DuckMapFlag
 	JML OverworldMap_DarkWorldTilemap
-
 ;--------------------------------------------------------------------------------
 PreItemGet:
-	LDA.b #$01 : STA !ITEM_BUSY ; mark item as busy
+	LDA.b #$01 : STA.l BusyItem ; mark item as busy
 RTL
 ;--------------------------------------------------------------------------------
 PostItemGet:
-
+        STZ.w ShopPurchaseFlag
+        LDA.w ItemReceiptMethod : CMP.b #$01 : BEQ +
+                LDX.w CurrentSpriteSlot
+                STZ.w SpriteMetaData,X
+        +
 RTL
 ;--------------------------------------------------------------------------------
 PostItemAnimation:
-	LDA.b #$00 : STA !ITEM_BUSY ; mark item as finished
+        PHB
+        LDA.b #$00 : STA.l BusyItem ; mark item as finished
+        LDA.l TextBoxDefer : BEQ +
+                STZ.w TextID : STZ.w TextID+1 ; reset decompression buffer
+                JSL.l Main_ShowTextMessage_Alt
+                LDA.b #$00 : STA.l TextBoxDefer
+        +
+        LDA.w ItemReceiptMethod : CMP.b #$01 : BNE +
+                LDA.b LinkDirection : BEQ +
+                        JSL.l IncrementChestTurnCounter
+        +
+        REP #$20
+        PEA.w $7E00
+        PLB : PLB
+        LDA.w TransparencyFlag : BNE .SP05
+                LDA.l PalettesCustom_off_black+$00 : STA.w PaletteBuffer+$0170 : STA.w PaletteBufferAux+$0170
+                LDA.l PalettesCustom_off_black+$02 : STA.w PaletteBuffer+$0172 : STA.w PaletteBufferAux+$0172
+                STA.w PaletteBuffer+$0174 : STA.w PaletteBufferAux+$0174
+                STA.w PaletteBuffer+$0176 : STA.w PaletteBufferAux+$0176
+                STA.w PaletteBuffer+$0178 : STA.w PaletteBufferAux+$0178
+                STA.w PaletteBuffer+$017A : STA.w PaletteBufferAux+$017A
+                STA.w PaletteBuffer+$017C : STA.w PaletteBufferAux+$017C
+                STA.w PaletteBuffer+$017E : STA.w PaletteBufferAux+$017E
+                BRA .done
+        .SP05
+        LDA.l PalettesCustom_off_black+$00 : STA.w PaletteBuffer+$01B0 : STA.w PaletteBufferAux+$01B0
+        LDA.l PalettesCustom_off_black+$02 : STA.w PaletteBuffer+$01B2 : STA.w PaletteBufferAux+$01B2
+        STA.w PaletteBuffer+$01B4 : STA.w PaletteBufferAux+$01B4
+        STA.w PaletteBuffer+$01B6 : STA.w PaletteBufferAux+$01B6
+        STA.w PaletteBuffer+$01B8 : STA.w PaletteBufferAux+$01B8
+        STA.w PaletteBuffer+$01BA : STA.w PaletteBufferAux+$01BA
+        STA.w PaletteBuffer+$01BC : STA.w PaletteBufferAux+$01BC
+        STA.w PaletteBuffer+$01BE : STA.w PaletteBufferAux+$01BE
+        .done
+        INC.b NMICGRAM
+        SEP #$20
 
-	LDA $7F509F : BEQ +
-		STZ $1CF0 : STZ $1CF1 ; reset decompression buffer
-		JSL.l Main_ShowTextMessage_Alt
-		LDA.b #$00 : STA $7F509F
-	+
-
-	LDA.w $02E9 : CMP.b #$01 : BNE +
-		LDA.b $2F : BEQ +
-			JSL.l IncrementChestTurnCounter
-	+
-
-    STZ $02E9 : LDA $0C5E, X ; thing we wrote over to get here
+        STZ.w ItemReceiptMethod : LDA.w AncillaGet, X ; thing we wrote over to get here
+        PLB
 RTL
 ;--------------------------------------------------------------------------------

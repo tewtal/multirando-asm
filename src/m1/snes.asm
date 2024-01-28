@@ -91,7 +91,7 @@ SnesOamPrepare:
     ; Y coordinate
     LDA.w OAMNES.Y, X
     CMP #$F8
-    BEQ .Clear
+    BCS .Clear
     SEC : SBC #!VSpriteOffset
 
     BIT.w OAMNES.Attr, X
@@ -135,6 +135,7 @@ SnesOamPrepare:
     BRA .Next
 
 .Clear
+    LDA.b #$F7
     STA.w OAM.Y, Y
     ;STA.w OAM.Y+$4, Y
 .Next

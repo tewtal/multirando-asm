@@ -1,3 +1,5 @@
+;lorom
+
 ;SHARED SPRITE PALETTE FIX
 ;
 ;This is a repair so that sprites that previously shared Link's palette

@@ -64,13 +64,21 @@ snes_reset:
     jsr sa1_setup
     jsr randomizer_setup
     jml snes_main
-
+    
 randomizer_setup:
     %a16()
     lda #$00ff
     sta !SRAM_CURRENT_GAME
     lda #$0000
     sta !SRAM_SAVING
+
+    lda !SRAM_INITIALIZED
+    cmp #$CAFE
+    bne +
+    rts
++
+    lda #$CAFE
+    sta !SRAM_INITIALIZED    
 
     ; TODO: Remove this and move to the "create new file code"
     ; Also this should probably use DMA
@@ -113,6 +121,7 @@ randomizer_setup:
 
     %a8()
     
+    jsl CopyItemBuffers
     rts
 
 sa1_setup:    

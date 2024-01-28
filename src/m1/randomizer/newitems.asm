@@ -42,6 +42,8 @@ GetFramePtrTable_extended:
     cmp.w #$00ff
     beq .normal_item
 
+    jsl mb_CheckProgressiveItemLong
+
     ; Get pointer to FrameDataTable graphics string
     phx
     asl #2 : tax
@@ -181,6 +183,9 @@ CustomItemHandler:
     ; Load item id and get the pointer to the graphics data
     lda.w $0748, x
     and.w #$00ff
+    
+    jsl mb_CheckProgressiveItemLong
+    
     asl #2 : tax
     lda.l ItemData, x
 
@@ -449,8 +454,8 @@ ItemData:
     dw $8000, pal_0        ; 39 Dummy - Pendant of Power
     dw $8000, pal_0        ; 3A Bow and arrows
     dw $8000, pal_0        ; 3B Bow and silver Arrows
-    dw $8000, pal_0        ; 3C Bee
-    dw $8000, pal_0        ; 3D Fairy
+    dw $9E00, pal_0        ; 3C Bee
+    dw $9100, pal_0        ; 3D Fairy
     dw $A280, pal_2        ; 3E Heart Container - Boss
     dw $A280, pal_2        ; 3F Heart Container - Sanc
 
@@ -462,7 +467,7 @@ ItemData:
     dw $8000, pal_0        ; 45 Dummy - small magic
     dw $8A80, pal_1        ; 46 300 Rupees
     dw $AA80, pal_2        ; 47 20 Rupees
-    dw $8000, pal_0        ; 48 Good Bee
+    dw $9E80, pal_0        ; 48 Good Bee
     dw $A780, pal_0        ; 49 Fighter Sword
     dw $8000, pal_0        ; 4A Dummy - activated flute
     dw $9780, pal_2        ; 4B Boots                       
@@ -493,10 +498,10 @@ ItemData:
     dw $0000, pal_0        ; 61 - Progressive Glove
     dw $B480, pal_1        ; 62 - Bombs                  (M
     dw $B200, pal_1        ; 63 - High Jump              (M
-    dw $B500, pal_1        ; 64 - Long Beam              (M
-    dw $B300, pal_1        ; 65 - Screw Attack           (M
-    dw $0000, $0000        ; 66 - Reserved - Progressive Bo
-    dw $0000, $0000        ; 67 - Reserved - Progressive Bo
+    dw $0000, $0000        ; 64 - Reserved - Progressive Bo
+    dw $0000, $0000        ; 65 - Reserved - Progressive Bo
+    dw $B500, pal_1        ; 66 - Long Beam              (M
+    dw $B300, pal_1        ; 67 - Screw Attack           (M
     dw $B280, pal_0        ; 68 - Morph Ball             (M
     dw $B380, pal_1        ; 69 - Varia Suit             (M
     dw $0000, $0000        ; 6A - Reserved - Goal Item (Sin

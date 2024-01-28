@@ -2,21 +2,23 @@
 ; Randomize Book of Mudora
 ;--------------------------------------------------------------------------------
 LoadLibraryItemGFX:
-	%GetPossiblyEncryptedItem(LibraryItem, SpriteItemValues)
-	STA $0E80, X ; Store item type
-	JSL.l PrepDynamicTile
+        %GetPossiblyEncryptedItem(LibraryItem, SpriteItemValues)
+        JSL.l AttemptItemSubstitution
+        JSL.l ResolveLootIDLong
+        STA.w SpriteID, X
+        JSL.l PrepDynamicTile_loot_resolved
 RTL
 ;--------------------------------------------------------------------------------
 DrawLibraryItemGFX:
-	PHA
-    LDA $0E80, X ; Retrieve stored item type
-	JSL.l DrawDynamicTile
-	PLA
+        PHA
+        LDA.w SpriteID, X
+        JSL.l DrawDynamicTile
+        PLA
 RTL
 ;--------------------------------------------------------------------------------
 SetLibraryItem:
-	LDY $0E80, X ; Retrieve stored item type
-	JSL.l ItemSet_Library ; contains thing we wrote over
+        LDY.w SpriteID, X
+        JSL.l ItemSet_Library ; contains thing we wrote over
 RTL
 ;--------------------------------------------------------------------------------
 
@@ -24,54 +26,76 @@ RTL
 ;================================================================================
 ; Randomize Bonk Keys
 ;--------------------------------------------------------------------------------
-!REDRAW = "$7F5000"
-;--------------------------------------------------------------------------------
 LoadBonkItemGFX:
-	LDA.b #$08 : STA $0F50, X ; thing we wrote over
+	LDA.b #$08 : STA.w SpriteOAMProp, X ; thing we wrote over
 LoadBonkItemGFX_inner:
-	LDA.b #$00 : STA !REDRAW
+	LDA.b #$00 : STA.l RedrawFlag
 	JSR LoadBonkItem
+        JSL.l AttemptItemSubstitution
+        JSL.l ResolveLootIDLong
+        STA.w SpriteItemType, X
+        STA.w SpriteID, X
 	JSL.l PrepDynamicTile
+        PHA : PHX
+        LDA.w SpriteID,X : TAX
+        LDA.l SpriteProperties_standing_width,X : BNE +
+                LDA.b #$00 : STA.l SpriteOAM : STA.l SpriteOAM+8
+        +
+        PLX : PLA
 RTL
 ;--------------------------------------------------------------------------------
 DrawBonkItemGFX: 
-	PHA
-	LDA !REDRAW : BEQ .skipInit ; skip init if already ready
-	JSL.l LoadBonkItemGFX_inner
-	BRA .done ; don't draw on the init frame
-	
+        PHA
+        LDA.l RedrawFlag : BEQ .skipInit
+        JSL.l LoadBonkItemGFX_inner
+        BRA .done ; don't draw on the init frame
+        
 	.skipInit
-	
-    JSR LoadBonkItem
-	JSL.l DrawDynamicTileNoShadow
-	
-	.done
-	PLA
+        LDA.w SpriteID,X
+        JSL.l DrawDynamicTileNoShadow
+
+        .done
+        PLA
 RTL
 ;--------------------------------------------------------------------------------
 GiveBonkItem:
 	JSR LoadBonkItem
-	CMP #$24 : BNE .notKey
+        JSR.w AbsorbKeyCheck : BCC .notKey
 	.key
 		PHY : LDY.b #$24 : JSL.l AddInventory : PLY ; do inventory processing for a small key
-		LDA CurrentSmallKeys : INC A : STA CurrentSmallKeys
+		LDA.l CurrentSmallKeys : INC A : STA.l CurrentSmallKeys
 		LDA.b #$2F : JSL.l Sound_SetSfx3PanLong
-		JSL CountBonkItem
+        LDA.b #$01 : STA.l UpdateHUDFlag
 RTL
 	.notKey
 		PHY : TAY : JSL.l Link_ReceiveItem : PLY
-		JSL CountBonkItem
 RTL
 ;--------------------------------------------------------------------------------
 LoadBonkItem:
-	LDA $A0 ; check room ID - only bonk keys in 2 rooms so we're just checking the lower byte
-	CMP #115 : BNE + ; Desert Bonk Key
+	LDA.b RoomIndex ; check room ID - only bonk keys in 2 rooms so we're just checking the lower byte
+	CMP.b #115 : BNE + ; Desert Bonk Key
     	LDA.l BonkKey_Desert
 		BRA ++
-	+ : CMP #140 : BNE + ; GTower Bonk Key
+	+ : CMP.b #140 : BNE + ; GTower Bonk Key
     	LDA.l BonkKey_GTower
 		BRA ++
 	+
 		LDA.b #$24 ; default to small key
 	++
+RTS
+;--------------------------------------------------------------------------------
+AbsorbKeyCheck:
+        PHA
+	CMP.b #$24 : BEQ .key
+        CMP.b #$A0 : BCC .not_key
+        CMP.b #$B0 : BCS .not_key
+                AND.b #$0F : ASL
+                CMP.w DungeonID : BNE .not_key
+                        .key
+                        PLA
+                        SEC
+                        RTS
+        .not_key
+        PLA
+        CLC
 RTS

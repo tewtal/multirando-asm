@@ -41,6 +41,13 @@ transition_to_z1:
     cpx #$2000
     bne -
 
+    ldx #$0000
+-
+    sta.l $7e0800, x
+    inx #2
+    cpx #$0400
+    bne -
+
     lda #$845C : sta $000810
     lda #$80E4 : sta $000812
 

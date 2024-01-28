@@ -1,150 +1,76 @@
 ;================================================================================
 ; Pendant / Crystal HUD Fix
 ;--------------------------------------------------------------------------------
-;CheckPendantHUD:
-;	LDA HudFlag : CMP.b #$40 ; check for hud flag instead
-;RTL
 ;================================================================================
 FlipLWDWFlag:
 	PHP
 	SEP #$20 ; set 8-bit accumulator
-	LDA CurrentWorld : EOR.b #$40 : STA CurrentWorld
+	LDA.l CurrentWorld : EOR.b #$40 : STA.l CurrentWorld
 	BEQ +
 		LDA.b #07 : BRA ++ ; dark world - crystals
 	+ 
 		LDA.b #03 ; light world - pendants
 	++
-	STA MapIcons
+	STA.l MapIcons
 	PLP
 RTL
 ;================================================================================
 HUDRebuildIndoorHole:
 	PHA
+	LDA.b #$01 : STA.l UpdateHUDFlag
 	LDA.l GenericKeys : BEQ .normal
 	.generic
 	PLA
-	LDA CurrentGenericKeys ; generic key count
-	JSL.l HUD_RebuildIndoor_Palace
+	LDA.l CurrentGenericKeys ; generic key count
+        JSL.l HUD_RebuildIndoor_Palace
 RTL
 	.normal
 	PLA
-	JSL.l HUD_RebuildIndoor_Palace
+        JSL.l HUD_RebuildIndoor_Palace
 RTL
 ;================================================================================
 HUDRebuildIndoor:
+	LDA.b #$01 : STA.l UpdateHUDFlag
 	LDA.l GenericKeys : BEQ .normal
 	.generic
-	LDA.b #$00 : STA $7EC017
-	LDA CurrentGenericKeys ; generic key count
+	LDA.b #$00 : STA.l RoomDarkness
+	LDA.l CurrentGenericKeys ; generic key count
 RTL
 	.normal
-    LDA.b #$00 : STA $7EC017
+    LDA.b #$00 : STA.l RoomDarkness
     LDA.b #$FF ; don't show keys
 RTL
 ;================================================================================
 GetCrystalNumber:
 	PHX
 		TXA : ASL : TAX
-		LDA CurrentWorld : EOR.b #$40 : BNE +
+		LDA.l CurrentWorld : EOR.b #$40 : BNE +
 			INX
 		+
 		LDA.l CrystalNumberTable-16, X
 	PLX
 RTL
 ;================================================================================
-OverworldMap_CheckObject:
-	PHX
-		;CPX.b #$01 : BNE + : JMP ++ : + : JMP .fail
-		LDA CurrentWorld : AND.b #$40 : BNE +
-			;LW Map
-			LDA.l MapMode : BEQ +++
-			LDA MapField : ORA MapOverlay : AND.b #$01 : BNE +++
-				PHX
-					LDA.l .lw_map_offsets, X : TAX ; put map offset into X
-					LDA MapField, X : ORA MapOverlay, X
-				PLX
-				AND.l .lw_map_masks, X : BNE +++
-				JMP .fail
-			+++
-			LDA.l .lw_offsets, X
-			BPL +++ : CLC : BRA .done : +++ ; don't display master sword
-			TAX : BRA ++
-		+
-			;DW Map
-			LDA.l MapMode : BEQ +++			
-			LDA MapField : ORA MapOverlay : AND.b #$02 : BNE +++
-				PHX
-					LDA.l .dw_map_offsets, X : TAX ; put map offset into X
-					LDA.l MapField, X : ORA MapOverlay, X
-				PLX
-				AND.l .dw_map_masks, X : BNE +++
-				JMP .fail
-			+++
-			LDA.l .dw_offsets, X
-			TAX : BRA ++
-	SEC
-	PLX
-RTL
-++
-		LDA.l CrystalPendantFlags_2, X
-		AND.b #$40 : BNE .checkCrystal
-		
-		.checkPendant
-		LDA PendantsField : AND.l CrystalPendantFlags, X : BNE .fail
-		CLC : BRA .done
-	
-		.checkCrystal
-		LDA CrystalsField : AND.l CrystalPendantFlags, X : BNE .fail
-		CLC : BRA .done
-	
-		.fail
-		SEC
-		.done
-	PLX
-RTL
-.lw_offsets
-db $02, $0A, $03, $FF
-.dw_offsets
-db $06, $08, $0C, $0B, $07, $09, $05
-.lw_map_offsets
-db $01, $00, $01
-; pod skull trock thieves mire ice swamp
-.dw_map_offsets
-db $01, $00, $00, $00, $01, $00, $01
-.lw_map_masks
-db $20, $20, $10, $00
-.dw_map_masks
-db $02, $80, $08, $10, $01, $40, $04
-;================================================================================
 SetLWDWMap:
 	PHP
 	SEP #$20 ; set 8-bit accumulator
-	LDA CurrentWorld : EOR.b #$40
+	LDA.l CurrentWorld : EOR.b #$40
 	BNE +
 		LDA.b #07 : BRA ++ ; dark world - crystals
 	+ 
 		LDA.b #03 ; light world - pendants
 	++
-	STA MapIcons
+	STA.l MapIcons
 	PLP
 RTL
 ;================================================================================
 GetMapMode:
-	LDA CurrentWorld : AND.b #$40 : BEQ +
+	LDA.l CurrentWorld : AND.b #$40 : BEQ +
 		LDA.b #07 ; dark world - crystals
 RTL
 	+ 
 		LDA.b #03 ; light world - pendants
 RTL
-;================================================================================
-;GetPendantCrystalWorld:
-;	PHB : PHK : PLB
-;	PHX
-;		LDA $040C : LSR : TAX
-;		LDA .dungeon_worlds, X
-;	PLX : PLB
-;	CMP.b #$00
-;RTL
 ;================================================================================
 BringMenuDownEnhanced:
 	REP #$20 ; set 16-bit accumulator
@@ -157,13 +83,13 @@ BringMenuDownEnhanced:
 
 		EOR.w #$FFFF : !ADD.w #$0001 ; negate menu speed
 
-		!ADD $EA : CMP.w #$FF18 : !BGE .noOvershoot
+		!ADD BG3VOFSQL : CMP.w #$FF18 : !BGE .noOvershoot
 			LDA.w #$FF18 ; if we went past the limit, go to the limit
 		.noOvershoot
-		STA $EA : CMP.w #$FF18
+		STA.b BG3VOFSQL : CMP.w #$FF18
 	SEP #$20 ; set 8-bit accumulator
 	BNE .notDoneScrolling
-		INC $0200
+		INC.w SubModuleInterface
 	.notDoneScrolling
 RTL
 ;================================================================================
@@ -175,45 +101,46 @@ RaiseHudMenu:
 		LDA.l MenuSpeed : AND.w #$00FF
 	++
 
-	!ADD $EA : BMI .noOvershoot
+	!ADD BG3VOFSQL : BMI .noOvershoot
 		LDA.w #$0000 ; if we went past the limit, go to the limit
 	.noOvershoot
-	STA $EA
+	STA.b BG3VOFSQL
 RTL
 ;================================================================================
 CheckCloseItemMenu:
 	LDA.l MenuCollapse : BNE + 
-		LDA $F4 : AND.b #$10 : RTL
+		LDA.b Joy1A_New : AND.b #$10 : RTL
 	+
-	LDA $F0 : AND.b #$10 : EOR.b #$10
+	LDA.b Joy1A_All : EOR.b #$10
 RTL
 ;================================================================================
 ShowDungeonItems:
-	LDA $040C : AND.w #$00FF : CMP.w #$00FF : BNE + : RTL : + ; return normal result if outdoors or in a cave
-	;LDA $F0 : AND.w #$0020 ; check for select
-	LDA HudFlag : AND.w #$0020 ; check hud flag
-	BEQ + : LDA.w #$0000 : RTL : + ; if set, send the zero onwards
-	LDA $040C : AND.w #$00FF : CMP.w #$00FF ; original logic
+	LDA.w DungeonID-1 : BMI .no_dungeon
+	        LDA.l HudFlag : AND.w #$0040 : BEQ +
+                        .no_dungeon
+                        LDA.w #$0000
+                        RTL
+                +
+	        LDA.w DungeonID 
+                REP #$02
+        .done
 RTL
 ;--------------------------------------------------------------------------------
 UpdateKeys:
-	PHX : PHP
-	SEP #$30 ; set 8-bit accumulator & index registers
-		LDA $040C : CMP.b $1F : !BLT .skip
-		
-		LSR : TAX ; get dungeon index and store to X
-	
-		LDA CurrentSmallKeys ; load current key count
-		STA DungeonKeys, X ; save to main counts
-		
-		CPX.b #$00 : BNE +
-			STA HyruleCastleKeys ; copy HC to sewers
-		+ : CPX.b #$01 : BNE +
-			STA SewerKeys ; copy sewers to HC
-		+
-		.skip
-	JSL.l PostItemGet
-	PLP : PLX
+        PHX : PHP
+        SEP #$30
+        LDA.l GenericKeys : BNE .skip
+        LDA.w DungeonID : CMP.b #$1F : BCS .skip	
+                LSR : TAX
+                LDA.l CurrentSmallKeys
+                CPX.b #$02 : BCC .castle_sewers
+                        STA.l DungeonKeys, X
+                        BRA .skip
+                .castle_sewers
+                STA.l HyruleCastleKeys : STA.l SewerKeys
+        .skip
+        JSL.l PostItemGet
+        PLP : PLX
 RTL
 ;$37C = Sewer Passage
 ;$37D = Hyrule Castle
@@ -232,40 +159,39 @@ RTL
 ;--------------------------------------------------------------------------------
 DrawBootsInMenuLocation:
 	LDA.l HUDDungeonItems : BNE +
-		LDA.w #$1608 : STA $00
+		LDA.w #$1608 : STA.b Scrap00
 		RTL
 	+
-	LDA.w #$1588 : STA $00
+	LDA.w #$1588 : STA.b Scrap00
 RTL
 ;--------------------------------------------------------------------------------
 DrawGlovesInMenuLocation:
 	LDA.l HUDDungeonItems : BNE +
-		LDA.w #$1610 : STA $00
+		LDA.w #$1610 : STA.b Scrap00
 		RTL
 	+
-	LDA.w #$1590 : STA $00
+	LDA.w #$1590 : STA.b Scrap00
 RTL
 ;--------------------------------------------------------------------------------
 DrawFlippersInMenuLocation:
 	LDA.l HUDDungeonItems : BNE +
-		LDA.w #$1618 : STA $00
+		LDA.w #$1618 : STA.b Scrap00
 		RTL
 	+
-	LDA.w #$1598 : STA $00
+	LDA.w #$1598 : STA.b Scrap00
 RTL
 ;--------------------------------------------------------------------------------
 DrawMoonPearlInMenuLocation:
 	LDA.l HUDDungeonItems : BNE +
-		LDA.w #$1620 : STA $00
+		LDA.w #$1620 : STA.b Scrap00
 		RTL
 	+
-	LDA.w #$15A0 : STA $00
+	LDA.w #$15A0 : STA.b Scrap00
 RTL
 ;--------------------------------------------------------------------------------
 DrawHUDDungeonItems:
 	LDA.l HUDDungeonItems : BNE .continue
-
-	RTL
+RTL
 
 .dungeon_positions
 		dw  0 ; Hyrule Castle
@@ -299,7 +225,7 @@ DrawHUDDungeonItems:
 
 
 .dungeon_bitmasks
-		dw $4000 ; Hyrule Castle
+		dw $C000 ; Hyrule Castle
 		dw $2000 ; Eastern
 		dw $1000 ; Desert
 		dw $0020 ; Hera
@@ -328,28 +254,19 @@ DrawHUDDungeonItems:
 		dw $A4*2 ; ; Turtle Rock
 		dw $0D*2 ; ; Ganon's Tower
 
-.continue
-	PHP
-
-	PHB
-	PHK
-	PLB
-
-	REP #$30
-
+        .continue
+        PHP : PHB
+        PHK : PLB
+        REP #$30
 ;-------------------------------------------------------------------------------
 	; dungeon names
 	LDA.w #$2D50
+	LDY.w #00
 
-	LDY.w #0
-
-
-.next_dungeon_name
+        .next_dungeon_name
 	LDX.w .dungeon_positions,Y
-	STA.w $1646,X
-
+	STA.w GFXStripes+$0646,X
 	INC
-
 	INY : INY
 	CPY.w #26 : BCC .next_dungeon_name
 
@@ -357,169 +274,142 @@ DrawHUDDungeonItems:
 	LDX.w #$001E
 	LDA.w #$24F5
 
---	STA.w $1686,X
-	STA.w $16C6,X
-	STA.w $1706,X
+--	STA.w GFXStripes+$0686,X
+	STA.w GFXStripes+$06C6,X
+	STA.w GFXStripes+$0706,X
 
-	DEX : DEX : BPL --
-
+	DEX : DEX
+        BPL --
 
 	LDA.l HudFlag : AND.w #$0020 : BEQ +
-
-	JMP .maps_and_compasses
-
-+
+	        JMP .maps_and_compasses
 ;-------------------------------------------------------------------------------
+        +
+	LDA.l HUDDungeonItems : AND.w #$0001 : BNE +
+                LDA.w #$24F5 : STA.w GFXStripes+$0684 ; blank tile
+                BRA .skip_small_keys
+        +
+        .draw_small_keys
+        LDA.w #$2810 : STA.w GFXStripes+$0684 ; small keys icon
+        LDY.w #0
+        CLC
 
-	LDA HUDDungeonItems : AND.w #$0001 : BEQ .skip_small_keys
+        .next_small_key
+	LDX.w .small_key_x_offset,Y
+	LDA.l DungeonKeys,X
+	AND.w #$00FF
 
-.draw_small_keys
-		LDA.w #$2810 : STA $1684 ; small keys icon
+	LDX.w .dungeon_positions,Y
+	ADC.w #$2816
+	STA.w GFXStripes+$0686,X
 
-		LDY.w #0
-
-		; Clear the carry only once
-		; it will be cleared by looping condition afterwards
-		CLC
-
-.next_small_key
-		LDX.w .small_key_x_offset,Y
-		LDA.l DungeonKeys,X
-		AND.w #$00FF
-
-		LDX.w .dungeon_positions,Y
-		ADC.w #$2816
-		STA.w $1686,X
-
-		INY : INY
-		CPY.w #26 : BCC .next_small_key
+	INY : INY
+	CPY.w #26 : BCC .next_small_key
 
 ;-------------------------------------------------------------------------------
 
-.skip_small_keys
+        .skip_small_keys
+        ; Big Keys
+        LDA.l HUDDungeonItems : AND.w #$0002 : BNE +
+                LDA.w #$24F5 : STA.w GFXStripes+$06C4 ; blank tile
+                BRA .skip_big_keys
+        +
+        LDA.w #$2811 : STA.w GFXStripes+$06C4 ; big key icon
+        LDX.w #0
+        LDA.l BigKeyField
 
-	; Big Keys
-	LDA HUDDungeonItems : AND.w #$0002 : BEQ .skip_big_keys
+        .next_big_key
+        BIT.w .dungeon_bitmasks,X
+        BEQ ..skip_key
 
+        LDY.w .dungeon_positions,X
+        LDA.w #$2826
+        STA.w GFXStripes+$06C6,Y
+        LDA.l BigKeyField
 
-		LDA.w #$2811 : STA $16C4 ; big key icon
-
-		; use X so we can BIT
-		LDX.w #0
-
-		; load once and test multiple times
-		LDA.l BigKeyField
-
-.next_big_key
-		BIT.w .dungeon_bitmasks,X
-		BEQ ..skip_key
-
-		LDY.w .dungeon_positions,X
-		LDA.w #$2826
-		STA.w $16C6,Y
-
-		; reload
-		LDA.l BigKeyField
-
-..skip_key
-		INX : INX
-		CPX.w #26 : BCC .next_big_key
+        ..skip_key
+        INX : INX
+        CPX.w #26 : BCC .next_big_key
 
 ;-------------------------------------------------------------------------------
 
-.skip_big_keys
+        .skip_big_keys
+        LDA.l HUDDungeonItems : AND.w #$0010 : BNE +
+                LDA.w #$24F5 : STA.w GFXStripes+$0704 ; blank tile
+                BRA .skip_boss_kills
+        +
+        LDA.w #$280F : STA.w GFXStripes+$0704 ; skull icon
+        LDY.w #0
 
-	LDA HUDDungeonItems : AND.w #$0010 : BEQ .skip_boss_kills
+        .next_boss_kill
+        LDX.w .boss_room_ids,Y
+        LDA.l RoomDataWRAM.l,X
+        AND.w #$0800
+        BEQ ..skip_boss_kill
+                LDA.w #$2826
+                LDX.w .dungeon_positions,Y
+                STA.w GFXStripes+$0706,X
+        ..skip_boss_kill
+        INY : INY
+        CPY.w #26 : BCC .next_boss_kill
 
-		LDA.w #$280F : STA $1704 ; skull icon
+;-------------------------------------------------------------------------------
+        .skip_boss_kills
+        LDA.l HUDDungeonItems : BIT.w #$00F3 : BEQ .maps_and_compasses
+                JMP .exit
+;-------------------------------------------------------------------------------
+        .maps_and_compasses
+        LDA.w #$24F5 : STA.w GFXStripes+$0704 ; blank tile boss icon
+        ; Maps
+        LDA.l HUDDungeonItems : AND.w #$0004 : BNE +
+                LDA.w #$24F5 : STA.w GFXStripes+$0684 ; map icon
+                BRA .skip_maps
+        +
+        LDA.w #$2821 : STA.w GFXStripes+$0684 ; map icon
+        LDX.w #0
+        LDA.l MapField
 
-		LDY.w #0
+        .next_map
+        BIT.w .dungeon_bitmasks,X
+        BEQ ..skip_map
 
-.next_boss_kill
-		LDX.w .boss_room_ids,Y
-		LDA.l RoomDataWRAM.l,X
-		AND.w #$0800
-		BEQ ..skip_boss_kill
+        LDY.w .dungeon_positions,X
+        LDA.w #$2826
+        STA.w GFXStripes+$0686,Y
+        LDA.l MapField
 
-		LDA.w #$2826
-		LDX.w .dungeon_positions,Y
-		STA.w $1706,X
+        ..skip_map
+        INX : INX
+        CPX.w #26 : BCC .next_map
 
-..skip_boss_kill
-		INY : INY
-		CPY.w #26 : BCC .next_boss_kill
+        .skip_maps
+        LDA.l HUDDungeonItems : AND.w #$0008 : BNE +
+                LDA.w #$24F5 : STA.w GFXStripes+$06C4 ; blank tile
+                BRA .skip_compasses
+        +
+        LDA.w #$2C20 : STA.w GFXStripes+$06C4 ; compass icon
+        LDX.w #0
+        LDA.l CompassField
+
+        .next_compass
+        BIT.w .dungeon_bitmasks,X
+        BEQ ..skip_compass
+
+        LDY.w .dungeon_positions,X
+        LDA.w #$2826
+        STA.w GFXStripes+$06C6,Y
+        LDA.l CompassField
+
+        ..skip_compass
+        INX : INX
+        CPX.w #26 : BCC .next_compass
 
 ;-------------------------------------------------------------------------------
 
-.skip_boss_kills
-	JMP .exit
-
-;-------------------------------------------------------------------------------
-
-	; This should only display if select is pressed in hud
- .maps_and_compasses
-
-	; Maps
-	LDA HUDDungeonItems : AND.w #$0004 : BEQ .skip_maps
-		LDA.w #$2821 : STA $1684 ; map icon
-
-		; use X so we can BIT
-		LDX.w #0
-
-		; load once and test multiple times
-		LDA.l MapField
-
-.next_map
-		BIT.w .dungeon_bitmasks,X
-		BEQ ..skip_map
-
-		LDY.w .dungeon_positions,X
-		LDA.w #$2826
-		STA.w $1686,Y
-
-		; reload
-		LDA.l MapField
-
-..skip_map
-		INX : INX
-		CPX.w #26 : BCC .next_map
-
-;-------------------------------------------------------------------------------
-
-.skip_maps
-
-	; Compasses
-	LDA HUDDungeonItems : AND.w #$0008 : BEQ .skip_compasses
-		LDA.w #$2C20 : STA $16C4 ; compass icon
-
-		; use X so we can BIT
-		LDX.w #0
-
-		; load once and test multiple times
-		LDA.l CompassField
-
-.next_compass
-		BIT.w .dungeon_bitmasks,X
-		BEQ ..skip_compass
-
-		LDY.w .dungeon_positions,X
-		LDA.w #$2826
-		STA.w $16C6,Y
-
-		; reload
-		LDA.l CompassField
-
-..skip_compass
-		INX : INX
-		CPX.w #26 : BCC .next_compass
-
-;-------------------------------------------------------------------------------
-
-.skip_compasses
-
-.exit
-	PLB
-	PLP
+        .skip_compasses
+        .exit
+        PLB
+        PLP
 RTL
 ;--------------------------------------------------------------------------------
 ;================================================================================
@@ -528,75 +418,72 @@ DrawPendantCrystalDiagram:
 		REP #$30 ; Set 16-bit accumulator & index registers
 		LDX.w #$0000 ; Paint entire box black & draw empty pendants and crystals
 		-
-		LDA.l .row0, X : STA $12EA, X
-		LDA.l .row1, X : STA $132A, X
-		LDA.l .row2, X : STA $136A, X
-		LDA.l .row3, X : STA $13AA, X
-		LDA.l .row4, X : STA $13EA, X
-		LDA.l .row5, X : STA $142A, X
-		LDA.l .row6, X : STA $146A, X
-		LDA.l .row7, X : STA $14AA, X
-		LDA.l .row8, X : STA $14EA, X
+		LDA.l .row0, X : STA.w GFXStripes+$02EA, X
+		LDA.l .row1, X : STA.w GFXStripes+$032A, X
+		LDA.l .row2, X : STA.w GFXStripes+$036A, X
+		LDA.l .row3, X : STA.w GFXStripes+$03AA, X
+		LDA.l .row4, X : STA.w GFXStripes+$03EA, X
+		LDA.l .row5, X : STA.w GFXStripes+$042A, X
+		LDA.l .row6, X : STA.w GFXStripes+$046A, X
+		LDA.l .row7, X : STA.w GFXStripes+$04AA, X
+		LDA.l .row8, X : STA.w GFXStripes+$04EA, X
 		INX #2 : CPX.w #$0014 : BCC -
 		
 		; pendants
-		LDA PendantsField
+		LDA.l PendantsField
 
 		  LSR : BCC + ; pendant of wisdom (red)
 			LDX.w #$252B
-			STX.w $13B6
-			INX : STX.w $13B8
-			INX : STX.w $13F6
-			INX : STX.w $13F8
+			STX.w GFXStripes+$03B6
+			INX : STX.w GFXStripes+$03B8
+			INX : STX.w GFXStripes+$03F6
+			INX : STX.w GFXStripes+$03F8
 
 		+ LSR : BCC + ; pendant of power (blue)
 			LDX.w #$2D2B
-			STX.w $13AE
-			INX : STX.w $13B0
-			INX : STX.w $13EE
-			INX : STX.w $13F0
+			STX.w GFXStripes+$03AE
+			INX : STX.w GFXStripes+$03B0
+			INX : STX.w GFXStripes+$03EE
+			INX : STX.w GFXStripes+$03F0
 
 		+ LSR : BCC + ; pendant of courage (green)
 			LDX.w #$3D2B
-			STX.w $1332
-			INX : STX.w $1334
-			INX : STX.w $1372
-			INX : STX.w $1374
+			STX.w GFXStripes+$0332
+			INX : STX.w GFXStripes+$0334
+			INX : STX.w GFXStripes+$0372
+			INX : STX.w GFXStripes+$0374
 		+
-
-
-
 		; crystals
-		LDA CrystalsField
+		LDA.l CrystalsField
 		LDX.w #$2D44
 		LDY.w #$2D45
 
 		  BIT.w #$0002 : BEQ + ; crystal 1
-			STX.w $14AC
-			STY.w $14AE
+			STX.w GFXStripes+$04AC
+			STY.w GFXStripes+$04AE
 		+ BIT.w #$0010 : BEQ + ; crystal 2
-			STX.w $146E
-			STY.w $1470
+			STX.w GFXStripes+$046E
+			STY.w GFXStripes+$0470
 		+ BIT.w #$0040 : BEQ + ; crystal 3
-			STX.w $14B0
-			STY.w $14B2
+			STX.w GFXStripes+$04B0
+			STY.w GFXStripes+$04B2
 		+ BIT.w #$0020 : BEQ + ; crystal 4
-			STX.w $1472
-			STY.w $1474
+			STX.w GFXStripes+$0472
+			STY.w GFXStripes+$0474
 		+ BIT.w #$0008 : BEQ + ; crystal 7
-			STX.w $14B8
-			STY.w $14BA
+			STX.w GFXStripes+$04B8
+			STY.w GFXStripes+$04BA
 		+ 
 
 		LDX.w #$2544
 		LDY.w #$2545
 
 		  BIT.w #$0004 : BEQ + ; crystal 5
-			STX.w $14B4
-			STY.w $14B6
+			STX.w GFXStripes+$04B4
+			STY.w GFXStripes+$04B6
 		+ BIT.w #$0001 : BEQ + ; crystal 6
-			STX.w $1476
-			STY.w $1478
+			STX.w GFXStripes+$0476
+			STY.w GFXStripes+$0478
 		+
 
 	PLB : PLP
@@ -674,3 +561,79 @@ dw $A8FB, $A8F9, $A8F9, $A8F9, $A8F9, $A8F9, $A8F9, $A8F9, $A8F9, $E8FB
 ;0x1C - ??? possibly unused. (Were they planning two extra dungeons perhaps?)
 ;0x1E - ??? possibly unused.
 ;================================================================================
+HandleEmptyMenu:
+        LDA.b Joy1A_New : BIT.b #$DF : BNE .close_menu ; Not select, close menu
+                          BIT.b #$20 : BNE .sel_pressed
+        LDA.b Joy1A_All : BIT.b #$20 : BNE .wait_for_change
+		LDA.l HudFlag : AND.b #$60 : BEQ .wait_for_change
+		LDA.l HudFlag : AND.b #$9F : STA.l HudFlag ; Unset without select
+                JSL.l MaybePlaySelectSFX
+                LDA.b #$0C : BRA .done
+        .sel_pressed
+        LDA.l HUDDungeonItems : BIT.b #$0C : BNE +
+                LDA.b #$40
+                BRA .store_flag
+        +
+        LDA.b #$60
+        .store_flag
+        STA.l HudFlag
+        JSL.l MaybePlaySelectSFX
+        LDA.b #$0C : BRA .done
+        .wait_for_change
+        LDA.b #$03 : BRA .done
+        .close_menu
+        LDA.b #$06
+        .done
+        STA.w SubModuleInterface
+RTL
+;-------------------------------------------------------------------------------
+MaybeDrawEquippedItem:
+        LDA.w ItemCursor : BEQ +
+                JML.l ItemMenu_DrawEquippedYItem+$07
+        +
+JML.l ItemMenu_DrawEquippedYItem_exit
+;-------------------------------------------------------------------------------
+RestoreMenu_SetSubModule:
+        LDA.w ItemCursor : BEQ +
+                LDA.b #$04 : STA.w SubModuleInterface
+                RTL
+        +
+        LDA.b #$03 : STA.w SubModuleInterface
+RTL
+;-------------------------------------------------------------------------------
+DrawHeartPiecesMenu:
+        LDA.l HUDHeartColors_index : AND.w #$00FF
+        ASL : TAX
+        LDA.l HUDHeartColors_masks_game_hud,X
+        STA.b Scrap0D
+
+        LDA.l HeartPieceQuarter : AND.w #$00FF
+        ASL #3 : TAX
+        LDY.w #$16F2
+
+        LDA.l HeartPieceMenuBaseTiles,X
+        ORA.b Scrap0D
+        STA.w $0000,Y
+
+        INX #2
+        LDA.l HeartPieceMenuBaseTiles,X
+        ORA.b Scrap0D
+        STA.w $0002,Y
+
+        INX #2
+        LDA.l HeartPieceMenuBaseTiles,X
+        ORA.b Scrap0D
+        STA.w $0040,Y
+
+        INX #2
+        LDA.l HeartPieceMenuBaseTiles,X
+        ORA.b Scrap0D
+        STA.w $0042,Y
+RTL
+
+HeartPieceMenuBaseTiles:
+dw $2084, $6084, $2085, $6085 ; 0 heart pieces
+dw $20AD, $6084, $2085, $6085 ; 1 heart piece
+dw $20AD, $6084, $20AE, $6085 ; 2 heart pieces
+dw $20AD, $60AD, $20AE, $6085 ; 3 heart pieces
+;-------------------------------------------------------------------------------

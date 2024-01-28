@@ -48,6 +48,29 @@ TakeItem_SetItemValueFF_extended:
     clc
     rtl
 
+;
+; Loads the underworld room item Id from our extended tables instead of from
+; the original level data (this lets us use the full 8-bit for item id:s)
+;
+LoadRoomItemIdUW_extended:
+    phx
+    ldy $EB
+    
+    ; Load dungeon id
+    lda.b $10
+    cmp.b #$07
+    bcc .firstLevels
+    tya : clc : adc.b #$80 : tax
+    bra .loadItem
+.firstLevels
+    tyx
+.loadItem
+    lda.l RoomItemsUW_extended, x
+    plx
+    cmp.b #$2F
+    rtl
+
+
 ; Params:
 ; X: cycle sprite index / object index
 ; Y: item slot
@@ -55,6 +78,8 @@ TakeItem_SetItemValueFF_extended:
 ; [01]: Y
 ; [04]: left sprite attributes
 ; [05]: right sprite attributes
+; [07]: Has two sides
+; [0A]: X separation
 ; [0C]: frame
 ; [0F]: flip horizontally
 ; [0343]: LeftSpriteOffset
@@ -86,7 +111,9 @@ Anim_WriteSpecificItemSprites_extended:
     lda.w DynamicItemAttrs+$1, x
     sta $05
     lda.b #$01
-    sta $07
+    sta $07 ; Has two sides
+    lda.b #$08
+    sta $0A ; X separation
 
     plx
     sec
@@ -302,8 +329,8 @@ ItemData:
     dw $8000, $0404     ; 39 - Dummy - Pendant of Power
     dw $8000, $0404     ; 3A - Bow and arrows
     dw $8000, $0404     ; 3B - Bow and silver Arrows
-    dw $8000, $0404     ; 3C - Bee
-    dw $8000, $0404     ; 3D - Fairy
+    dw $9E00, $0404     ; 3C - Bee
+    dw $9100, $0404     ; 3D - Fairy
     dw $A280, $0606     ; 3E - Heart Container - Boss
     dw $A280, $0606     ; 3F - Heart Container - Sanc
     
@@ -315,7 +342,7 @@ ItemData:
     dw $8000, $0404     ; 45 - Dummy - small magic
     dw $8A80, $0505     ; 46 - 300 Rupees
     dw $AA80, $0606     ; 47 - 20 Rupees
-    dw $8000, $0404     ; 48 - Good Bee
+    dw $9E80, $0404     ; 48 - Good Bee
     dw $A780, $0404     ; 49 - Fighter Sword
     dw $8000, $0404     ; 4A - Dummy - activated flute
     dw $9780, $0606     ; 4B - Boots                      
@@ -346,10 +373,10 @@ ItemData:
     dw $0000, $0404     ; 61 - Progressive Glove
     dw $B480, $0505     ; 62 - Bombs                  (M1)
     dw $B200, $0505     ; 63 - High Jump              (M1)
-    dw $B500, $0505     ; 64 - Long Beam              (M1)
-    dw $B300, $0505     ; 65 - Screw Attack           (M1)
-    dw $0000, $0404     ; 66 - Reserved - Progressive Bow                 (Why two here? Are both used?)
-    dw $0000, $0404     ; 67 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $0000, $0404     ; 64 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $0000, $0404     ; 65 - Reserved - Progressive Bow                 (Why two here? Are both used?)
+    dw $B500, $0505     ; 66 - Long Beam              (M1)
+    dw $B300, $0505     ; 67 - Screw Attack           (M1)
     dw $B280, $0404     ; 68 - Morph Ball             (M1)
     dw $B380, $0505     ; 69 - Varia Suit             (M1)
     dw $0000, $0404     ; 6A - Reserved - Goal Item (Single/Triforce)

@@ -15,6 +15,7 @@ incsrc "hooks.asm"
 org $878000
 base $7E1000
 incsrc "common.asm"
+incsrc "randomizer/wavy_ice.asm"  ; This has to exist in RAM
 warnpc $871000
 
 ; Include SNES port functions that doesn't have to be in the common code area

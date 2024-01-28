@@ -35,6 +35,13 @@ transition_to_m1:
     cpx #$2000
     bne -
 
+    ldx #$0000
+-
+    sta.l $7e0800, x
+    inx #2
+    cpx #$0400
+    bne -    
+
     sep #$30
     jsl UploadItemPalettes
 

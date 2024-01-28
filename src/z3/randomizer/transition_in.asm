@@ -82,6 +82,7 @@ transition_to_zelda:
 
     jsl DecompSwordGfx          ; Update sword graphics
     jsl DecompShieldGfx         ; Update shield graphics
+    jsl DecompressAllItemGraphics
 
     ; Load starting equipment, pre-open stuff
     LDA.l !SRAM_ALTTP_FRESH_FILE : BNE +
@@ -171,7 +172,7 @@ transition_to_zelda:
     ldy #$0000
 
     lda.w #$0000
-    sta.l !NMI_AUX
+    sta.l NMIAux
 
     %ai8()
 
@@ -182,7 +183,8 @@ transition_to_zelda:
 
     lda #$48
     sta $010e
-    lda #$01
+    
+    lda #$00
     sta $010a
 
     ; lda #$05

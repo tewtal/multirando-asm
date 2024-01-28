@@ -2,11 +2,6 @@
 ; Item Downgrade Fix
 ;--------------------------------------------------------------------------------
 ItemDowngradeFix:
-	JSR ItemDowngradeFixMain
-	JSL CountChestKeyLong
-RTL
-
-ItemDowngradeFixMain:
 	JSL.l AddInventory
 	BMI .dontWrite ; thing we wrote over part 1
 	
@@ -32,18 +27,18 @@ ItemDowngradeFixMain:
 	CPY.b #$00 : BEQ .isUncleSwordShield ; Fighter's Sword & Shield
 
         .done
-	STA [$00] ; thing we wrote over part 2
+	STA.b [Scrap00] ; thing we wrote over part 2
 	.dontWrite
-RTS
+RTL
 	.isPowerGloves
 	.isBlueShield
 	.isRedShield
 	.isBlueBoomerang
 	.isBow
 	.isBowAndArrows
-	CMP [$00] : !BGE .done ; finished if we're upgrading
-	LDA [$00] ; reload old value
-RTS
+	CMP.b [$00] : !BGE .done ; finished if we're upgrading
+	LDA.b [$00] ; reload old value
+RTL
 	.isSilverArrowBow
 	.isRedBoomerang
 	.isMagicPowder
@@ -51,31 +46,31 @@ RTS
 	.isShovel
 	.isMushroom
 	PHA
-	LDA [$00] : BNE + ; don't upgrade if we already have the toggle for it
+	LDA.b [Scrap00] : BNE + ; don't upgrade if we already have the toggle for it
 			PLA
-			STA [$00]
-		RTS
+			STA.b [Scrap00]
+		RTL
 	+
 	PLA
-RTS
+RTL
 	.isSword
 	PHA
-                LDA HighestSword : STA $04
+                LDA.l HighestSword : STA.b Scrap04
 		TYA ; load sword item
 		CMP.b #$49 : BNE + : LDA.b #$00 : + ; convert extra fighter's sword to normal one
 		CMP.b #$50 : BNE + : LDA.b #$01 : + ; convert extra master sword to normal one
-		INC : CMP $04 : !BGE + ; skip if highest is lower (this is an upgrade)
-			LDA $04 : DEC ; convert to item id
-			TAY : PLA : LDA $04 ; put sword id into the thing to write
+		INC : CMP.b Scrap04 : !BGE + ; skip if highest is lower (this is an upgrade)
+			LDA.b Scrap04 : DEC ; convert to item id
+			TAY : PLA : LDA.b Scrap04 ; put sword id into the thing to write
 			JMP .done
 		+
 	PLA
 JMP .done
         .isUncleSwordShield
 	PHA
-                LDA HighestSword : STA [$00] ; already set to 1 if we had no sword, always keep highest
-                INC $00
-                LDA HighestShield : STA [$00]
+                LDA.l HighestSword : STA.b [Scrap00] ; already set to 1 if we had no sword, always keep highest
+                INC.b Scrap00
+                LDA.l HighestShield : STA.b [Scrap00]
 	PLA
-RTS
+RTL
 ;================================================================================
