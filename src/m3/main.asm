@@ -32,4 +32,18 @@ sm_vram_right:
     incbin "../data/sm-vram-right-1.bin"
     incbin "../data/sm-vram-right-2.bin"
 
+org $d80000
+m1_initram:
+    incbin "../data/m1-initram.bin"
+m1_initsram:
+    incbin "../data/m1-initsram.bin"
+z1_initram:
+    incbin "../data/z1-initram.bin"
+z1_initsram:
+    incbin "../data/z1-initsram.bin"
+sm_alttp_sram:
+    incbin "../data/z3-initsram.bin"
+warnpc $d90000
+
+
 namespace off

@@ -11,6 +11,12 @@ org $898000
 incsrc "newitems.asm"
 incsrc "transition_out.asm"
 incsrc "transition_in.asm"
+incsrc "loadgame.asm"
 
 org $8A8000
 incsrc "data.asm"
+
+
+; Patch transition door
+org $80A6C9
+    db $03, $1f

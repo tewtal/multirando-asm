@@ -46,6 +46,7 @@ NMIEnd:
     plp : plb : ply : plx : pla
     jmp $E576
 
+print "sttb = ", pc
 SnesTransferTileBuf:
     lda #$01
     sta.w TransferSourceSet

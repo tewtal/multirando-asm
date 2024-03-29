@@ -30,13 +30,13 @@ org $01E9BC
 
 org $b88000
 zelda_wram:
-    incbin "../../data/zelda-wram-lo-1.bin"
+    incbin "../../data/z3-newwram.bin":0000-8000
 org $b98000
-    incbin "../../data/zelda-wram-lo-2.bin"
+    incbin "../../data/z3-newwram.bin":8000-10000
 org $ba8000
-    incbin "../../data/zelda-wram-hi-1.bin"
+    incbin "../../data/z3-newwram.bin":10000-18000
 org $bb8000
-    incbin "../../data/zelda-wram-hi-2.bin"
+    incbin "../../data/z3-newwram.bin":18000-20000
 
 org $bc8000
 zelda_vram:

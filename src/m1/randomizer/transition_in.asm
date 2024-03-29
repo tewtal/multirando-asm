@@ -50,8 +50,7 @@ transition_to_m1:
     lda #$D95C : sta $000810
     lda #$80C0 : sta $000812
 
-;   Restore gameplay
-    ldx.w #$01F4 : txs
+
 
     ; Destination args =
     ; DSxxxAAA
@@ -77,10 +76,12 @@ transition_to_m1:
 +
     lda.w #$0282 : sta $56
 ++
-    
+
+    lda.w #$0101 : sta $49
     lda.w #$0101 : sta $4D
-    lda.w #$7113 : sta $51
-    lda.w #$1371 : sta $30D
+    lda.w #$7112 : sta $51
+    lda.w #$0171 : sta $30D
+    
     lda.l !IRAM_TRANSITION_DESTINATION_ID
     ; Change the room to the room left of where we are
     xba : inc : xba
@@ -95,12 +96,18 @@ transition_to_m1:
 +
     lda.w #$0181 : sta $56
 ++
+
+    lda.w #$0303 : sta $49
+    ;lda.w #$0000 : sta $4D
+    ;lda.w #$71ED : sta $51
+    ;lda.w #$FE71 : sta $30D
     lda.l !IRAM_TRANSITION_DESTINATION_ID
     ; Change the room to the room right of where we are
     xba : dec : xba
 
 .set_room
     sta.b $4F
+    
 
     ; Get what bank we need to switch to and put in A
     lda $74 : and #$000f : asl : tax
@@ -117,6 +124,9 @@ transition_to_m1:
     lda #%00000010 : STA PPUCNT1ZP
 
     lda #$01 : sta $1c
+
+    ; Restore World map
+    jsl $801000 : dw $A93E
 
     ; Load samus GFX
     lda #$00 : sta $23
@@ -140,13 +150,29 @@ transition_to_m1:
     and #$0f : sta $23
     lda #$1f : sta PPUCNT1ZP
 
+    ldx.b #$00
+-
+    lda.l door_stack, x
+    sta $1f0, x
+    inx
+    cpx.b #$10
+    bne -
+
+    %ai16()
+;   Restore gameplay
+    ldx.w #$01F4 : txs
+    %ai8()
+
     jml [$00d0]
 
 door_entrypoint:
-    dw $8b78
+    dw $8b79
 door_bank:
     dw $0081  ;    brinstar
     dw $0082  ;    norfair
     dw $0084  ;    kraid
     dw $0083  ;    tourian
     dw $0085  ;    ridley
+
+door_stack:
+    db $E6, $01, $77, $8B, $81, $58, $8B, $4D, $CB, $47, $C9, $C4, $C0, $56, $90, $87

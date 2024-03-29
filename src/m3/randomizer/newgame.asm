@@ -64,6 +64,47 @@ introskip_doorflags:
     ;jsl sm_copy_alttp_items ; Copy alttp items into temporary SRAM buffer
     jsl sm_fix_z3_checksum  ; Fix alttp checksum 
     
+
+        ; TODO: Remove this and move to the "create new file code"
+    ; Also this should probably use DMA
+
+    ; Copy Z1 initram to BW-RAM buffer
+    ldx #$0000
+-
+    lda z1_initram, x
+    sta $40C800, x
+    inx #2
+    cpx #$0800
+    bne -
+
+    ; Copy Z1 initsram to BW-RAM buffer
+    ldx #$0000
+-
+    lda z1_initsram, x
+    sta $406000, x
+    inx #2
+    cpx #$2000
+    bne -    
+
+    ; Copy M1 initram to BW-RAM buffer
+    ldx #$0000
+-
+    lda m1_initram, x
+    sta $40D000, x
+    inx #2
+    cpx #$0800
+    bne -
+
+    ; Copy M1 initsram to BW-RAM buffer
+    ldx #$0000
+-
+    lda m1_initsram, x
+    sta $408000, x
+    inx #2
+    cpx #$2000
+    bne -
+
+
     jsl mb_CopyItemBuffers  ; Copy all games items into temporary SRAM buffer
 
 ;     ; Clear multiworld seed data and reinitialize on new game.

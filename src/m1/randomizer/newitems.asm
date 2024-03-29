@@ -209,6 +209,7 @@ CustomItemHandler:
 .end
     rtl
 
+print "pickupitemextended = ", pc
 PickupItem_extended:
     tay
     
@@ -225,7 +226,10 @@ PickupItem_extended:
 
     ; Ok, we have a custom item, handle picking it up here
     lda.w $0748, x    ; Load item id
+    
+    phx : phy
     jsl mb_WriteItemToInventory
+    ply : plx
     
     ; Flag this item as picked up
     jsr SetItemBit

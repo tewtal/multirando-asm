@@ -156,7 +156,7 @@ sm_alttp_new_game:
     sta.l !SRAM_ALTTP_START,x
     inx
     inx
-    cpx #$2000
+    cpx #$4000
     bne -
 
     jsl sm_fix_z3_checksum
@@ -167,8 +167,7 @@ sm_alttp_new_game:
     pla
     rtl
 
-sm_alttp_sram:
-    incbin "../../data/zelda-sram.bin"
+
 
 sm_fix_z3_checksum:
     pha

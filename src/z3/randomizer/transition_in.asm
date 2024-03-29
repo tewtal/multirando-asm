@@ -263,6 +263,7 @@ zelda_save_start_hook:
     sta.l !SRAM_SAVING
     rtl
 
+print "zelda_save_done_hook = ", pc
 zelda_save_done_hook:
     lda #$0001
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games

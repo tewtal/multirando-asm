@@ -72,56 +72,6 @@ randomizer_setup:
     lda #$0000
     sta !SRAM_SAVING
 
-    lda !SRAM_INITIALIZED
-    cmp #$CAFE
-    bne +
-    rts
-+
-    lda #$CAFE
-    sta !SRAM_INITIALIZED    
-
-    ; TODO: Remove this and move to the "create new file code"
-    ; Also this should probably use DMA
-
-    ; Copy Z1 initram to BW-RAM buffer
-    ldx #$0000
--
-    lda data_z1_initram, x
-    sta $40C800, x
-    inx #2
-    cpx #$0800
-    bne -
-
-    ; Copy Z1 initsram to BW-RAM buffer
-    ldx #$0000
--
-    lda data_z1_initsram, x
-    sta $406000, x
-    inx #2
-    cpx #$2000
-    bne -    
-
-    ; Copy M1 initram to BW-RAM buffer
-    ldx #$0000
--
-    lda data_m1_initram, x
-    sta $40D000, x
-    inx #2
-    cpx #$0800
-    bne -
-
-    ; Copy M1 initsram to BW-RAM buffer
-    ldx #$0000
--
-    lda data_m1_initsram, x
-    sta $408000, x
-    inx #2
-    cpx #$2000
-    bne -
-
-    %a8()
-    
-    jsl CopyItemBuffers
     rts
 
 sa1_setup:    

@@ -3284,3 +3284,10 @@ NewOutletData:
 	dw $0000 ; 0xFC
 	dw $0000 ; 0xFD
 	dw $0000 ; 0xFE
+
+
+CheckOutletSpawn:
+	jsl FakeWorldFix
+	stz.b $8b
+	stz.w $040b
+	rtl

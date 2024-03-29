@@ -2640,11 +2640,11 @@ db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1E8-0x1EF
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1F0-0x1F7
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x1F8-0x1FF
 
-db $86, $85, $FF, $FF, $FF, $FF, $FF, $FF ; 0x200-0x207
+db $86, $32, $61, $74, $FF, $FF, $FF, $FF ; 0x200-0x207
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x208-0x20F
-db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x210-0x217
+db $80, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x210-0x217
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x218-0x21F
-db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x220-0x227
+db $85, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x220-0x227
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x228-0x22F
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x230-0x237
 db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; 0x238-0x23F

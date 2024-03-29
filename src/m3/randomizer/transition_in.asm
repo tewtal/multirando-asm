@@ -129,7 +129,7 @@ sm_save_done_hook:
     rtl
 
 sm_load_hook:
-    phb : phx : phy
+    phb : phx : phy : pha
     pea $7e00
     plb
     plb
@@ -138,6 +138,8 @@ sm_load_hook:
     ;jsl sm_copy_alttp_items
     ;jsl stats_load_sram
     ;jsl mw_load_sram
+
+    pla
     jml $81808f
 
 copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)

@@ -46,6 +46,7 @@ transition_from_m1:
     jml mb_snes_transition    ; Jump the SNES CPU into BW-RAM routines that let the SA-1 control it
 
 
+print "samusindoor = ", pc
 SamusInDoor_extended:
     phx
     sta $56

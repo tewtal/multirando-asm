@@ -30,17 +30,17 @@ org $C13798   ; Crocomire's room changes colors $2E, $2F, $3E, and $3F for reaso
     incbin "../../data/Crocomire_palette.bin"
 
 org $848794
-    lda.w #(new_item_graphics_data>>16)
+    jsr get_item_bank
 
 org $D70000
 new_item_graphics_data:
     incbin "../../data/newitems_sm.bin"
 
 ;  Replace terminator item for testing
-;  org $8f8432
-;      dw $efe0
-;  org $8f8432+$5
-;      db $e0
+;org $8f8432
+;     dw $ef03
+ ;org $8f8432+$5
+  ;   db $50
 
 ; Add our new custom item PLMs
 org $84efe0
@@ -575,6 +575,23 @@ item_graphics:
     dw $8280 : db $00, $00, $00, $00, $00, $00, $00, $00    ; FD - Three Marker
     dw $8300 : db $00, $00, $00, $00, $00, $00, $00, $00    ; FE - Four Marker
     dw $0000 : db $00, $00, $00, $00, $00, $00, $00, $00    ; FF - Unused
+
+get_item_bank:
+    phx
+    lda.w $1c27  ; Get plm index
+    tax
+    lda.w $1c37, x ; Get PLM id
+    cmp.w #plm_items
+    bcc.w .original
+.custom
+    lda.w #(new_item_graphics_data>>16)
+    bra .end
+.original:
+    lda.w #$0089
+.end
+    plx
+    rts
+
 
 warnpc $84fe00
 

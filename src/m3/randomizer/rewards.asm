@@ -82,7 +82,7 @@ boss_death_reward:
     %ai16()
 
     ; Show message box
-    lda #$0063
+    lda #$0023
     jsl $858080
 
     plp : plx

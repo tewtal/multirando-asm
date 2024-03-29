@@ -5,7 +5,7 @@
 ; Transition table when entering a dungeon/cave
 transition_table_in:
 ;  room_id,  game,  destination, args
-dw $0066, $0001, $0201, $0000
+dw $0066, $0001, $0220, $0000
 dw $0000
 
 org $87F000

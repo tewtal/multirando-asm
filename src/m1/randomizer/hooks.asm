@@ -64,12 +64,12 @@ org $839D79 : lda [$00], y              ; Rinka
 ; ============================================================================
 ; Disable reloading items from password
 ; ============================================================================
-%hook($8D3D, "rts")
+org $808D3D : jsl LoadItemsFromPassword : rts
 
 ; ============================================================================
 ; Cross-game transitions
 ; ============================================================================
-%hook($8B74, "jsl SamusInDoor_extended : nop")
+%hook($8B74, "jsl SamusInDoor_extended : rts")
 
 ; ============================================================================
 ; Wavy-ice patch by snarfblam
@@ -77,3 +77,8 @@ org $839D79 : lda [$00], y              ; Rinka
 %hook($DBD2, "nop #8")
 %hook($D5C5, "jmp WavyIce_NewBehavior")
 %hook($F5EE, "jmp WavyIce_NewDamage")
+
+; ============================================================================
+; Spawn with full health
+; ============================================================================
+%hook($C922, "jsl RestoreSamusHealth : rts")

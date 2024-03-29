@@ -70,8 +70,7 @@ org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 %zhook($E627, "jsr WritePPUCTRL1AndResetScroll")
 
 ; Hook TransferTileBuf writes (dynamic tilemap/attribute writes)
-%zhook($A08C, "jsr SnesTransferTileBuf")
-
+org ((!BASE_BANK+$6)<<16)+$A08C : jsr SnesTransferTileBuf
 
 ; Sound engine hooks
 

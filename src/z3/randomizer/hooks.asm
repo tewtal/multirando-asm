@@ -11,6 +11,6 @@ org $02d70f
 org $02E214
     jml check_teleport_out
 
-org $0089be
+org $8089be
 	jml zelda_save_done_hook
 

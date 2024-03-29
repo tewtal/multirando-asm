@@ -21,7 +21,7 @@ UploadItemPalettes:
 ; Class in A
 ; Item Id in X
 TakeItem_SetItemValueFF_extended:
-    pha
+    phy : phx : pha
     lda.l ItemIdToDescriptor_extended, x
     cmp #$40
     bcc .notExtended
@@ -32,13 +32,13 @@ TakeItem_SetItemValueFF_extended:
     txa
     sec : sbc #$30
     jsl mb_WriteItemToInventory
-    pla
+    pla : plx : ply
     sec
     rtl
 
 ; Run original code and return
 .notExtended
-    pla
+    pla : plx : ply
     cpy #$07
     bne +
     cmp #$03

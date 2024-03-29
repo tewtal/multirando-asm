@@ -174,6 +174,8 @@ org $82E2AD : LDA.w NewOutletData_overworld_id,X
 org $82E2BA : LDA.w NewOutletData_scroll_mod_y,X
 org $82E2C9 : LDA.w NewOutletData_scroll_mod_x,X
 
+org $82E2B5 : JSL CheckOutletSpawn : NOP
+
 ;--------------------------------------------------------------------------------
 
 ;================================================================================
