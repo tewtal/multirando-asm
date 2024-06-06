@@ -21,8 +21,8 @@ org $AA8000
 incsrc "transition_tables.asm"
 warnpc $AAFFFF
 
-org $01E9BC
-    db $ca
+; org $01E9BC
+;     db $ca
 
 ; Banks B8-BE seems to be free as well in ALTTPR
 ; Use this for the WRAM/VRAM dumps used for game transitions
