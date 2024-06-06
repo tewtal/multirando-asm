@@ -6,6 +6,7 @@ incsrc "transition_out.asm"
 incsrc "transition_in.asm"
 incsrc "newitems.asm"
 incsrc "caves.asm"
+incsrc "ending.asm"
 
 org $8A8000
 incsrc "tables.asm"

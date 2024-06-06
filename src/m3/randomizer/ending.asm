@@ -17,11 +17,14 @@ org $8bde80
     jml sm_setup_credits
 
 org $b7fd00
-sm_check_ending_door:        ; Check if ALTTP has been beaten, and only then activate the escape.
+sm_check_ending_door:        ; Check if all games has been beaten, and only then activate the escape.
     pha
     lda #$0001
     sta.l !SRAM_SM_COMPLETED      ; Set supermetroid as completed
+    
     lda.l !SRAM_ALTTP_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED
     bne .alttp_done
     pla
     jsl $808212         ; Clear event flag if set
@@ -34,7 +37,10 @@ sm_check_ending_door:        ; Check if ALTTP has been beaten, and only then act
 sm_check_ending_mb:
     lda #$0001
     sta.l !SRAM_SM_COMPLETED      ; Set supermetroid as completed
+    
     lda.l !SRAM_ALTTP_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED    
     bne .alttp_done
     lda #$b2f9
     sta $0fa8
@@ -50,6 +56,8 @@ sm_check_ending_mb:
 sm_check_ending_mb_event:
     jsl $90F084
     lda.l !SRAM_ALTTP_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED    
     bne .alttp_done
     jml $A9B31a
 
@@ -58,6 +66,8 @@ sm_check_ending_mb_event:
 
 sm_check_ending_mb_timer:
     lda.l !SRAM_ALTTP_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED    
     bne .alttp_done
     clc
     jml $809E2E
@@ -68,6 +78,8 @@ sm_check_ending_mb_timer:
 
 sm_check_ending_mb_anim:
     lda.l !SRAM_ALTTP_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED    
     bne .alttp_done
     lda #$b3b5
     sta $0fa8

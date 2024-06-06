@@ -111,6 +111,7 @@ z3_transition_table:
 
     ; Copy SRAM -> WRAM
     dw $0003, !SRAM_ALTTP_START&$ffff, !SRAM_ALTTP_START>>16, $f000, $0000, $0500
+    dw $0003, (!SRAM_ALTTP_START+$0500)&$ffff, !SRAM_ALTTP_START>>16, $6000, $0001, $1000
 
     ; Set WRIO.7 to 1 (required by ALTTP)
     dw $0006, $0080, $4201

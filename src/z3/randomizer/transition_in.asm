@@ -69,6 +69,10 @@ transition_to_zelda:
     lda !SRAM_ALTTP_EQUIPMENT_2
     sta $000303
 
+    ; Adjust progressive items (update the "highest" value)
+    LDA.l SwordEquipment : STA.l HighestSword
+    LDA.l ArmorEquipment : STA.l HighestMail
+    LDA.l ShieldEquipment : STA.l HighestShield
 
     php
     jsl $0dfa78                 ; Redraw HUD

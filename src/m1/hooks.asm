@@ -74,6 +74,7 @@ endmacro
 
 ; Hook code that creates PPU strings outside of the regular gameplay modes
 %hook($C20E, "jsl PreparePPUProcess")
+
 ; The title screen uses this routine instead of the common one
 org (!BASE_BANK<<16)+$9449
     jsl PreparePPUProcess

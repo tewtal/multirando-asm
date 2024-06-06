@@ -4,7 +4,10 @@
 alttp_check_ending:
     lda.b #$01
     sta.l !SRAM_ALTTP_COMPLETED
+    
     lda.l !SRAM_SM_COMPLETED
+    and.l !SRAM_Z1_COMPLETED
+    and.l !SRAM_M1_COMPLETED
     bne .sm_completed
     lda.b #$08 : sta $010c
     lda.b #$0f : sta $10

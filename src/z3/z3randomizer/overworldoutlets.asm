@@ -3287,7 +3287,7 @@ NewOutletData:
 
 
 CheckOutletSpawn:
-	jsl FakeWorldFix
+	LDA.b OverworldIndex : AND.b #$40 : STA.l CurrentWorld
 	stz.b $8b
 	stz.w $040b
 	rtl

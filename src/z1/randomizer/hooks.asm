@@ -87,3 +87,22 @@ org $818619
     bra $0A
 
 ; ========================================================================
+
+; ========================================================================
+; Ending + Credits
+; ========================================================================
+
+; Hook the check for the ending sequence and redirect back to overworld if all games are not beaten
+
+;InitZelda:
+org $84A8CA
+    jsl CheckEndingSequence
+    bcs +
+    rts
++
+    jsr $eba3
+    lda #$02                ; Change game mode to load new level
+    sta $12
+    stz $10                 ; Set level to overworld
+    lda.b #$01 : sta.b $5A  ; Set exiting from stairs
+    rts

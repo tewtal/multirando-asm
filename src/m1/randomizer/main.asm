@@ -12,6 +12,7 @@ incsrc "newitems.asm"
 incsrc "transition_out.asm"
 incsrc "transition_in.asm"
 incsrc "loadgame.asm"
+incsrc "ending.asm"
 
 org $8A8000
 incsrc "data.asm"

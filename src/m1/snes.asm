@@ -453,6 +453,7 @@ print "tm = ", pc
 
 ; This routine is called with X/Y as arguments to where the pointer to draw is located
 ; We'll pre-process this string into SNES format before sending commands to the PPU
+print "prepareppuproc = ", pc
 PreparePPUProcess:
     phx : phy
     stx $00
@@ -958,17 +959,18 @@ PreparePalette:
     iny #2
 
     lda TransferAddress
-    and #$00f0
+    and #$001c
     asl #2
     cmp #$0040
     bcc +
     clc : adc #$0040
 +
-    sta TransferTmp
+    sta TransferTmp  ; Palette offset
     lda TransferAddress
-    and #$000f
+    and #$0003
     clc : adc TransferTmp
     sta PalIdx
+
     lda TransferCount
     and #$003f
     sta TransferCount
@@ -976,6 +978,7 @@ PreparePalette:
     sta ($04), y    ; Store length
     iny #2
     sep #$20
+
 
 .loop
     lda PalIdx
@@ -1028,14 +1031,16 @@ UploadStartTilemap:
     sta $2117
 
     rep #$10
-    ldx #$0400
+    ldx #$03C0
     ldy #$0000
 -
     lda ($00), y
     sta $2118
     iny
     dex
-    bne -
+    bne -    
+
+    ; TODO: Properly copy attribute data here as well
 
     sep #$30
     rtl

@@ -554,7 +554,6 @@ print "tm = ", pc
 
 ; This routine is called with X/Y as arguments to where the pointer to draw is located
 ; We'll pre-process this string into SNES format before sending commands to the PPU
-
 PreparePPUProcess:
     phx : phy
     stx $00
@@ -1083,16 +1082,6 @@ PreparePalette:
     clc : adc TransferTmp
     sta PalIdx
 
-    ; sta TransferTmp
-    ; lda TransferAddress
-    ; and #$0003
-    ; sta PalIdx  ; Store offset into row
-    ; lda TransferAddress
-    ; and #$00fc
-    ; asl #2
-    ; clc : adc PalIdx
-    ; clc : adc TransferTmp
-    ; sta PalIdx
     lda TransferCount
     and #$003f
     sta TransferCount

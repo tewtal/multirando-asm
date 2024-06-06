@@ -52,6 +52,8 @@ introskip_doorflags:
     sta.l !SRAM_ALTTP_COMPLETED
     sta.l !SRAM_ALTTP_RANDOMIZER_SAVED
     sta.l !SRAM_ALTTP_FRESH_FILE
+    sta.l !SRAM_M1_COMPLETED
+    sta.l !SRAM_Z1_COMPLETED
     ; sta.l !door_timer_tmp
     ; sta.l !door_adjust_tmp
     ; sta.l !add_time_tmp

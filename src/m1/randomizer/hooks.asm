@@ -82,3 +82,19 @@ org $808D3D : jsl LoadItemsFromPassword : rts
 ; Spawn with full health
 ; ============================================================================
 %hook($C922, "jsl RestoreSamusHealth : rts")
+
+; ============================================================================
+; Patch ending sequence to check for full game completion
+; ============================================================================
+org $808000
+    ; LDA TitleRoutine ($1F) : CMP #$15
+    jsl CheckExtraEndingTitleModes        
+
+; Patch the code where the game sets the escape timer flag after defeating
+; mother brain to not set it in the case where all games are not completed
+org $839EDE
+    ; LDA #$05 : STA $98
+    ; LDA #$80 : STA #$99
+    ; RTS
+    jsl CheckEndingSequence
+    rts

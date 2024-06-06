@@ -26,7 +26,7 @@
 org $C12D7C   ; Patch to Crateria surface palette for Z3 items e.g. PoH, Pearl
     incbin "../../data/Crateria_palette.bin"
 
-org $C13798   ; Crocomire's room changes colors $2E, $2F, $3E, and $3F for reasons unknown.
+org $C13798   ; Crocomire's room changes colors $1E, $2E, $2F, $3E, and $3F for reasons unknown.
     incbin "../../data/Crocomire_palette.bin"
 
 org $848794
@@ -320,7 +320,7 @@ item_graphics:
     dw $4600 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 13 Shovel
     dw $4700 : db $03, $03, $03, $03, $03, $03, $03, $03    ; 14 Flute
     dw $5100 : db $02, $02, $02, $02, $02, $02, $02, $02    ; 15 Somaria
-    dw $5A00 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 16 Empty Bottle
+    dw $4A00 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 16 Empty Bottle
     dw $6200 : db $02, $02, $02, $02, $02, $02, $02, $02    ; 17 Heart Piece
     dw $5200 : db $03, $03, $03, $03, $03, $03, $03, $03    ; 18 Cane of Byrna
     dw $5300 : db $02, $02, $02, $02, $02, $02, $02, $02    ; 19 Cape

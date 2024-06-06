@@ -13,32 +13,34 @@
  - [ ] Fix minor scrolling/attribute glitches
         * HDMA Split issue on pause menu in dungeons
         * Attribute blinking when scrolling vertically in some cases
-        * Sprite palette issues
 
 # Mother Brain
  - [x] Set up base SA-1 configuration to allow for all games
  - [x] Allow a single NES game to boot using the correct mapping
  - [x] Implement basic main menu
- - [ ] Implement game switching
+ - [x] Implement game switching
  - [ ] Implement game monitoring/statistic services
  - [ ] Implement more things
 
 # NES-SPC
- - [ ] Add a command to return to SPC IPL ROM 
+ - [x] Add a command to return to SPC IPL ROM 
 
 # Randomization
 
 ## Metroid 1
- - [ ] Add M1 Randomizer Patches
+ - [x] Add M1 Randomizer Patches
 
 ## Super Metroid
- - [ ] Add Super Metroid Randomizer Patches
+ - [_] Add Super Metroid Randomizer Patches
+        * Added a subset of patches from SMZ3
 
 ## Zelda 1
- - [ ] Add Z1 Randomizer Patches
+ - [x] Add Z1 Randomizer Patches
 
 ## A Link to the Past
- - [ ] Add ALTTP Randomizer Patches
+ - [x] Add ALTTP Randomizer Patches
+        * Synced to latest V32-baserom
 
 ## Combined
- - [ ] Add combined randomizer systems
+ - [_] Add combined randomizer systems
+        * In progress

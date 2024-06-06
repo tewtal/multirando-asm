@@ -134,10 +134,10 @@ item_message_table:
     dw $001D       ; 61 - Progressive Glove
     dw $001D       ; 62 - Bombs                  (M1)
     dw $001D       ; 63 - High Jump              (M1)
-    dw $001D       ; 64 - Long Beam              (M1)
-    dw $001D       ; 65 - Screw Attack           (M1)
-    dw $001D       ; 66 - Reserved - Progressive Bow                 (Why two her
-    dw $001D       ; 67 - Reserved - Progressive Bow                 (Why two her
+    dw $001D       ; 64 - Reserved - Progressive Bow                 (Why two her
+    dw $001D       ; 65 - Reserved - Progressive Bow                 (Why two her
+    dw $001D       ; 66 - Long Beam              (M1)
+    dw $001D       ; 67 - Screw Attack           (M1)
     dw $001D       ; 68 - Morph Ball             (M1)
     dw $001D       ; 69 - Varia Suit             (M1)
     dw $001D       ; 6A - Reserved - Goal Item (Single/Triforce)
@@ -403,10 +403,10 @@ item_names:
     dw "___       Glove Upgrade      ___"
     dw "___         M1 Bombs         ___"
     dw "___       M1 High Jump       ___"
+    dw "___          ProgBow         ___"
+    dw "___          ProgBow         ___"
     dw "___       M1 Long Beam       ___"
     dw "___      M1 Screw Attack     ___"
-    dw "___          ProgBow         ___"
-    dw "___          ProgBow         ___"
     dw "___       M1 Morph Ball      ___"
     dw "___       M1 Varia Suit      ___"
     dw "___         Goal Single      ___"
