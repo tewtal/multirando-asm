@@ -87,7 +87,41 @@ ChooseRoutineExtended:
 
 CustomItemHandler_common:
     jsl CustomItemHandler
-    rts
+    lda #$03
+    jmp $EDD6
+
+; A copy of the default powerup handler
+PowerUpHandler_extended:
+    iny             ;Prepare to store item type.
+    ldx #$00            ;
+    lda #$FF            ;
+    cmp $0748         ;Is first power-up item slot available?
+    beq +               ;if yes, branch to load item.
+    ldx #$08            ;Prepare to check second power-up item slot.
+    cmp $0750        ;Is second power-up item slot available?         
+    bne ++              ;If not, branch to exit.
++
+    lda [$00],y         ;Power-up item type.
+    jsr $EE3D       ;($EE3D)Get unique item ID.
+    jsr $EE4A        ;($EE4A)Check if Samus already has item.
+
+    bcs ++               ;Samus already has item. do not load it.
+    ldy #$02            ;Prepare to load item coordinates.
+    lda $09             ;
+    sta $0748,x       ;Store power-up type in available item slot.
+    lda [$00],y         ;Load x and y screen positions of item.
+    tay             ;Save position data for later processing.
+    and #$F0            ;Extract Y coordinate.
+    ora #$08            ;+ 8 to find  Y coordinate center.
+    sta $0749,x     ;Store center Y coord
+    tya             ;Reload position data.
+    jsr $C2C5          ;($C2C5)*16. Move lower 4 bits to upper 4 bits.
+    ora #$08            ;+ 8 to find X coordinate center.
+    sta $074A,x     ;Store center X coord
+    jsr $EB85        ;($EB85)Get name table to place item on.
+    sta $074B,x      ;Store name table Item is located on.
+++
+    rtl
 
 GetEnemyData_long:
     lda [$00],y                     ;Get 1st byte again.

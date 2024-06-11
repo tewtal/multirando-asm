@@ -49,8 +49,14 @@ CheckExtraEndingTitleModes:
     lda #$1a
     sta $1f
 
+    ; Set area to brinstar
+    lda #$00
+    sta $74
+
     ; pop the return address off the stack
     pla : pla : pla
 
     ; Run initialize game
+    lda #$80 : sta m1_NMIJumpBank
+    pea $8080 : plb : plb
     jml $8092d4

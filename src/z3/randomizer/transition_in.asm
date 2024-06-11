@@ -260,23 +260,15 @@ zelda_restore_dmaregs:
     plp
     rts
 
-zelda_save_start_hook:
-    ; The save routine will be disrupted by NMI if this takes too long.
-    ; Avoid doing anything time consuming here.
-    lda #$01
-    sta.l !SRAM_SAVING
-    rtl
-
 print "zelda_save_done_hook = ", pc
 zelda_save_done_hook:
+    php
+    rep #$30
     lda #$0001
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
     ; TODO: Fix when adding multiworld
     ; jsl mw_save_sram
-    lda #$0000
-    sta.l !SRAM_SAVING
-    sep #$30
-    plb
+    plp
     rtl
 
 zelda_restore_randomizer_ram:

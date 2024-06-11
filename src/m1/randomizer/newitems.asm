@@ -140,7 +140,9 @@ CustomItemHandler:
     jsr CheckItemBit
     bcs .end
 
-    jsl $811000 : dw $EDFE          ; JSR to $81EDFE
+    ; Jump to a copy of the default item handler
+    ; but this one doesn't continue processing items
+    jsl $810000+(PowerUpHandler_extended&$ffff)
 
     phy
     phx
@@ -202,12 +204,12 @@ CustomItemHandler:
 
     sep #$30
 
-
     plx
     ply
 
 .end
     rtl
+
 
 print "pickupitemextended = ", pc
 PickupItem_extended:

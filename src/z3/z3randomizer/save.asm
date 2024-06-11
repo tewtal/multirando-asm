@@ -26,6 +26,7 @@ WriteSaveChecksumAndBackup:
         ; PLB
         TDC
         TAX
+        jsl zelda_save_done_hook
 RTL
 ;--------------------------------------------------------------------------------
 ValidateSRAM:
