@@ -235,4 +235,4 @@ table ../../data/tables/box_yellow.tbl,rtl
     dw "B"
 cleartable
 
-warnpc $8fffff
+warnpc $8effff

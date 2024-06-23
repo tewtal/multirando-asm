@@ -210,7 +210,7 @@ DW $0001, $0000 : DB $00 : DW $2ECE
 BossRidley_Icon_Spritemap:
 DW $0001, $0000 : DB $00 : DW $2ECF
 
-warnpc $C2FF6A
+warnpc $82FF6A
 
 ; Spritemap pointers
 ; Index = (local_address - $C569) / 2

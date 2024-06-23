@@ -145,3 +145,5 @@ introskip_doorflags:
 .ret:   
     lda #$0000
     rtl
+
+warnpc $80D200

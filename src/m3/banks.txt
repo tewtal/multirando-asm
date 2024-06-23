@@ -1,0 +1,61 @@
+===============================================================================
+SM ROM
+===============================================================================
+
+Bank                Content
+------------        ---------
+80:CE00-CEFF        -- Fast pause menu --
+80:D000-D0FF        -- Init Patches --
+80:D100-D1FF        -- Fast Doors --
+80:D200-D3FF        -- Max Ammo --
+80:D400-D7FF        -- Reserve tank hud --
+80:FC00-FCFF        -- SA1 Bank calculation code --
+82:F710-F73F        -- Game transition - door setup code --
+82:F780-F7FF        -- Fast Doors --
+82:F800-FB7F        -- Seed display --
+82:FB80-FFFF        -- Map icons --
+83:AE00-AE7F        -- New LN Refill Exit (Teleport) Door Data --
+84:86D1-870B        -- Keycard setup ---
+84:D410-D490        -- Keycard PLM:s --
+84:EFE0-FDFF        -- New Item PLM:s, tables and code --
+84:FE00-FEFF        -- Kraid vomit fix --
+84:FF00-FF7F        -- New reserve tank code --
+85:9650-AFFF        -- Extended message boxes --
+88:F000-F700        -- Messagebox Lowercase Code and Data --
+8C:FA00-FFFF        -- Titlescreen map --
+8E:F000-FFFF        -- Keycard map data and code --
+8F:EA00-EAFF        -- Golden 4 skip --
+8F:EB00-EBFF        -- Zebes awake fix --
+8F:EC00-ECFF        -- New shaft door ASM --
+8F:ED00-EDFF        -- New LN Refill Room --
+8F:F700-F800        -- PLM Injection Code --
+8F:F800-FFFF        -- PLM Injection Table --
+99:F000-FFFF        -- Boss reward code --
+A3:F320-F3FF        -- Elevator speed --
+B7:FD00-FDFF        -- Ending check --
+B8:8000-FFFF        -- Free space --
+
+C0:0000-FFFF        SM Banks #C0-DF (as HiRom)
+...
+CF:0000-FFFF        SM Banks #C0-DF (as HiRom)
+
+D0:0000-0FFF        -- Game transition table --
+D0:1000-3FFF        -- Game transition out code --
+D0:4000-7EFF        -- Game transition in code --
+D0:7F00-7FFF        -- Reset SPC code --
+
+D1:0000-FFFF        -- SM Transition WRAM --
+D2:0000-FFFF        -- SM Transition WRAM --
+D3:0000-FFFF        -- SM Transition WRAM --
+D4:0000-FFFF        -- SM Transition WRAM --
+D5:0000-FFFF        -- SM Transition VRAM --
+D6:0000-FFFF        -- SM Transition VRAM --
+D7:0000-9FFF        -- New item graphics data --
+D7:A000-FFFF        -- Item message tables --
+D8:0000-FFFF        -- Z1/M1/Z3 Init RAM/SRAM --
+
+D9:0000-FFFF        -- Free space --
+...
+DE:0000-7FFF        -- Free space --
+DE:8000-FFFF        -- Titlescreen gfx --
+DF:0000-02FF        -- Configuration flags --

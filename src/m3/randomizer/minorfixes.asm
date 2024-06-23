@@ -85,7 +85,7 @@ jsr $8DAA   ; Draw PLM
 pla : sta.w $05B4 ; Restore NMI ready flag
 rts
 
-warnpc $858000
+warnpc $84feff
 }
 
 ; Patch calls to draw PLM

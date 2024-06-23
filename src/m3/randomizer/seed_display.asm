@@ -183,3 +183,5 @@ WordTable:
     db "WAINDA  "
     db "KURIPI  "
     db "ZORA    "
+
+print "Seed display", pc

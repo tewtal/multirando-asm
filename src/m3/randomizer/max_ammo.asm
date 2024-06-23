@@ -50,7 +50,7 @@ JSR Power_Counter  ; person's code has this going to $80CDBA, but that may chang
 org $809C00
 JSR Running_Counter  ; originally LDA $09C8
 
-org $80CDA0
+org $80D200
 ; luckily this chunk of free space is in the same relative location in the crossover, so no JSRs need to change to JSLs!
 ; copypasta person's code, but removed all of the definitions he created in case of conflicts with additional files being used
 	Missile_Counter:
@@ -155,6 +155,7 @@ org $80CDA0
 		
 	SM_Numbers:
 		DW #$0045, #$003C, #$003D, #$003E, #$003F, #$0040, #$0041, #$0042, #$0043, #$0044
+print "max ammo end = ", pc
 
 org $858851
 ; data, message boxes specifically

@@ -7,6 +7,12 @@ incsrc "patches.asm"
 incsrc "seed_display.asm"
 incsrc "bomb_torizo.asm"
 incsrc "aim_any_button.asm"
+;incsrc "decompression.asm"
+incsrc "elevators_speed.asm"
+incsrc "fast_doors.asm"
+incsrc "fast_pause_menu.asm"
+incsrc "fast_saves.asm"
+incsrc "reserve_hud.asm"
 
 ; 
 ; Randomizer things
