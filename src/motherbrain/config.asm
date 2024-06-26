@@ -17,3 +17,8 @@ config_sm_sprite:    ; $FFFF04
 ; Enables keysanity specific code sections.
 config_keysanity:    ; $FFFF06
     dw #$0000
+
+org $FFFFF0
+base $40FFF0
+config_seed:
+    dd $ffffffff

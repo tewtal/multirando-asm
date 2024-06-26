@@ -31,6 +31,7 @@ TakeItem_SetItemValueFF_extended:
     ; saved at $0A here
     txa
     sec : sbc #$30
+    jsl overlay_show_item
     jsl mb_WriteItemToInventory
     pla : plx : ply
     sec

@@ -8,7 +8,7 @@ seed_display:
     php
     rep #$30
 
-    lda.l $420000
+    lda.l $40FFF0
     and #$003f
     asl
     asl
@@ -30,7 +30,7 @@ seed_display:
     cpx #$000E
     bne -
 
-    lda.l $420001
+    lda.l $40FFF1
     and #$003f
     asl
     asl
@@ -52,7 +52,7 @@ seed_display:
     cpx #$000E
     bne -
 
-    lda.l $420002
+    lda.l $40FFF2
     and #$003f
     asl
     asl
@@ -74,7 +74,7 @@ seed_display:
     cpx #$000E
     bne -
 
-    lda.l $420003
+    lda.l $40FFF3
     and #$003f
     asl
     asl

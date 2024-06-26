@@ -21,6 +21,8 @@
 !IStartDrawLoop = #i_start_draw_loop
 !IStartHiddenDrawLoop = #i_start_hidden_draw_loop
 
+!DP_MsgRewardType = $39
+
 !ITEM_PLM_BUF = $7ffb00
 
 org $C12D7C   ; Patch to Crateria surface palette for Z3 items e.g. PoH, Pearl
@@ -236,7 +238,7 @@ i_pickup:
     jsl mb_WriteItemToInventory
 
     ; Show item message here
-    pla : sta $c7 : asl : tax
+    pla : sta !DP_MsgRewardType : asl : tax
     lda.l item_message_table, x
     and #$00ff
     jsl $858080
@@ -255,7 +257,7 @@ receive_sm_item:
 
 .keycard
     and #$000f
-    sta $c7                     ; Store keycard index
+    sta !DP_MsgRewardType       ; Store keycard index
     clc : adc #$0080            ; Turn this into an event id
     jsl $8081fa                 ; Set event (receive keycard)
     lda #$0022
@@ -265,7 +267,7 @@ receive_sm_item:
 .mapMarker
     and #$000f
     sec : sbc #$000a
-    sta $c7                     ; Store map marker index
+    sta !DP_MsgRewardType       ; Store map marker index
     clc : adc #$00a0            ; Set event (map marker received)
     jsl $8081fa
     lda #$0024

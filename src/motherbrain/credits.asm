@@ -57,7 +57,7 @@ init:
     sta $420d   ; enable FastROM
 
     ; Set "game" to credits so we can have our own NMI routine
-    lda #$11
+    lda #$04
     sta !SRAM_CURRENT_GAME
 
     ; Clear all PPU registers
@@ -377,6 +377,7 @@ init:
     jmp .loop
 
 ; Credits NMI routine
+print "credits nmi = ", pc
 nmi:
     pha : phx : phy : php
 
@@ -634,7 +635,7 @@ write_faded_pal:
     
 -
     ; red component
-    lda $ff0000,x
+    lda $fe0000,x
     and #$001f
     sec
     sbc $04
@@ -644,7 +645,7 @@ write_faded_pal:
     sta $06
 
     ; green component
-    lda $ff0000,x
+    lda $fe0000,x
     lsr #5
     and #$001f
     sec
@@ -657,7 +658,7 @@ write_faded_pal:
     sta $06
 
     ; blue component
-    lda $ff0000,x
+    lda $fe0000,x
     lsr #10
     and #$001f
     sec
@@ -1051,11 +1052,11 @@ alttp_shift_stat:
     rts
 
 events:
-    ;  tilemap pointer location                 cmd    val1   val2
-    dw tilemap_data_randomizer_staff+$0800,   $0001,  $0004,  $0000
-    dw tilemap_data_stop+$0800,               $000f,  $0000,  $0000
-    dw tilemap_data_alttp_sprite_credits,     $0010,  config_alttp_sprite,    tilemap_data_sm_sprite_credits
-    dw tilemap_data_sm_sprite_credits,        $0010,  config_sm_sprite,       tilemap_data_end_sprite_credits
+    ;  tilemap pointer location                              cmd    val1   val2
+    dw (tilemap_data_randomizer_staff+$0800)-tilemap_data,   $0001,  $0004,  $0000
+    dw (tilemap_data_stop+$0800)-tilemap_data,               $000f,  $0000,  $0000
+    dw (tilemap_data_alttp_sprite_credits)-tilemap_data,     $0010,  config_alttp_sprite,    (tilemap_data_sm_sprite_credits-tilemap_data)
+    dw (tilemap_data_sm_sprite_credits)-tilemap_data,        $0010,  config_sm_sprite,       (tilemap_data_end_sprite_credits-tilemap_data)
     dw $0000
 
 stats:

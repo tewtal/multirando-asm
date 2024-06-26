@@ -19,6 +19,10 @@
 
 !BossRewardSmall = #BossRewardSmall
 
+!DP_MsgRewardType = $3A
+!DP_MsgBitFlag = $3E
+!DP_MsgOverride = $40
+
 org $D7A000
 item_message_table:
     ; Offset = ALTTP SRAM Offset
@@ -768,7 +772,7 @@ btn_array:
 
 BossRewardSmall:
     REP #$30    
-    LDA $C7     ; RewardType
+    LDA !DP_MsgRewardType     ; RewardType
     BEQ .pendant
     CMP #$0040
     BEQ .crystal
@@ -782,7 +786,7 @@ BossRewardSmall:
     .smboss
         LDY #bosses
 +
-    LDA $C9     ; Bitflag
+    LDA !DP_MsgBitFlag     ; Bitflag
 
     ; Loop until we've shifted out the bit from the mask
     ; and increase Y to point to the correct message box
@@ -871,7 +875,7 @@ write_dungeon:
     bra .end
 
 .adjust
-    lda.b $c7                ; Load dungeon id
+    lda.b !DP_MsgRewardType                ; Load dungeon id
     asl #6 : tay
     ldx #$0000
 -
@@ -895,7 +899,7 @@ write_dungeon_key:
     bra .end
 
 .adjust
-    lda.b $c7                ; Load dungeon id
+    lda.b !DP_MsgRewardType                ; Load dungeon id
     asl #6 : tay
     ldx #$0000
 -
@@ -919,7 +923,7 @@ write_keycard:
     bra .end
 
 .adjust
-    lda.b $c7                ; Load keycard index
+    lda.b !DP_MsgRewardType                ; Load keycard index
     asl #6 : tay
     phy
 
@@ -954,7 +958,7 @@ write_map_marker:
     bra .end
 
 .adjust
-    lda.b $c7                ; Load map marker id
+    lda.b !DP_MsgRewardType                ; Load map marker id
     asl #6 : tay
     ldx #$0000
 -
@@ -978,7 +982,7 @@ write_normal:
     bra .end    
 
 .adjust
-    lda.b $c7                ; Load item id
+    lda.b !DP_MsgRewardType                ; Load item id
     asl #6 : tay
     ldx #$0000
 -
@@ -1065,10 +1069,10 @@ char_table:
 
 org $858749
 fix_1c1f:
-    LDA $CE     ; if $CE is set, it overrides the message box
+    LDA !DP_MsgOverride      ; if $CE is set, it overrides the message box
     BEQ +
     STA $1C1F
-    STZ $CE     ; Clear $CE
+    STZ !DP_MsgOverride      ; Clear $CE
 +	LDA $1C1F
 	CMP #$001D
 	BPL +

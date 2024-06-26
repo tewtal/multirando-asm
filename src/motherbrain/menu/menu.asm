@@ -1,5 +1,13 @@
 print pc, " menu start"
 
+table ../../../resources/header.tbl
+cm_title_header:
+db $28, "Quad Combo - 0.1.0        ", $ff
+
+cm_title_footer:
+db $28, "2024-06-23 - #cbf1b9abcdef", $ff
+table ../../../resources/normal.tbl
+
 cm_start:
 {
     PHP : %ai16()
@@ -396,7 +404,14 @@ cm_tilemap_menu:
     TYA : CLC : ADC !DP_MenuIndices : INC #2 : STA !DP_CurrentMenu
     ; draw menu header
     LDX #$00C6 ; tilemap position
+    LDA [!DP_CurrentMenu] : AND #$00FF : CMP #$0002 : BNE +
+    INC !DP_CurrentMenu
+    JSR cm_draw_text_from_address
+    BRA ++
++
+    INC !DP_CurrentMenu
     JSR cm_draw_text
+++
 
     ; menu pointer + header pointer + 1 = footer
     TYA : CLC : ADC !DP_CurrentMenu : INC : STA !DP_CurrentMenu
@@ -406,7 +421,7 @@ cm_tilemap_menu:
     ; INC past #$F007
     INC !DP_CurrentMenu : INC !DP_CurrentMenu : STZ !DP_Palette
     LDX #$0646 ; footer tilemap position
-    JSR cm_draw_text
+    JSR cm_draw_text_from_address
     RTS
 
   .done
@@ -950,6 +965,32 @@ cm_draw_text:
   .end
     %a16()
     RTS
+
+cm_draw_text_from_address:
+; X = pointer to tilemap area (STA !ram_tilemap_buffer,X)
+    %a16()
+    LDY #$0000
+    LDA [!DP_CurrentMenu] : STA !DP_TextLo
+    INY #2
+    
+    %a8()
+    LDA [!DP_CurrentMenu],Y : STA !DP_TextHi
+    LDY #$0000
+    ; terminator
+    LDA [!DP_TextLo],Y : INY : CMP #$FF : BEQ .end
+    ; ORA with palette info
+    ORA !DP_Palette : STA !DP_Palette
+
+  .loop
+    LDA [!DP_TextLo],Y : CMP #$FF : BEQ .end       ; terminator
+    STA !ram_tilemap_buffer,X : INX                     ; tile
+    LDA !DP_Palette : STA !ram_tilemap_buffer,X : INX   ; palette
+    INY : BRA .loop
+
+  .end
+    %a16()
+    LDY #$0002
+    RTS 
 
 ; --------------
 ; Input Display

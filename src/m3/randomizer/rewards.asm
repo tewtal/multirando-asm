@@ -50,7 +50,7 @@ boss_death_reward:
     ; Load boss reward type from table
     %a8()
     lda.l boss_rewards, x
-    sta $c7
+    sta !DP_MsgRewardType
     beq .pendant
     cmp #$40
     beq .crystal
@@ -58,13 +58,13 @@ boss_death_reward:
 
     .pendant
         lda.l boss_rewards+$2, x
-        sta $c9
+        sta !DP_MsgBitFlag
         ora.l !SRAM_ALTTP_ITEM_BUF+$74
         sta.l !SRAM_ALTTP_ITEM_BUF+$74        
         bra .exit
     .crystal
         lda.l boss_rewards+$2, x
-        sta $c9
+        sta !DP_MsgBitFlag
         ora.l !SRAM_ALTTP_ITEM_BUF+$7A
         sta.l !SRAM_ALTTP_ITEM_BUF+$7A
         bra .exit
@@ -72,7 +72,7 @@ boss_death_reward:
         ; Save to special event bits for boss tokens (not the actual boss kill flags that opens doors)
         ; Although in a future update adding the option of this also setting those flags should be a possibility
         lda.l boss_rewards+$2, x
-        sta $c9
+        sta !DP_MsgBitFlag
         ora.l $7ed832
         sta.l $7ed832
         bra .exit

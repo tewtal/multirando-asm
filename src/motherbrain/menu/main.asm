@@ -98,6 +98,9 @@
 !DP_SecondDigit = $1C
 !DP_ThirdDigit = $1E
 
+!DP_TextLo = $20
+!DP_TextHi = $22
+
 !ACTION_TOGGLE              = #$0000
 !ACTION_TOGGLE_BIT          = #$0002
 !ACTION_TOGGLE_INVERTED     = #$0004

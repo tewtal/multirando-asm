@@ -34,6 +34,7 @@ NMIStart:
     lda $4210
     jsl SnesOamDMA
     jsl SnesProcessPPUString
+    jsl overlay_handle
 
     lda $ff
     ldx $5c

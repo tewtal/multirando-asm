@@ -92,14 +92,14 @@ sm_check_ending_mb_anim:
 +
     jml $A9B345
 
+; Jumping to credits is the same as transitioning to game 4
 sm_setup_credits:
     %ai16()
-    sei
-    lda #$0000
-    sta $4200
-
-    ; Reset SPC and put it into upload mode
-    jsl sm_reset_spc_engine
-
-    ; Call credits
-    jml credits_init
+    
+    lda.w #$0004  ; Credits
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.w #$0000
+    STA.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.w #$0000
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS    
+    jml sm_do_transition_ext

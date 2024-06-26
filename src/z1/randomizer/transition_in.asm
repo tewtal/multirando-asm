@@ -19,6 +19,7 @@ transition_to_z1:
     lda #$21 : sta.l $002107
     lda #$01 : sta.l $00210B
     lda #$01 : sta.l $002105
+    lda #$00 : sta.l $002106
     lda #$00 : sta.l $002101
     lda #$11 : sta.l $00212C
     lda #$00 : sta.l $00212d
@@ -121,6 +122,8 @@ transition_to_z1:
 
     lda #$00 : sta $210d
     lda #$00 : sta $210d
+
+    jsl overlay_init
 
     ; Jump the game into its loop and wait for NMI to pick up
     jml $85E45B

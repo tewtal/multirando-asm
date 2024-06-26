@@ -37,15 +37,10 @@ alttp_check_ending:
 
 alttp_setup_credits:
     %ai16()
-    sei
-    lda #$0000
-    sta $4200
-
-    %a8()
-    jsl $00894a ; Save ALTTP SRAM so stats are updated
-
-    ; Reset SPC and put it into upload mode
-    jsl spc_reset
-
-    ; Call credits
-    jml credits_init  
+    lda.w #$0004  ; Credits
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.w #$0000
+    STA.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.w #$0000
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS    
+    jml transition_from_zelda

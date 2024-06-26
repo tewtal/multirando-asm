@@ -61,6 +61,7 @@ transition_tables:
     dw z3_transition_table
     dw z1_transition_table
     dw m1_transition_table
+    dw credits_transition_table
     dw transition_tables_end
 
 sm_transition_table:
@@ -175,6 +176,22 @@ m1_transition_table:
 
     ; Done with transition setup, jump to entry point on the SNES side
     dw $0008, m1_transition_to_m1&$ffff, m1_transition_to_m1>>16
+
+    dw $0000
+
+credits_transition_table:
+    ; Update SA-1 bank registers
+    dw $0006, $0007, $2220
+    dw $0006, $0007, $2222
+    dw $0006, $0007, $2221
+    dw $0006, $0007, $2223
+
+    ; Set up IRQ/NMI handlers
+    dw $0004, (((credits_nmi&$ff)<<8)|$005c), !IRAM_NMI
+    dw $0004, ((credits_nmi>>8)&$FFFF), !IRAM_NMI+2
+
+    ; Done with transition setup, jump to entry point on the SNES side
+    dw $0008, credits_init&$ffff, credits_init>>16
 
     dw $0000
 

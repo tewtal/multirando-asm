@@ -92,6 +92,9 @@ print "SRAM buffer ends at ", hex(!M1_BUFFER_END)
 ; Z3 things
 !IRAM_ALTTP_GFX_POINTER = $003520
 
+; Z1/M1 Overlay (3530-3550)
+!IRAM_OVERLAY_START = $003530 
+
 !IRAM_NMI = $0037f0
 !IRAM_IRQ = $0037f4
 

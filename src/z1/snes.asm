@@ -275,7 +275,7 @@ SnesOamDMA:
     LDA #$00
     STA $2101
 
-    LDA #$11
+    LDA #$15
     STA $212C
 
     PLP

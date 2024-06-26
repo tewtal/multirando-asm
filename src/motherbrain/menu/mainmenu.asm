@@ -5,7 +5,7 @@
 macro cm_header(title)
 ; outlined text to be drawn above the menu items
     table ../../../resources/header.tbl
-    db #$28, "<title>", #$FF
+    db #$01, #$28, "<title>", #$FF
     table ../../../resources/normal.tbl
 endmacro
 
@@ -16,19 +16,13 @@ macro cm_footer(title)
     table ../../../resources/normal.tbl
 endmacro
 
-macro cm_version_header(title, major, minor, build, rev_1, rev_2)
-; header text with automatic version number appended
-    table ../../../resources/header.tbl
-if !VERSION_REV_1
-    db #$28, "<title> <major>.<minor>.<build>.<rev_1><rev_2>", #$FF
-else
-if !VERSION_REV_2
-    db #$28, "<title> <major>.<minor>.<build>.<rev_2>", #$FF
-else
-    db #$28, "<title> <major>.<minor>.<build>", #$FF
-endif
-endif
-    table ../../../resources/normal.tbl
+macro cm_version_header(label)
+    db #$02 : dl <label>
+endmacro
+
+macro cm_version_footer(label)
+    dw #$F007
+    dl <label>
 endmacro
 
 macro cm_numfield(title, addr, start, end, increment, heldincrement, jsltarget)
@@ -227,10 +221,8 @@ MainMenu:
     dw #mm_goto_debug
 
     dw #$0000
-    %cm_version_header("Z1Z3M1M3", !VERSION_MAJOR, !VERSION_MINOR, !VERSION_BUILD, !VERSION_REV_1, !VERSION_REV_2)
-if defined("PRERELEASE")
-    %cm_footer("PRERELEASE COMMIT !PRERELEASE")
-endif
+    %cm_version_header(cm_title_header)
+    %cm_version_footer(cm_title_footer)
 
 MainMenuBanks:
     dw #StartGameMenu>>16
@@ -269,7 +261,7 @@ StartGameMenu:
     dw sgm_z3_pendants
     dw sgm_z3_crystals
     dw #$0000
-    %cm_header("Z1Z3M1M3 - Start Game")
+    %cm_header("Start Game")
 
 sgm_start:
     %cm_jsl("Start Game", .startgame, #$0000)
@@ -288,36 +280,36 @@ sgm_start:
 sgm_m1:
     %cm_draw_text("-- Metroid --")
 sgm_m1_energy:
-    %cm_draw_numfield_word("Energy", $40A000)
+    %cm_draw_numfield_word("Energy", $FFFFF4)
 sgm_m1_missiles:
-    %cm_draw_numfield_word("Missiles", $40A002)
+    %cm_draw_numfield_word("Missiles", $FFFFF4)
 sgm_m1_bosses:
-    %cm_draw_numfield_word("Bosses", $40A004)
+    %cm_draw_numfield_word("Bosses", $FFFFF4)
 
 sgm_sm:
     %cm_draw_text("-- Super Metroid --")
 sgm_sm_energy:
-    %cm_draw_numfield_word("Energy", $40A010)
+    %cm_draw_numfield_word("Energy", $400042)
 sgm_sm_missiles:
-    %cm_draw_numfield_word("Missiles", $40A012)
+    %cm_draw_numfield_word("Missiles", $400046)
 sgm_sm_supers:
-    %cm_draw_numfield_word("Super Missiles", $40A014)
+    %cm_draw_numfield_word("Super Missiles", $40004A)
 sgm_sm_powerbombs:
-    %cm_draw_numfield_word("Power Bombs", $40A016)
+    %cm_draw_numfield_word("Power Bombs", $40004E)
 sgm_sm_bosses:
-    %cm_draw_numfield_word("Bosses", $40A018)
+    %cm_draw_numfield_word("Bosses", $400072)
 
 sgm_z1:
     %cm_draw_text("-- Zelda 1 --")
 sgm_z1_bosses:
-    %cm_draw_numfield_word("Triforce Pieces", $40A020)
+    %cm_draw_numfield_word("Triforce Pieces", $FFFFF4)
 
 sgm_z3:
     %cm_draw_text("-- A Link to the Past --")
 sgm_z3_pendants:
-    %cm_draw_numfield_word("Pendants", $40A030)
+    %cm_draw_numfield_word("Pendants", $FFFFF4)
 sgm_z3_crystals:
-    %cm_draw_numfield_word("Crystals", $40A032)
+    %cm_draw_numfield_word("Crystals", $FFFFF4)
 
 
 SetupMenu:

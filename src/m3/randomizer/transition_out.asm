@@ -39,7 +39,8 @@ sm_do_transition:
     STA !IRAM_TRANSITION_DESTINATION_ID
     lda.l sm_transition_table+$6,x
     sta !IRAM_TRANSITION_DESTINATION_ARGS    
-    
+
+sm_do_transition_ext:
     jsl $8085c6                     ; Save map data
 
     lda #$0000
