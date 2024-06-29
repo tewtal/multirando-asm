@@ -620,6 +620,9 @@ VScrollAddrTmp = $0A44
 VScrollSplit = $0A46
 VScrollSplitTest = $0A48
 
+ButtonsPressedSnes = $0A4A
+ButtonsDownSnes = $0A4C
+
 ; Randomizer Labels
 ExitRoomTemp = $0A50
 ExitRoomTable = $0A52
@@ -641,3 +644,6 @@ DynamicItemSlot = $0A82
 CaveItemTemp = $0A90
 CaveItemTempFlags = $0A91
 CaveItemTempPrice = $0A92
+
+; Quick swap
+QuickSwapTemp = $0A98

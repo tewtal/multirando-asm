@@ -58,6 +58,11 @@ org $81AC5B
 +
     bra $03
 
+; Hook the first entrypoint of "TakeItem" to show item overlay
+; LDX #$08 : STX $0602
+org $81ABE0
+    jsl TakeItem_ShowItemOverlay : nop
+
 ; 85B847  A4 EB          LDY $EB
 ; 85B849  B9 7E 6A       LDA $6A7E,Y
 ; 85B84C  29 1F          AND #$1F
@@ -106,3 +111,13 @@ org $84A8CA
     stz $10                 ; Set level to overworld
     lda.b #$01 : sta.b $5A  ; Set exiting from stairs
     rts
+
+
+
+; ==========
+; Quick swap
+; ========
+
+; Hook checking for pause to also check for quick swap
+
+%zhook($EC36, "jsl QuickSwapCheck") ; LDA $F8 : AND #$20

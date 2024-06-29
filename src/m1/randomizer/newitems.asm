@@ -13,7 +13,7 @@ UploadItemPalettes:
     bne -
 
     lda #$8f : sta $2100
-    rtl    
+    rtl
 
 ScanForItems_Start:
     lda.b #(brinstar_item_table>>16)
@@ -216,11 +216,11 @@ PickupItem_extended:
     tay
     
     ; Play pickup music
-    jsl $811000 : dw $CBF9
+    ; jsl $811000 : dw $CBF9
 
     ldx $4C
     lda $074C, x
-    beq .end
+    beq .m1item
 
     ; Save powerup name table, needed for some routines
     lda $074B, x
@@ -228,6 +228,7 @@ PickupItem_extended:
 
     ; Ok, we have a custom item, handle picking it up here
     lda.w $0748, x    ; Load item id
+    jsl overlay_show_item
     
     phx : phy
     jsl mb_WriteItemToInventory
@@ -239,9 +240,28 @@ PickupItem_extended:
     sec ; Setting carry skips the normal processing
     rtl
 
-.end
+.m1item
+    pha : phx
+    lda.w $0748, x  ; Load item id
+    tax
+    lda.l M1ItemIdMap, x ; Load M1 item id mapping
+    jsl overlay_show_item
+    plx : pla
+
     clc
     rtl
+
+M1ItemIdMap:
+    db $62      ; Bombs
+    db $63      ; HiJump
+    db $66      ; LongBeam
+    db $67      ; Screw
+    db $68      ; Morph
+    db $69      ; Varia
+    db $6C      ; Wave
+    db $6D      ; Ice Beam
+    db $6E      ; ETank
+    db $6F      ; Missiles
 
 SetItemBit:
     pha : phx
@@ -510,8 +530,8 @@ ItemData:
     dw $B300, pal_1        ; 67 - Screw Attack           (M
     dw $B280, pal_0        ; 68 - Morph Ball             (M
     dw $B380, pal_1        ; 69 - Varia Suit             (M
-    dw $0000, $0000        ; 6A - Reserved - Goal Item (Sin
-    dw $0000, $0000        ; 6B - Reserved - Goal Item (Mul
+    dw $A900, pal_0        ; 6A - Reserved - Goal Item (Sin
+    dw $A900, pal_0        ; 6B - Reserved - Goal Item (Mul
     dw $B600, pal_2        ; 6C - Wave Beam              (M
     dw $B580, pal_3        ; 6D - Ice Beam               (M
     dw $B400, pal_1        ; 6E - Energy Tank            (M

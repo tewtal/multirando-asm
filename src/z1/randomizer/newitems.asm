@@ -17,6 +17,29 @@ UploadItemPalettes:
     lda #$8f : sta $2100
     rtl
 
+;
+; Executes when any item is being picked up
+;
+TakeItem_ShowItemOverlay:
+    pha
+    cmp #$1b
+    beq .end
+    cmp #$0e
+    beq .end
+
+    cmp #$30
+    bcs .extended
+    clc : adc #$d0
+    bra .show
+.extended
+    sec : sbc #$30
+.show
+    jsl overlay_show_item
+.end
+    ldx #$08 : stx $0602
+    pla
+    rtl
+
 ; Executes when links picks up an item of class 0x30 or higher
 ; Class in A
 ; Item Id in X
@@ -31,7 +54,6 @@ TakeItem_SetItemValueFF_extended:
     ; saved at $0A here
     txa
     sec : sbc #$30
-    jsl overlay_show_item
     jsl mb_WriteItemToInventory
     pla : plx : ply
     sec
@@ -380,8 +402,8 @@ ItemData:
     dw $B300, $0505     ; 67 - Screw Attack           (M1)
     dw $B280, $0404     ; 68 - Morph Ball             (M1)
     dw $B380, $0505     ; 69 - Varia Suit             (M1)
-    dw $0000, $0404     ; 6A - Reserved - Goal Item (Single/Triforce)
-    dw $0000, $0404     ; 6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
+    dw $A900, $0404     ; 6A - Reserved - Goal Item (Single/Triforce)
+    dw $A900, $0404     ; 6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
     dw $B600, $0606     ; 6C - Wave Beam              (M1)
     dw $B580, $0707     ; 6D - Ice Beam               (M1)
     dw $B400, $0505     ; 6E - Energy Tank            (M1)

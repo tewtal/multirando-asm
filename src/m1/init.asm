@@ -19,7 +19,7 @@ SnesBoot:
     LDA #$21 : STA $2107
     LDA #$01 : STA $210B
     LDA #$00 : STA $2101
-    LDA #$11 : STA $212C
+    LDA #$15 : STA $212C
     JSL SetupScrollHDMA
 
     ; Clear SNES OAM Buffer
@@ -36,6 +36,7 @@ SnesBoot:
 
     SEP #$30
     JSL UploadItemPalettes
+    JSL overlay_init
     JSL (!BASE_BANK<<16)+$C01A ; Startup
 
 SnesInit:

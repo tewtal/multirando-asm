@@ -21,7 +21,9 @@
 !IStartDrawLoop = #i_start_draw_loop
 !IStartHiddenDrawLoop = #i_start_hidden_draw_loop
 
-!DP_MsgRewardType = $39
+!DP_MsgRewardType = $3A
+!DP_MsgBitFlag = $3E
+!DP_MsgOverride = $40
 
 !ITEM_PLM_BUF = $7ffb00
 
@@ -412,8 +414,8 @@ item_graphics:
     dw $2A00 : db $01, $01, $01, $01, $01, $01, $01, $01    ; 67 - Screw Attack           (M1)
     dw $2900 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 68 - Morph Ball             (M1)
     dw $2B00 : db $01, $01, $01, $01, $01, $01, $01, $01    ; 69 - Varia Suit             (M1)
-    dw $0000 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 6A - Reserved - Goal Item (Single/Triforce)
-    dw $0000 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
+    dw $7800 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 6A - Reserved - Goal Item (Single/Triforce)
+    dw $7800 : db $00, $00, $00, $00, $00, $00, $00, $00    ; 6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
     dw $3000 : db $02, $02, $02, $02, $02, $02, $02, $02    ; 6C - Wave Beam              (M1)
     dw $2F00 : db $03, $03, $03, $03, $03, $03, $03, $03    ; 6D - Ice Beam               (M1)
     dw $2C00 : db $01, $01, $01, $01, $01, $01, $01, $01    ; 6E - Energy Tank            (M1)

@@ -2,30 +2,31 @@
 ; Layer 3 text overlay popups for items gotten in the NES games
 ;
 
-!LAYER3_TILES = $4000
-!LAYER3_TILEMAP = $6000
+!LAYER3_TILES = $6000   ; words
+!LAYER3_TILEMAP = $5000 ; words
 
 ;
 ; We steal some SA-1 IRAM for this so we have access to fast unused RAM reserved just for this
 ;
 
-overlay_state = !IRAM_OVERLAY_START
-overlay_scroll = !IRAM_OVERLAY_START+$2
-overlay_timer = !IRAM_OVERLAY_START+$4
-overlay_height = !IRAM_OVERLAY_START+$6
+pushpc
+org !IRAM_OVERLAY_START
+overlay_state: skip 2
+overlay_scroll: skip 2
+overlay_timer: skip 2
+overlay_height:
 
-;
-; Bank 7F is completely unused in the NES ports, so let's use this for dialog buffer
-;
-
-overlay_buffer = $7f0000
-
+org $7f0000
+overlay_buffer:
+pullpc
 
 ; Uploads the correct tileset to layer 3 and initializes it correctly
 print "overlay_init = ", pc
 overlay_init:
     ; Perform DMA to VRAM at $4000 to transfer tiles
     php
+
+    ; Upload BG3 Tiles
     rep #$30
     lda #$1801
     sta $4320
@@ -38,7 +39,7 @@ overlay_init:
     lda #(overlay_item_names-overlay_tile_data)
     sta $4325
 
-    lda #$4000
+    lda #!LAYER3_TILES
     sta $2116
 
     sep #$20
@@ -49,15 +50,15 @@ overlay_init:
     lda #$04
     sta $420b
 
+    ; Clear BG3
     rep #$20
-
     lda #(overlay_clear_byte&$ffff)
     sta $4322
 
     lda #$0A00
     sta $4325
 
-    lda #$3000
+    lda #!LAYER3_TILEMAP
     sta $2116
 
     sep #$20
@@ -67,10 +68,33 @@ overlay_init:
     lda #$04
     sta $420b
 
-    lda #(12<<2)+2
+    ; Upload overlay palette to color index 0C-0F
+    lda #$0C
+    sta $2121
+
+    lda #$00
+    sta $2122
+    sta $2122
+
+    lda #$c9
+    sta $2122
+    lda #$69
+    sta $2122
+    lda #$ff
+    sta $2122
+    lda #$7f
+    sta $2122
+
+    lda #$00
+    sta $2122
+    sta $2122
+
+    ; Set BG3 visibility
+
+    lda #(20<<2)+2
     sta $2109
 
-    lda #$04
+    lda #$06
     sta $210c
     
     lda #$00
@@ -123,7 +147,7 @@ overlay_handle:
     lda.w #$0200
     sta.w $4325
 
-    lda.w #$3380
+    lda.w #(!LAYER3_TILEMAP+$380)
     sta.w $2116
 
     sep #$20

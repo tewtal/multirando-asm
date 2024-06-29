@@ -19,10 +19,6 @@
 
 !BossRewardSmall = #BossRewardSmall
 
-!DP_MsgRewardType = $3A
-!DP_MsgBitFlag = $3E
-!DP_MsgOverride = $40
-
 org $D7A000
 item_message_table:
     ; Offset = ALTTP SRAM Offset

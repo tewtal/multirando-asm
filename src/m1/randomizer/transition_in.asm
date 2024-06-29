@@ -19,7 +19,7 @@ transition_to_m1:
     lda #$01 : sta $210B
     lda #$01 : sta $2105
     lda #$00 : sta $2101
-    lda #$11 : sta $212C
+    lda #$15 : sta $212C
     lda #$00 : sta $212d
     lda #$8f : sta $2100
     jsl SetupScrollHDMA
@@ -44,6 +44,7 @@ transition_to_m1:
 
     sep #$30
     jsl UploadItemPalettes
+    jsl overlay_init
 
     %ai16()
 

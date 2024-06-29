@@ -7,6 +7,7 @@ incsrc "transition_in.asm"
 incsrc "newitems.asm"
 incsrc "caves.asm"
 incsrc "ending.asm"
+incsrc "quickswap.asm"
 
 org $8A8000
 incsrc "tables.asm"

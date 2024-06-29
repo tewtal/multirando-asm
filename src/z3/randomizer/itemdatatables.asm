@@ -258,7 +258,7 @@ endmacro
 %ReceiptProps($68, -4, 0, $68, $F36A, $FF, other, skip) ; 68 - Morph Ball             (M1)
 %ReceiptProps($69, -4, 0, $69, $F36A, $FF, other, skip) ; 69 - Varia Suit             (M1)
 %ReceiptProps($6A, -4, 0, $49, $F36A, $FF, triforce, skip) ; 6A - Triforce
-%ReceiptProps($6B, -4, 0, $50, $F36A, $FF, goal_item, skip) ; 6B - Power star
+%ReceiptProps($6B, -4, 0, $49, $F36A, $FF, goal_item, skip) ; 6B - Power star
 %ReceiptProps($6C, -4, 0, $6C, $F36A, $FF, other, skip)  ; 6C - Wave Beam              (M1)
 %ReceiptProps($6D, -4, 0, $6D, $F36A, $FF, other, skip)  ; 6D - Ice Beam               (M1)
 %ReceiptProps($6E, -4, 0, $6E, $F36A, $FF, other, skip) ; 6E - Energy Tank            (M1)
@@ -1123,7 +1123,7 @@ ItemReceiptGraphicsOffsets:
 	dw $2460                               ; 68 - Morph Ball             (M1)
 	dw $24E0                               ; 69 - Varia Suit             (M1)
 	dw $0060                               ; 6A - Triforce
-	dw $11E0                               ; 6B - Power star
+	dw $0060                               ; 6B - Power star
 	dw $2920                               ; 6C - Wave Beam              (M1) 
 	dw $28E0                               ; 6D - Ice Beam               (M1) 
 	dw $2820                               ; 6E - Energy Tank            (M1) 
@@ -1406,7 +1406,7 @@ StandingItemGraphicsOffsets:
 	dw $2460                               ; 68 - Morph Ball             (M1)
 	dw $24E0                               ; 69 - Varia Suit             (M1)
 	dw $0060                               ; 6A - Triforce
-	dw $11E0                               ; 6B - Power star
+	dw $0060                               ; 6B - Power star
 	dw $2920                               ; 6C - Wave Beam              (M1) 
 	dw $28E0                               ; 6D - Ice Beam               (M1) 
 	dw $2820                               ; 6E - Energy Tank            (M1) 

@@ -170,7 +170,7 @@ SnesOamDMA:
     LDA #$18
     STA $2101
 
-    LDA #$11
+    LDA #$15
     STA $212C
 
     SEP #$30

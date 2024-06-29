@@ -112,8 +112,8 @@
 67 - Screw Attack           (M1)
 68 - Morph Ball             (M1)
 69 - Varia Suit             (M1)
-6A - Reserved - Goal Item (Single/Triforce)
-6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
+6A - Reserved - Goal Item (Single/Triforce)     (Win the game - not used maybe)
+6B - Reserved - Goal Item (Multi/Power Star)    (Triforce hunt)
 6C - Wave Beam              (M1)
 6D - Ice Beam               (M1)
 6E - Energy Tank            (M1)
@@ -256,7 +256,7 @@ DA - Bow
 DB - Magical Key
 DC - Raft
 DD - Stepladder
-DE - Unused?
+DE - Unused? - Triforce of power
 DF - 5 Rupees
 
 E0 - Magical Rod

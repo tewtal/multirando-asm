@@ -77,6 +77,7 @@ WritePPUCTRL:
     sta PPUCNT0ZP
     pha
     and #$80
+    ora #$01    ; Always keep auto-joypad read active
     sta $4200
     pla
     rts

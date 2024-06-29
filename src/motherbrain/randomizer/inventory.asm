@@ -258,6 +258,9 @@ WriteItemToInventory:
 +   cmp #$0003
     bne +
         jmp .bitmaskItem8
++   cmp #$0004
+    bne +
+        jmp .incrementItem16
 +   cmp #$0012
     bne +
         jmp .alttpBottle
@@ -328,6 +331,13 @@ WriteItemToInventory:
     adc.w ItemData+6, x                 ; Add the item value
     sta.w !SRAM_ITEM_BUFFER, y          ; Write the item to the SRAM buffer
     %a16()
+    jmp .end
+
+.incrementItem16
+    lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value
+    clc
+    adc.w ItemData+6, x                 ; Add the item value
+    sta.w !SRAM_ITEM_BUFFER, y          ; Write the item to the SRAM buffer
     jmp .end
 
 .bitmaskItem16
@@ -703,6 +713,7 @@ ItemBufferOffsets:
 ;   01 - Increment Item (Increment value at offset with item value) (8-bit)
 ;   02 - Bitmask Item (OR value at offset with item value) (16-bit)
 ;   03 - Bitmask Item (OR value at offset with item value) (8-bit)
+;   04 - Increment Item (Increment value at offset with item value) (16-bit)
 
 ;   ALTTP Item Types
 ;   ------------------------
@@ -853,7 +864,7 @@ ItemData:
     dw $0003, $0002, $0003, $0010        ; 68 - Morph Ball             (M1)
     dw $0003, $0002, $0003, $0020        ; 69 - Varia Suit             (M1)
     dw $0001, $0000, $0000, $0000        ; 6A - Reserved - Goal Item (Single/Triforce)
-    dw $0001, $0000, $0000, $0000        ; 6B - Reserved - Goal Item (Multi/Power Star)    (Is this used for anything)
+    dw $0001, $0118, $0004, $0001        ; 6B - Reserved - Goal Item (Multi/Power Star)    (Goal hunt)
     dw $0003, $0002, $0003, $0040        ; 6C - Wave Beam              (M1)
     dw $0003, $0002, $0003, $0080        ; 6D - Ice Beam               (M1)
     dw $0003, $0001, $0001, $0001        ; 6E - Energy Tank            (M1)

@@ -69,6 +69,9 @@ org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 %zhook($E4A5, "jsr WritePPUCTRL1")
 %zhook($E627, "jsr WritePPUCTRL1AndResetScroll")
 
+; Hook controller reading routine
+%zhook($E62D, "jsl SnesReadInputs : rts")
+
 ; Hook TransferTileBuf writes (dynamic tilemap/attribute writes)
 org ((!BASE_BANK+$6)<<16)+$A08C : jsr SnesTransferTileBuf
 

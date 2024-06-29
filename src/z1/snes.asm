@@ -320,7 +320,40 @@ EmulateMMC1:
     LDA #$21
     STA $002107
 .End
-    RTL   
+    RTL
+
+; Use autojoypad-read instead of manual controller reads to read all controllers fast
+; X = which controller to read
+
+;
+; ButtonsPressed := $F8
+; ButtonsDown := $FA
+;
+
+SnesReadInputs:
+    lda $4219
+    eor $fa
+    and $4219
+    sta $f8
+    lda $4219
+    sta $fa
+
+    lda $421b
+    eor $fb
+    and $421b
+    sta $f9
+    lda $421b
+    sta $fb
+
+    lda $4218
+    eor ButtonsDownSnes
+    and $4218
+    sta ButtonsPressedSnes
+    lda $4218
+    sta ButtonsDownSnes
+
+    rtl
+
 
 
 ; Converts NES PPU Strings to SNES PPU strings
