@@ -18,7 +18,7 @@ org $8A8000
 incsrc "data.asm"
 
 org $8B8000
-incsrc "../../common/item_overlay.asm"
+incsrc "../../common/overlay.asm"
 
 
 ; Patch transition door

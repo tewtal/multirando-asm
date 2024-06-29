@@ -11,7 +11,7 @@ incsrc "quickswap.asm"
 
 org $8A8000
 incsrc "tables.asm"
-incsrc "../../common/item_overlay.asm"
+incsrc "../../common/overlay.asm"
 
 org $8B8000
 incsrc "data.asm"
