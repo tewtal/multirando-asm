@@ -60,3 +60,13 @@ CheckExtraEndingTitleModes:
     lda #$80 : sta m1_NMIJumpBank
     pea $8080 : plb : plb
     jml $8092d4
+
+StartCredits:
+    %ai16()
+    lda.w #$0004  ; Credits
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.w #$0000
+    STA.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.w #$0000
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS
+    jml transition_from_m1

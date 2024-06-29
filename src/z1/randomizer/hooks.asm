@@ -112,6 +112,9 @@ org $84A8CA
     lda.b #$01 : sta.b $5A  ; Set exiting from stairs
     rts
 
+; DrawCredits
+org $82AE13
+    jsl StartCredits
 
 
 ; ==========

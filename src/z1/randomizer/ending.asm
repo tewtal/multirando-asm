@@ -35,3 +35,13 @@ CheckEndingSequence:
 
     clc
     rtl
+
+StartCredits:
+    %ai16()
+    lda.w #$0004  ; Credits
+    sta.l !IRAM_TRANSITION_GAME_ID
+    lda.w #$0000
+    STA.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.w #$0000
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS
+    jml transition_from_z1

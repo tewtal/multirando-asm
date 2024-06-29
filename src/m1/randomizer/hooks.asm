@@ -103,3 +103,6 @@ org $839EDE
     ; RTS
     jsl CheckEndingSequence
     rts
+
+org $809BCD
+    jsl StartCredits
