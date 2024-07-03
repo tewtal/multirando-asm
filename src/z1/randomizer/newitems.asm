@@ -26,6 +26,19 @@ TakeItem_ShowItemOverlay:
     beq .end
     cmp #$0e
     beq .end
+    cmp #$00
+    beq .end
+    cmp #$0f
+    beq .end
+    cmp #$18
+    beq .end
+    cmp #$21
+    beq .end
+    cmp #$22
+    beq .end
+    cmp #$23
+    beq .end
+
 
     cmp #$30
     bcs .extended

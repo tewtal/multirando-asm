@@ -215,10 +215,10 @@ action_submenu_jump:
 ; as long as all of its menu items and submenus are included.
 
 MainMenu:
-    dw #mm_goto_startgame
-    dw #mm_goto_setup
-    dw $FFFF
-    dw #mm_goto_debug
+    dw #sgm_start
+;    dw #mm_goto_setup
+;    dw $FFFF
+;    dw #mm_goto_debug
 
     dw #$0000
     %cm_version_header(cm_title_header)
