@@ -647,3 +647,7 @@ CaveItemTempPrice = $0A92
 
 ; Quick swap
 QuickSwapTemp = $0A98
+QuickSwapDir = $0A99
+QuickSwapType = $0A9A
+QuickSwapFound = $0A9B
+QuickSwapIndex = $0A9C
