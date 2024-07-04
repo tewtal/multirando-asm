@@ -1,3 +1,5 @@
 build/*
-resources/
+resources/*.sfc
+resources/*.nes
+resources/*.bps
 external/
