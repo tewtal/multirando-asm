@@ -41,10 +41,10 @@ new_item_graphics_data:
     incbin "../../data/newitems_sm.bin"
 
 ;  Replace terminator item for testing
-;org $8f8432
-;     dw $ef03
- ;org $8f8432+$5
-  ;   db $50
+; org $8f8432
+;    dw $Efe0
+; org $8f8432+$5
+;    db $50
 
 ; Add our new custom item PLMs
 org $84efe0
@@ -581,21 +581,15 @@ item_graphics:
     dw $0000 : db $00, $00, $00, $00, $00, $00, $00, $00    ; FF - Unused
 
 get_item_bank:
-    phx
-    lda.w $1c27  ; Get plm index
-    tax
-    lda.w $1c37, x ; Get PLM id
-    cmp.w #plm_items
-    bcc.w .original
+    cpy #item_graphics
+    bcc .original
 .custom
     lda.w #(new_item_graphics_data>>16)
     bra .end
-.original:
+.original
     lda.w #$0089
 .end
-    plx
     rts
-
 
 warnpc $84fe00
 
