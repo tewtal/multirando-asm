@@ -120,7 +120,13 @@ org $82AE13
 ; ==========
 ; Quick swap
 ; ========
-
 ; Hook checking for pause to also check for quick swap
-
 %zhook($EC36, "jsl QuickSwapCheck") ; LDA $F8 : AND #$20
+
+
+; ==============================================
+; Level 9 triforce pieces required
+; ==============================================
+; LDA TriforceInv : CMP #$FF : BNE @Exit
+org $818AA1
+    jsl CountTriforcePieces : nop : db $90 ; Change BNE to BCC

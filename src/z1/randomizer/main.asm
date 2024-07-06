@@ -8,10 +8,14 @@ incsrc "newitems.asm"
 incsrc "caves.asm"
 incsrc "ending.asm"
 incsrc "quickswap.asm"
+incsrc "goals.asm"
 
 org $8A8000
 incsrc "tables.asm"
 incsrc "../../common/overlay.asm"
+warnpc $8AF000
+org $8AF000
+incsrc "config.asm"
 
 org $8B8000
 incsrc "data.asm"
