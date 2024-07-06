@@ -127,11 +127,11 @@ transition_to_m1:
     lda #$01 : sta $1c
 
     ; Restore World map
-    jsl $801000 : dw $A93E
+    jsl $901000 : dw $A93E
 
     ; Load samus GFX
     lda #$00 : sta $23
-    jsl $801000 : dw $C5DC
+    jsl $901000 : dw $C5DC
 
     ; Enable NMI since some routines require it
     cli : lda.l $004210
@@ -140,7 +140,7 @@ transition_to_m1:
 
     ; Get bank and perform a bank switch 
     ply : tya : dec : sta $23
-    jsl $800000|(InitTransitionData&$ffff)
+    jsl $900000|(InitTransitionData&$ffff)
 
     %a16()
     lda.l door_entrypoint : sta.b $d0
@@ -169,11 +169,11 @@ transition_to_m1:
 door_entrypoint:
     dw $8b79
 door_bank:
-    dw $0081  ;    brinstar
-    dw $0082  ;    norfair
-    dw $0084  ;    kraid
-    dw $0083  ;    tourian
-    dw $0085  ;    ridley
+    dw $0091  ;    brinstar
+    dw $0092  ;    norfair
+    dw $0094  ;    kraid
+    dw $0093  ;    tourian
+    dw $0095  ;    ridley
 
 door_stack:
     db $E6, $01, $77, $8B, $81, $58, $8B, $4D, $CB, $47, $C9, $C4, $C0, $56, $90, $87

@@ -1,26 +1,26 @@
 incsrc "hooks.asm"
 
-org $888000
+org $988000
 incsrc "tables.asm"
 
-warnpc $88F000
-org $88F000
+warnpc $98F000
+org $98F000
 incsrc "transition_tables.asm"
 
-org $898000
+org $998000
 incsrc "newitems.asm"
 incsrc "transition_out.asm"
 incsrc "transition_in.asm"
 incsrc "loadgame.asm"
 incsrc "ending.asm"
 
-org $8A8000
+org $9A8000
 incsrc "data.asm"
 
-org $8B8000
+org $9B8000
 incsrc "../../common/overlay.asm"
 
 
 ; Patch transition door
-org $80A6C9
+org $90A6C9
     db $03, $1f

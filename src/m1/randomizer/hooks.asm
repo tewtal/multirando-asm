@@ -3,15 +3,15 @@
 ; ============================================================================
 
 ; L9598:  .word SpecItmsTbl               ;($A3D6)Beginning of special items table.
-org $819598
+org $919598
     dw brinstar_item_table
-org $829598
+org $929598
     dw norfair_item_table
-org $839598
+org $939598
     dw tourian_item_table
-org $849598
+org $949598
     dw kraid_item_table
-org $859598
+org $959598
     dw ridley_item_table
 
 %hook($ED98, "jsl ScanForItems_Start : nop")
@@ -28,10 +28,10 @@ org $859598
 ; Hook all the extra special handlers that reads from the item tables
 %hook($EC0F, "lda [$00], y")            ; Elevator
 %hook($EDF8, "jsr GetEnemyData_long")   ; Squeept
-org $839CF6 : lda [$00], y              ; Cannon
-org $839D07 : lda [$00], y              ; Cannon
-org $839D3D : lda [$00], y              ; Zebetite
-org $839D79 : lda [$00], y              ; Rinka
+org $939CF6 : lda [$00], y              ; Cannon
+org $939D07 : lda [$00], y              ; Cannon
+org $939D3D : lda [$00], y              ; Zebetite
+org $939D79 : lda [$00], y              ; Rinka
 %hook($EEF4, "jsr LoadDoor_long")       ; Door
 ; ============================================================================
 
@@ -69,7 +69,7 @@ org $839D79 : lda [$00], y              ; Rinka
 ; ============================================================================
 ; Disable reloading items from password
 ; ============================================================================
-org $808D3D : jsl LoadItemsFromPassword : rts
+org $908D3D : jsl LoadItemsFromPassword : rts
 
 ; ============================================================================
 ; Cross-game transitions
@@ -91,18 +91,18 @@ org $808D3D : jsl LoadItemsFromPassword : rts
 ; ============================================================================
 ; Patch ending sequence to check for full game completion
 ; ============================================================================
-org $808000
+org $908000
     ; LDA TitleRoutine ($1F) : CMP #$15
     jsl CheckExtraEndingTitleModes        
 
 ; Patch the code where the game sets the escape timer flag after defeating
 ; mother brain to not set it in the case where all games are not completed
-org $839EDE
+org $939EDE
     ; LDA #$05 : STA $98
     ; LDA #$80 : STA #$99
     ; RTS
     jsl CheckEndingSequence
     rts
 
-org $809BCD
+org $909BCD
     jsl StartCredits

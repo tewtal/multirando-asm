@@ -147,7 +147,7 @@ z1_transition_table:
 
     ; Set up IRQ/NMI handlers
     dw $0004, $105c, !IRAM_NMI
-    dw $0004, $0008, !IRAM_NMI+2
+    dw $0004, $8008, !IRAM_NMI+2
 
     ; Done with transition setup, jump to entry point on the SNES side
     dw $0008, z1_transition_to_z1&$ffff, z1_transition_to_z1>>16
@@ -157,7 +157,7 @@ z1_transition_table:
 m1_transition_table:
     ; Update SA-1 bank registers
     dw $0006, $0080, $2220
-    dw $0006, $0087, $2222
+    dw $0006, $0086, $2222
     dw $0006, $0080, $2221
     dw $0006, $0007, $2223
 
@@ -168,11 +168,11 @@ m1_transition_table:
     dw $0003, $D000, $0040, $0000, $0000, $0800
 
     ; Copy common routines from ROM -> RAM
-    dw $0003, $8000, $0087, $1000, $0000, $1000
+    dw $0003, $8000, $0097, $1000, $0000, $1000
 
     ; Set up IRQ/NMI handlers
     dw $0004, $105c, !IRAM_NMI
-    dw $0004, $0008, !IRAM_NMI+2
+    dw $0004, $9008, !IRAM_NMI+2
 
     ; Done with transition setup, jump to entry point on the SNES side
     dw $0008, m1_transition_to_m1&$ffff, m1_transition_to_m1>>16

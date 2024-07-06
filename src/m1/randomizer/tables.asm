@@ -1,4 +1,4 @@
-org $888000
+org $988000
 brinstar_item_table:
 .row_2
     ;Elevator to Tourian.
@@ -69,8 +69,8 @@ brinstar_item_table:
     dw $FFFF
     db $07, $FF, $04, $02, $00
 
-warnpc $888200
-org $888200
+warnpc $988200
+org $988200
 norfair_item_table:
 .row_a
     ;Missiles.
@@ -195,8 +195,8 @@ norfair_item_table:
     ;Elevator to Ridley hideout.
 	db $19, $FF, $04, $04, $00
 
-warnpc $888400
-org $888400
+warnpc $988400
+org $988400
 tourian_item_table:
 .row_3
     ;Elevator to end.
@@ -260,8 +260,8 @@ tourian_item_table:
     ;Left door.
 	db $05, $FF, $09, $B3, $00 
 
-warnpc $888600
-org $888600
+warnpc $988600
+org $988600
 kraid_item_table:
 .row_12
     ;Elevator from Brinstar.
@@ -314,8 +314,8 @@ kraid_item_table:
 	dw $FFFF
 	db $08, $FF, $02, $08, $BE, $00
 
-warnpc $888800
-org $888800
+warnpc $988800
+org $988800
 ridley_item_table:
 
 .row_18
@@ -353,7 +353,7 @@ ridley_item_table:
 
 
 ; Reserve space From A000-FFFF for eventual expansion of item tables.
-warnpc $889000
-org $889000
+warnpc $989000
+org $989000
 next_thing:
 
