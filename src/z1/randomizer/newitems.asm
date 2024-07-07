@@ -6,9 +6,9 @@ UploadItemPalettes:
     lda #$C0 : sta $2121
     ldx #$00
 -
-    lda.l new_item_palettes, x
+    lda.l nes_new_item_palettes, x
     sta $2122
-    lda.l new_item_palettes+1, x
+    lda.l nes_new_item_palettes+1, x
     sta $2122
     inx : inx
     cpx #$80
@@ -47,7 +47,7 @@ TakeItem_ShowItemOverlay:
 .extended
     sec : sbc #$30
 .show
-    jsl overlay_show_item
+    jsl nes_overlay_show_item
 .end
     ldx #$08 : stx $0602
     pla
@@ -250,7 +250,7 @@ PrepDynamicItem:
     sta [$F0], y
     iny #2    
     
-    lda #(new_item_graphics>>16)
+    lda #(nes_new_item_graphics>>16)
     sta [$F0], y
     iny #2    
     

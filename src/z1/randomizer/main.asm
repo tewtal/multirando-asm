@@ -12,13 +12,11 @@ incsrc "goals.asm"
 
 org $8A8000
 incsrc "tables.asm"
-incsrc "../../common/overlay.asm"
 warnpc $8AF000
+
+; Don't move this
 org $8AF000
 incsrc "config.asm"
-
-org $8B8000
-incsrc "data.asm"
 
 
 org $878000+(CommonBankEnd-CommonBankStart)

@@ -32,4 +32,4 @@ config_events:       ; DF0202
 
 ; Sprite screw attack config flag
 config_screw_attack: ; DF0204
-    dw #$0000
+    dw #$0001

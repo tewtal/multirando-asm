@@ -14,6 +14,9 @@ incsrc "defines.asm"
 ; Macros
 incsrc "macros.asm"
 
+; Common Code/Data
+incsrc "common/main.asm"
+
 ; Zelda 1
 incsrc "z1/main.asm"
 

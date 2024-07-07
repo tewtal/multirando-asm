@@ -44,7 +44,7 @@ transition_to_m1:
 
     sep #$30
     jsl UploadItemPalettes
-    jsl overlay_init
+    jsl nes_overlay_init
 
     %ai16()
 

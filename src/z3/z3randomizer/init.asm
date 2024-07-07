@@ -53,7 +53,7 @@ Init_Primary:
 	
 	LDA.b #$10 : STA.b PlayerSpriteBank ; set default player sprite bank
 	LDA.b #$81 : STA.w NMITIMEN ; thing we wrote over, turn on NMI & gamepad
-        LDA.b #(ReturnFromInit>>16)|$80 : PHA : PLB
+    LDA.b #(ReturnFromInit>>16)|$80 : PHA : PLB
 
 JML ReturnFromInit
 

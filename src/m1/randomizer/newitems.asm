@@ -4,9 +4,9 @@ UploadItemPalettes:
     lda #$C0 : sta $2121
     ldx #$00
 -
-    lda.l new_item_palettes, x
+    lda.l nes_new_item_palettes, x
     sta $2122
-    lda.l new_item_palettes+1, x
+    lda.l nes_new_item_palettes+1, x
     sta $2122
     inx : inx
     cpx #$80
@@ -193,7 +193,7 @@ CustomItemHandler:
 
     sta [$d0], y
     iny #2
-    lda #(new_item_graphics>>16)
+    lda #(nes_new_item_graphics>>16)
     sta [$d0], y
     iny #2
     lda #$0000
@@ -228,7 +228,7 @@ PickupItem_extended:
 
     ; Ok, we have a custom item, handle picking it up here
     lda.w $0748, x    ; Load item id
-    jsl overlay_show_item
+    jsl nes_overlay_show_item
     
     phx : phy
     jsl mb_WriteItemToInventory
@@ -245,7 +245,7 @@ PickupItem_extended:
     lda.w $0748, x  ; Load item id
     tax
     lda.l M1ItemIdMap, x ; Load M1 item id mapping
-    jsl overlay_show_item
+    jsl nes_overlay_show_item
     plx : pla
 
     clc

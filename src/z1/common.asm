@@ -34,7 +34,7 @@ NMIStart:
     lda $4210
     jsl SnesOamDMA
     jsl SnesProcessPPUString
-    jsl overlay_handle
+    jsl nes_overlay_handle
 
     lda $ff
     ldx $5c
@@ -78,7 +78,7 @@ WritePPUCTRL:
     pha
     and #$80
     ora #$01    ; Always keep auto-joypad read active
-    sta $4200
+    sta.l $004200
     pla
     rts
 
@@ -92,7 +92,7 @@ WritePPUCTRL1:
 .blank
     lda #$8f
 +
-    sta $2100
+    sta.l $002100
     pla
     rts
 

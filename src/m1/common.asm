@@ -32,7 +32,7 @@ NMIStart:
     sep #$30
     lda $4210
     jsl UpdateScrollHDMA
-    jsl overlay_handle
+    jsl nes_overlay_handle
     jmp $C0DF
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code

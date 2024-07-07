@@ -1,5 +1,6 @@
 incsrc "hooks.asm"
 
+; Don't move this
 org $988000
 incsrc "tables.asm"
 
@@ -13,13 +14,6 @@ incsrc "transition_out.asm"
 incsrc "transition_in.asm"
 incsrc "loadgame.asm"
 incsrc "ending.asm"
-
-org $9A8000
-incsrc "data.asm"
-
-org $9B8000
-incsrc "../../common/overlay.asm"
-
 
 ; Patch transition door
 org $90A6C9

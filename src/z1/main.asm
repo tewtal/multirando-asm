@@ -1,5 +1,5 @@
 namespace z1
-sa1rom 0,3,6,0
+sa1rom 0,0,6,7
 
 !BASE_BANK = $80
 

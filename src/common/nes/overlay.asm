@@ -270,10 +270,10 @@ overlay_clear_byte:
     db $00
 
 overlay_tile_data:
-    incbin ../data/ovl_gfx.bin
+    incbin ../../data/ovl_gfx.bin
 
 overlay_item_names:
-    table ../data/tables/small_overlay.tbl,rtl
+    table ../../data/tables/small_overlay.tbl,rtl
     dw "                          "
     dw "       Master Sword       "
     dw "      Tempered Sword      "
@@ -542,7 +542,7 @@ overlay_item_names:
     dw "                          " ; FF
 
 overlay_box:
-    table ../data/tables/box_overlay.tbl,rtl
+    table ../../data/tables/box_overlay.tbl,rtl
     dw "~~/--------------------------\~~"
     dw "~~[                          ]~~"
     dw "~~[                          ]~~"
