@@ -36,7 +36,7 @@ org $C13798   ; Crocomire's room changes colors $1E, $2E, $2F, $3E, and $3F for 
 org $848794
     jsr get_item_bank
 
-org $D70000
+org $DC0000
 new_item_graphics_data:
     incbin "../../data/newitems_sm.bin"
 

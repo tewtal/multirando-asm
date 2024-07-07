@@ -19,7 +19,7 @@
 
 !BossRewardSmall = #BossRewardSmall
 
-org $D7A000
+org $D0A000
 item_message_table:
     ; Offset = ALTTP SRAM Offset
     ; Value = Value to write/add to offset
@@ -674,7 +674,7 @@ map_markers:
     dw "___         Maridia          ___" ; 2
     dw "___      Lower Norfair       ___" ; 3
 cleartable
-warnpc $D7FFFF
+warnpc $D0FFFF
 
 ; Starts at 1D
 org $859643
@@ -809,7 +809,7 @@ BossRewardSmall:
     JSR $82B8
 
     PLY
-    PHB : PEA $d7d7 : PLB : PLB
+    PHB : PEA $d0d0 : PLB : PLB
     LDX #$0000             ;\
 -
     LDA.W $0000, y
@@ -860,7 +860,7 @@ MapMarkerBig:
 
 write_dungeon:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     cmp #$001e
     beq .adjust
@@ -888,7 +888,7 @@ write_dungeon:
 
 write_dungeon_key:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     cmp #$0021
     beq .adjust
@@ -912,7 +912,7 @@ write_dungeon_key:
 
 write_keycard:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     cmp #$0022
     beq .adjust
@@ -947,7 +947,7 @@ write_keycard:
 
 write_map_marker:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     cmp #$0024
     beq .adjust
@@ -971,7 +971,7 @@ write_map_marker:
 
 write_normal:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     cmp #$001D
     beq .adjust
@@ -995,7 +995,7 @@ write_normal:
 
 write_placeholders:
     phx : phy
-    phb : pea $d7d7 : plb : plb
+    phb : pea $d0d0 : plb : plb
     lda.l $001c1f
     ; cmp #$005c
     ; beq .adjust
