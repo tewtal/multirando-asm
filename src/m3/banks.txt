@@ -44,18 +44,9 @@ D0:1000-3FFF        -- Game transition out code --
 D0:4000-7EFF        -- Game transition in code --
 D0:7F00-7FFF        -- Reset SPC code --
 
-D1:0000-FFFF        -- SM Transition WRAM --
-D2:0000-FFFF        -- SM Transition WRAM --
-D3:0000-FFFF        -- SM Transition WRAM --
-D4:0000-FFFF        -- SM Transition WRAM --
-D5:0000-FFFF        -- SM Transition VRAM --
-D6:0000-FFFF        -- SM Transition VRAM --
-D7:0000-9FFF        -- New item graphics data --
-D7:A000-FFFF        -- Item message tables --
-D8:0000-FFFF        -- Z1/M1/Z3 Init RAM/SRAM --
-
-D9:0000-FFFF        -- Free space --
+D1:0000-FFFF        -- Free space --
 ...
-DE:0000-7FFF        -- Free space --
+DC:0000-7FFF        -- Free space --
+DD:0000-FFFF        -- Z1/M1/Z3 Init RAM/SRAM --
 DE:8000-FFFF        -- Titlescreen gfx --
 DF:0000-02FF        -- Configuration flags --

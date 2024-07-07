@@ -92,7 +92,7 @@ sm_transition_table:
 
 z3_transition_table:
     ; Update SA-1 bank registers
-    dw $0006, $0084, $2220
+    dw $0006, $0007, $2220      ; Set while copying VRAM/WRAM data
     dw $0006, $0084, $2222
     dw $0006, $0085, $2221
     dw $0006, $0085, $2223
@@ -101,14 +101,15 @@ z3_transition_table:
     dw $0006, $0001, $2224
 
     ; Restore VRAM
-    dw $0001, z3_zelda_vram&$ffff, z3_zelda_vram>>16, $0000, $8000
-    dw $0001, z3_zelda_vram&$ffff, (z3_zelda_vram>>16)+1, $4000, $8000
+    dw $0001, mb_zelda_vram&$ffff, mb_zelda_vram>>16, $0000, $0000
+    ;dw $0001, mb_zelda_vram&$ffff, (mb_zelda_vram>>16)+1, $4000, $8000
 
     ; Restore WRAM
-    dw $0003, z3_zelda_wram&$ffff, z3_zelda_wram>>16, $0000, $0000, $8000
-    dw $0003, z3_zelda_wram&$ffff, (z3_zelda_wram>>16)+1, $8000, $0000, $8000
-    dw $0003, z3_zelda_wram&$ffff, (z3_zelda_wram>>16)+2, $0000, $0001, $8000
-    dw $0003, z3_zelda_wram&$ffff, (z3_zelda_wram>>16)+3, $8000, $0001, $8000
+    dw $0003, mb_zelda_wram&$ffff, mb_zelda_wram>>16, $0000, $0000, $0000
+    dw $0003, mb_zelda_wram&$ffff, (mb_zelda_wram>>16)+1, $0000, $0001, $0000
+
+    dw $0006, $0084, $2220      ; Set correct bank register after copying
+
 
     ; Copy SRAM -> WRAM
     dw $0003, !SRAM_ALTTP_START&$ffff, !SRAM_ALTTP_START>>16, $f000, $0000, $0500

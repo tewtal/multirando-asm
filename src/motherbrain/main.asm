@@ -4,6 +4,10 @@ sa1rom 0,0,0,7      ; Set boot configuration
 incsrc "boot.asm"
 
 sa1rom 0,0,0,7      ; Set main configuration
+org $F00000
+incsrc "randomizer/data.asm" ; Up to 12 banks of randomizer specific data
+; Uses up banks F0-F8 right now, so F9-FB remains free
+
 org $FC0000
 namespace menu
 incsrc "menu/main.asm"
@@ -16,17 +20,24 @@ incsrc "data.asm"
 warnpc $FD0000
 namespace off
 
+; FD0000 - FDFFFF
+; SPC data for credits
+
 org $FE0000
 namespace credits
 incsrc "credits.asm"
-incsrc "spc_play.asm"       ; Bank $FD is used for the SPC to play here
+incsrc "spc_play.asm"
 namespace mb
+warnpc $FF0000
 
-org $FF8000
+org $FF0000
 namespace off
 incsrc "../nes-spc/spc.asm"
-
 namespace mb
+; free space for more code here
+warnpc $FFE000
+
+
 org $FFE000
 base $40E000
 incsrc "snes.asm"

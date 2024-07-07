@@ -34,15 +34,15 @@ Banks:
 Slots:
     0, 1, 2, 3: Super Metroid (Extended to 4MB)
     4, 5:       A Link to the Past (Extended to 2MB)
-    6:          Zelda 1 (Extended to 1MB)
-    7:          Metroid 1 (Extended to 1MB)
+    6:          Zelda 1 + Metroid 1 (1MB)
+    7:          Additional Data + Credits + Mother Brain (1MB)
 
 Mapping:
     Boot:
         Bank C -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
         Bank D -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
         Bank E -> Slot 0 (LoROM) (Regular SM LoROM Banks 80-9F)
-        Bank F -> Slot 7 (HiROM) (Metroid 1 / Mother Brain Data)
+        Bank F -> Slot 7 (HiROM) (Mother Brain Data)
     Super Metroid
         Bank C -> Slot 2 (HiROM) (Regular SM LoROM Banks C0-DF ends up as HiROM C0-CF here)
         Bank D -> Slot 3 (HiROM) (1MB of HiROM at D0-DF for extended SM code/data)
@@ -59,8 +59,7 @@ Mapping:
         Bank E -> Slot 6 (LoROM) (Zelda 1 code/data + extra randomizer code/data at LoROM banks 80-9F)
     
     Metroid 1
-        Bank E -> Slot 7 (LoROM) (Metroid 1 code/data + extra randomizer code/data at LoROM banks 80-9F + Mother Brain data)                                                
-                                 (Note: Currently banks 90-9F (F8-FF hirom) are reserved for common code / data, leaving banks 88-8F free for M1 rando code)
+        Bank E -> Slot 6 (LoROM) (Zelda 1 code/data (80-8F), Metroid 1 code/data (90-9F))
 
 At boot, copy the SA-1 code from Slot 7 to BW-RAM $40E000 and resume SA-1 execution from there.
 This is needed since we can't keep a static block of ROM mapped in all cases due to ALTTP requiring some special mirroring to

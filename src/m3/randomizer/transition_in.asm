@@ -16,6 +16,9 @@ transition_to_sm:
     ; So from here we take over the transition process from the SA-1
     ; and restore WRAM/VRAM depending on door direction and move on
 
+    %a8()
+    lda #$07 : sta $2220        ; Swap in bank 7 to banks C0-DF temporarily since we have the transition data there
+
     %a16()
     lda.l !IRAM_TRANSITION_DESTINATION_ID
     tax
@@ -24,24 +27,27 @@ transition_to_sm:
     beq +
 
     %a8()
-    ldx.w #sm_vram>>16          ; Put SM VRAM bank in X
+    ldx.w #mb_sm_vram>>16          ; Put SM VRAM bank in X
     jsl copy_to_vram            ; Call the DMA routine to copy SM template VRAM from ROM
 
-    ldx.w #sm_wram>>16          ; Put SM WRAM bank in X
+    ldx.w #mb_sm_wram>>16          ; Put SM WRAM bank in X
     jsl copy_to_wram            ; Call the DMA routine to copy SM template WRAM from ROM
     jmp ++
 
 +
     %a8()
-    ldx.w #sm_vram_right>>16    ; Put SM VRAM bank in X
+    ldx.w #mb_sm_vram_right>>16    ; Put SM VRAM bank in X
     jsl copy_to_vram            ; Call the DMA routine to copy SM template VRAM from ROM
 
-    ldx.w #sm_wram_right>>16    ; Put SM WRAM bank in X
+    ldx.w #mb_sm_wram_right>>16    ; Put SM WRAM bank in X
     jsl copy_to_wram            ; Call the DMA routine to copy SM template WRAM from ROM
 
 ++
-    %ai16()
 
+    %a8()
+    lda #$02 : sta $2220        ; Swap bank the original SM banks to C0-CF
+    
+    %ai16()
     ldx #$1ff0
     txs                         ; Adjust stack pointer
 
