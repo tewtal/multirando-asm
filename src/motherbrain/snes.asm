@@ -431,6 +431,9 @@ snes_run_z1:
     lda #$86
     sta $2222   ; Swap Z1 bank into $80-9F
 
+    lda #$07
+    sta $2223   ; Swap Z1 bank into $80-9F
+
     lda #$03
     sta $2224
 
@@ -462,8 +465,11 @@ snes_run_m1:
 	lda #$80
 	sta.l $002100
 
-    lda #$87
+    lda #$86
     sta.l $002222   ; Swap M1 bank into $80-9F
+
+    lda #$07
+    sta.l $002223   ; Swap M1 bank into $80-9F
 
     lda #$04
     sta.l $002224

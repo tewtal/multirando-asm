@@ -142,7 +142,7 @@ CustomItemHandler:
 
     ; Jump to a copy of the default item handler
     ; but this one doesn't continue processing items
-    jsl $810000+(PowerUpHandler_extended&$ffff)
+    jsl $910000+(PowerUpHandler_extended&$ffff)
 
     phy
     phx
@@ -216,7 +216,7 @@ PickupItem_extended:
     tay
     
     ; Play pickup music
-    ; jsl $811000 : dw $CBF9
+    ; jsl $911000 : dw $CBF9
 
     ldx $4C
     lda $074C, x

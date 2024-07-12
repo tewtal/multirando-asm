@@ -52,9 +52,10 @@ D5:0000-FFFF        -- Samus extended sprite data --
 D6:0000-FFFF        -- Samus extended sprite data --
 
 D7:0000-FFFF        -- Free space --
-...
-DB:0000-7FFF        -- Free space --
-DC:0000-7FFF        -- New Item graphics data --
+D8:0000-FFFF        -- Free space -- (Reserved: Z2 Code, will be mapped to 0x90-0x97 LoROM)
+...                 
+DB:0000-FFFF        -- Free space -- (Reserved: Z2 Code)
+DC:0000-FFFF        -- New Item graphics data --
 DD:0000-FFFF        -- Z1/M1/Z3 Init RAM/SRAM --
 DE:8000-FFFF        -- Titlescreen gfx --
 DF:0000-02FF        -- Configuration flags --

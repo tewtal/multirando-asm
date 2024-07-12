@@ -104,9 +104,9 @@ PowerUpHandler_extended:
 +
     lda [$00],y         ;Power-up item type.
     jsr $EE3D       ;($EE3D)Get unique item ID.
-    jsr $EE4A        ;($EE4A)Check if Samus already has item.
+    ; jsr $EE4A        ;($EE4A)Check if Samus already has item.
 
-    bcs ++               ;Samus already has item. do not load it.
+    ; bcs ++               ;Samus already has item. do not load it.
     ldy #$02            ;Prepare to load item coordinates.
     lda $09             ;
     sta $0748,x       ;Store power-up type in available item slot.
