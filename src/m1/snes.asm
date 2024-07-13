@@ -1146,71 +1146,71 @@ SoundEmulateLengthCounters:
     bit #$01
     beq .sq1
 
-    lda $0900
-    and #$20
-    bne ++
-    ldx.w APUSq0Length
-    bne +
-    tya
-    and #$fe
-    tay
-    bra .sq1
+        lda $0900
+        and #$20
+        bne ++
+            ldx.w APUSq0Length
+            bne +
+                tya
+                and #$fe
+                tay
+                bra .sq1
 +
-    dex
-    stx.w APUSq0Length
+                dex
+                stx.w APUSq0Length
 ++
-    tya
+        tya
 
 .sq1
 
     bit #$02
     beq .noise
-
-    lda $0904
-    and #$20
-    bne ++
-    ldx.w APUSq1Length
-    bne +
-    tya
-    and #$fd
-    tay
-    bra .sq1
+        lda $0904
+        and #$20
+        bne ++
+            ldx.w APUSq1Length
+            bne +
+                tya
+                and #$fd
+                tay
+                bra .sq1
 +
-    dex
-    stx.w APUSq1Length
+                dex
+                stx.w APUSq1Length
 ++
-    tya
+        tya
 
 .noise
     bit #$08
     beq .tri
-
-    lda $090c
-    and #$20
-    bne ++
-    ldx.w APUNoiLength
-    bne +
-    tya
-    and #$f7
-    tay
-    bra .sq1
+        lda $090c
+        and #$20
+        bne ++
+            ldx.w APUNoiLength
+            bne +
+                tya
+                and #$f7
+                tay
+                bra .sq1
 +
-    dex
-    stx.w APUNoiLength
+                dex
+                stx.w APUNoiLength
 ++
-    tya
+        tya
 
 .tri
     ldx $0908
+    cpx #$7f
+    beq +++
     bpl ++
-
-    ldx.w APUTriLength
-    bne +
-    and #$fb
-    bra .end
++++
+        ldx.w APUTriLength
+        bne +
+            and #$fb
+            bra .end
 +
-    dex
-    stx.w APUTriLength
+            dex
+            stx.w APUTriLength
 ++
 .end
 
@@ -1223,9 +1223,9 @@ SnesUpdateAudio:
 
     ; This isn't great but fixes some SFX
     ; but makes the triangle channel never stop
-    LDA $908
-    ORA #$80
-    STA $908
+    ; LDA $908
+    ; ORA #$80
+    ; STA $908
 
     JSR SoundEmulateLengthCounters
 
