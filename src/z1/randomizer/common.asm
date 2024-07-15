@@ -28,3 +28,8 @@ LoadAnim_ItemFrameTiles_extended_y:
 GetDynamicItemIndex_near:
     jsl GetDynamicItemIndex
     rts
+
+InitMode8_SaveItems:
+    jsl SaveItems
+    jsr $E625
+    rts

@@ -67,12 +67,12 @@ org $939D79 : lda [$00], y              ; Rinka
 %hook($DBE3, "lda.b #$ff : sta $0748, x : jsr $cbc0 : jmp $dbf3")
 
 ; ============================================================================
-; Save items directly on "Game over" screen
+; Save items directly on Password screen
 ;
-; L93A1:  LDX #$B9                ;Low byte of start of PPU data.
-; L93A3:  LDY #$93                ;High byte of start of PPU data.
+; L9360:  LDX #$7F                ;Low byte of start of PPU data.
+; L9362:  LDY #$93                ;High byte of start of PPU data.
 ; ============================================================================
-org $9093A1 : jsl SaveItems
+org $909360 : jsl SaveItems
 
 ; ============================================================================
 ; Disable reloading items from password
@@ -95,6 +95,11 @@ org $908D3D : rts
 ; Spawn with full health
 ; ============================================================================
 %hook($C922, "jsl RestoreSamusHealth : rts")
+
+; ============================================================================
+; Move Up+A (Up+B on SNES) to controller 1
+; ============================================================================
+%hook($C9B1, "lda.b $14")
 
 ; ============================================================================
 ; Patch ending sequence to check for full game completion

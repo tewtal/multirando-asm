@@ -130,3 +130,16 @@ org $82AE13
 ; LDA TriforceInv : CMP #$FF : BNE @Exit
 org $818AA1
     jsl CountTriforcePieces : nop : db $90 ; Change BNE to BCC
+
+
+; ==============================================
+; Move Up+A Reset to controller 1
+; ==============================================
+org $8580DA
+    lda.b $fa
+
+; ==============================================
+; Save out of game items on Up+A/Death
+; ==============================================
+org $858600
+    jsr InitMode8_SaveItems

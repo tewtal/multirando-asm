@@ -1,5 +1,17 @@
 !MAX_DYNAMIC_SLOTS = 4
 
+SaveItems:
+    php
+    rep #$30
+
+    lda #$0002                     ; Since M1 "saves" on death, we need to properly save all items found
+    jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
+    
+    plp
+    lda.b #$00
+    sta.b $11
+    rtl
+
 UploadItemPalettes:
     lda #$80 : sta $2100
     

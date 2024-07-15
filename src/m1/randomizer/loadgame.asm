@@ -1,4 +1,4 @@
-; Runs at Game over to instantly save out of game items
+; Runs at password screen to save items
 SaveItems:
     php
     rep #$30
@@ -9,7 +9,7 @@ SaveItems:
     plp
 
     ; Original hooked code
-    ldx.b #$b9
+    ldx.b #$7f
     ldy.b #$93
     rtl
 
