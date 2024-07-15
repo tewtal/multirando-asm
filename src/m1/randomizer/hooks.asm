@@ -67,9 +67,17 @@ org $939D79 : lda [$00], y              ; Rinka
 %hook($DBE3, "lda.b #$ff : sta $0748, x : jsr $cbc0 : jmp $dbf3")
 
 ; ============================================================================
+; Save items directly on "Game over" screen
+;
+; L93A1:  LDX #$B9                ;Low byte of start of PPU data.
+; L93A3:  LDY #$93                ;High byte of start of PPU data.
+; ============================================================================
+org $9093A1 : jsl SaveItems
+
+; ============================================================================
 ; Disable reloading items from password
 ; ============================================================================
-org $908D3D : jsl LoadItemsFromPassword : rts
+org $908D3D : rts
 
 ; ============================================================================
 ; Cross-game transitions

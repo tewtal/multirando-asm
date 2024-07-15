@@ -56,10 +56,10 @@ CheckExtraEndingTitleModes:
     ; pop the return address off the stack
     pla : pla : pla
 
-    ; Run initialize game
-    lda #$80 : sta m1_NMIJumpBank
-    pea $8080 : plb : plb
-    jml $8092d4
+    ; Run initialize game (skip loading back data)
+    lda #$90 : sta m1_NMIJumpBank
+    pea $9090 : plb : plb
+    jml $9092dd
 
 StartCredits:
     %ai16()

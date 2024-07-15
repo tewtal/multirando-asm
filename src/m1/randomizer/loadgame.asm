@@ -1,7 +1,5 @@
-; This is run when the game is supposed to restore items from
-; password data, but we've hooked it since we don't care about that
-; Instead we make sure to save the buffer of items to SRAM
-LoadItemsFromPassword:
+; Runs at Game over to instantly save out of game items
+SaveItems:
     php
     rep #$30
 
@@ -9,6 +7,10 @@ LoadItemsFromPassword:
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
 
     plp
+
+    ; Original hooked code
+    ldx.b #$b9
+    ldy.b #$93
     rtl
 
 RestoreSamusHealth:

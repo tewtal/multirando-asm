@@ -1229,10 +1229,7 @@ SoundEmulateLengthCounters:
 
 .tri
     ldx $0908
-    cpx #$7f
-    beq +++
-    bpl ++
-+++
+    bmi ++
 
     ldx.w APUTriLength
     bne +
