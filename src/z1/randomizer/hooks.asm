@@ -71,6 +71,9 @@ org $81ABE0
 org $85B847
     jsl LoadRoomItemIdUW_extended : nop #5
 
+; Patch the check in MoveAndDrawRoomItem for empty item 3F and replace with 2F
+%zhook($E6F3, "cmp.b #$2f")
+
 ; ========================================================================
 ; Shops
 ; ========================================================================

@@ -1229,7 +1229,7 @@ SoundEmulateLengthCounters:
 
 .tri
     ldx $0908
-    bmi ++
+    bpl ++
 
     ldx.w APUTriLength
     bne +
