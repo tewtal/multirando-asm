@@ -4,7 +4,36 @@
 CopyItemBuffers:
     php
     %ai16()
+    lda #$0000 : jsl CopyItemBuffer
+    lda #$0001 : jsl CopyItemBuffer
+    lda #$0002 : jsl CopyItemBuffer
+    lda #$0003 : jsl CopyItemBuffer
+    plp
+    rtl
 
+;
+; Copies a specific item buffer for a game
+;
+CopyItemBuffer:
+    php
+    %ai16()
+    and #$00ff  ; Mask off the high byte
+    cmp #$0000
+    bne +
+    jmp .smBuffer
++
+    cmp #$0001
+    bne +
+    jmp .alttpBuffer
++
+    cmp #$0002
+    bne +
+    jmp .z1Buffer
++
+    jmp .m1Buffer
++    
+
+.smBuffer
     ldx.w #$0000
 -
     lda.l $400010, x
@@ -12,7 +41,9 @@ CopyItemBuffers:
     inx #2
     cpx.w #(!SM_BUFFER_END-!SM_BUFFER_START)
     bne -
+    jmp .end    
 
+.alttpBuffer
     ldx.w #$0000
 -
     lda.l $402300, x
@@ -20,7 +51,9 @@ CopyItemBuffers:
     inx #2
     cpx.w #(!ALTTP_BUFFER_END-!ALTTP_BUFFER_START)
     bne -
+    jmp .end
 
+.z1Buffer
     ldx.w #$0000
 -
     lda.l $40CE57, x
@@ -28,7 +61,9 @@ CopyItemBuffers:
     inx #2
     cpx.w #(!Z1_BUFFER_END-!Z1_BUFFER_START)
     bne -
+    jmp .end
 
+.m1Buffer
     ldx.w #$0000
 -
     lda.l $408876, x
@@ -37,8 +72,10 @@ CopyItemBuffers:
     cpx.w #(!M1_BUFFER_END-!M1_BUFFER_START)
     bne -
 
+.end
     plp
     rtl
+
 ;
 ; Restores all item buffers except for the game in A
 ; Used when we're saving in a game to also save the state

@@ -9,14 +9,7 @@ transition_from_m1:
 
     ; TODO: Change to DMA
     ; Backup RAM to BW-RAM so we can restore it on transition in
-
-    ldx #$0000
--
-    lda.w $0000, x
-    sta.l $40D000, x
-    inx #2
-    cpx.w #$0800
-    bne -
+    jsl backup_wram
 
     ; Set previous game id
     lda.w #$0003
@@ -84,4 +77,18 @@ SamusInDoor_extended:
     lda.b $56
     ora.b #$80
     sta.b $56 
+    rtl
+
+backup_wram:
+    php
+    %ai16();
+    ldx #$0000
+-
+    lda.w $0000, x
+    sta.l $40D000, x
+    inx #2
+    cpx.w #$0800
+    bne -
+
+    plp
     rtl

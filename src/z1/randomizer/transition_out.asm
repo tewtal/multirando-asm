@@ -7,14 +7,7 @@ transition_from_z1:
 
     ; TODO: Change to DMA
     ; Backup RAM to BW-RAM so we can restore it on transition in
-
-    ldx #$0000
--
-    lda.w $0000, x
-    sta.l $40C800, x
-    inx #2
-    cpx.w #$0800
-    bne -
+    jsl backup_wram
 
     ; Set previous game id
     lda.w #$0002
@@ -141,8 +134,18 @@ check_dungeon_transition:
 
 
 
-
-
+backup_wram:
+    php
+    %ai16()
+    ldx #$0000
+-
+    lda.w $0000, x
+    sta.l $40C800, x
+    inx #2
+    cpx.w #$0800
+    bne -
+    plp
+    rtl
 
 
 

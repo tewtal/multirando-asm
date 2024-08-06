@@ -5,6 +5,10 @@ SaveItems:
 
     lda #$0003                     ; Since M1 "saves" on death, we need to properly save all items found
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
+    
+    jsl backup_wram                ; Backup M1 WRAM to buffer
+    lda #$0003
+    jsl mb_CopyItemBuffer          ; Copy the M1 items to item buffer so that on a reset no M1 items are lost
 
     plp
 

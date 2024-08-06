@@ -121,6 +121,8 @@ sm_save_hook:
 
     lda #$0000
     jsl mb_RestoreItemBuffers ; Save all found items to actual SRAM
+    lda #$0000
+    jsl mb_CopyItemBuffer     ; Copy SM buffer back to prevent item loss on reset
     
     ;jsl sm_save_alttp_items
     ;jsl stats_save_sram

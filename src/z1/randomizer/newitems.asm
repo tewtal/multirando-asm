@@ -4,8 +4,12 @@ SaveItems:
     php
     rep #$30
 
-    lda #$0002                     ; Since M1 "saves" on death, we need to properly save all items found
+    lda #$0002                     ; Copy all items back to their original game on save
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
+    
+    jsl backup_wram                ; Backup WRAM to WRAM-buffer
+    lda #$0002
+    jsl mb_CopyItemBuffer          ; Copy Z1 items from WRAM-buffer into item buffer
     
     plp
     lda.b #$00

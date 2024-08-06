@@ -266,6 +266,8 @@ zelda_save_done_hook:
     rep #$30
     lda #$0001
     jsl mb_RestoreItemBuffers      ; Restore all item buffers to proper SRAM in all games
+    lda #$0001
+    jsl mb_CopyItemBuffer          ; Copy Z3 items to the buffer to prevent loss on reset
     ; TODO: Fix when adding multiworld
     ; jsl mw_save_sram
     plp
