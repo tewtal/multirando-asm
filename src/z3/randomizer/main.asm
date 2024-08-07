@@ -21,5 +21,6 @@ org $AA8000
 incsrc "transition_tables.asm"
 warnpc $AAFFFF
 
-; org $01E9BC
-;     db $ca
+; place temp item
+org $01E9BC
+    db $ca

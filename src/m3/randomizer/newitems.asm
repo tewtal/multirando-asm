@@ -44,7 +44,7 @@ new_item_graphics_data:
 ; org $8f8432
 ;    dw $Efe0
 ; org $8f8432+$5
-;    db $50
+;    db $72
 
 ; Add our new custom item PLMs
 org $84efe0
@@ -228,6 +228,7 @@ i_pickup:
     
     ; Check if this item belongs to SM
     jsl mb_CheckItemGame
+    cmp.w #$0000
     bne .notSm
     pla
 
@@ -251,30 +252,39 @@ i_pickup:
 
 ; This should only ever be called for new items
 receive_sm_item:
-    cmp #$0020
-    bcs .keycard
-    cmp #$001A
+    cmp #$00CA
     bcs .mapMarker
+    cmp #$00B0
+    bcc .keyCard
     bra .end
 
-.keycard
-    and #$000f
-    sta !DP_MsgRewardType       ; Store keycard index
-    clc : adc #$0080            ; Turn this into an event id
-    jsl $8081fa                 ; Set event (receive keycard)
-    lda #$0022
-    jsl $858080                 ; Display message 62 - keycard
+.keyCard
+    ; Load the bitmask from the global item table
+    sta !DP_MsgRewardType
+    asl #3
+    tax
+    lda.l $7ed7c0+$70           ; Keydoor event location
+    ora.l mb_ItemData+$06, x    ; Key bitmask
+    sta.l $7ed7c0+$70
+    lda !DP_MsgRewardType : asl : tax
+    lda.l item_message_table, x
+    and #$00ff
+    jsl $858080
     bra .end
 
 .mapMarker
+    pha
     and #$000f
     sec : sbc #$000a
-    sta !DP_MsgRewardType       ; Store map marker index
     clc : adc #$00a0            ; Set event (map marker received)
     jsl $8081fa
-    lda #$0024
-    jsl $858080                 ; Display message 64 - map marker
-    bra .end      
+    pla
+    sta !DP_MsgRewardType       ; Store map marker id
+    asl : tax
+    lda.l item_message_table, x
+    and #$00ff
+    jsl $858080                 
+    bra .end 
 
 .end
     rts

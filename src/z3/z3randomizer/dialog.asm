@@ -76,6 +76,116 @@ FreeDungeonItemNotice:
 
 	LDA.l FreeItemText : BNE + : JMP .skip : +
 
+	; ========= Quad Addition =======
+	LDA.l FreeItemText : AND.b #$80 : BNE +
+		JMP ++
+	   + : LDA.l ScratchBufferV
+			CMP.b #$70 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_CrateriaL1)
+				JMP .done
+		+ : CMP.b #$71 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_CrateriaL2)
+				JMP .done
+		+ : CMP.b #$7B : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_CrateriaBoss)
+				JMP .done
+		+ : CMP.b #$7E : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_MaridiaBoss)
+				JMP .done
+		+ : CMP.b #$80 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_BrinstarL1)
+				JMP .done
+		+ : CMP.b #$81 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_BrinstarL2)
+				JMP .done
+		+ : CMP.b #$8B : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_BrinstarBoss)
+				JMP .done
+		+ : CMP.b #$8E : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_WreckedShipL1)
+				JMP .done
+		+ : CMP.b #$8F : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_WreckedShipBoss)
+				JMP .done
+		+ : CMP.b #$90 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_NorfairL1)
+				JMP .done
+		+ : CMP.b #$91 : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_NorfairL2)
+				JMP .done
+		+ : CMP.b #$9B : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_NorfairBoss)
+				JMP .done
+		+ : CMP.b #$9E : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_LowerNorfairL1)
+				JMP .done
+		+ : CMP.b #$9F : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_LowerNorfairBoss)
+				JMP .done
+		+ : CMP.b #$AE : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_MaridiaL1)
+				JMP .done
+		+ : CMP.b #$AF : BNE +  
+				%CopyDialog(Notice_KeyCardOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_MaridiaL2)
+				JMP .done
+
+		; Maps
+		+ : CMP.b #$CA : BNE +  
+				%CopyDialog(Notice_MapOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_Brinstar)
+				JMP .done
+		+ : CMP.b #$CB : BNE +  
+				%CopyDialog(Notice_MapOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_WreckedShip)
+				JMP .done
+		+ : CMP.b #$CC : BNE +  
+				%CopyDialog(Notice_MapOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_Maridia)
+				JMP .done
+		+ : CMP.b #$CD : BNE +  
+				%CopyDialog(Notice_MapOf)
+				LDA.l DialogReturnPointer : DEC #2 : STA.l DialogOffsetPointer
+				%CopyDialog(Notice_LowerNorfair)
+				JMP .done
+		+
+	++
+	; ==================================
+
 	LDA.b #$00 : STA.l ScratchBufferNV ; initialize scratch
 	LDA.l FreeItemText : AND.b #$01 : BEQ + ; show message for general small key
 	LDA.l ScratchBufferV : CMP.b #$24 : BNE + ; general small key
@@ -120,13 +230,13 @@ FreeDungeonItemNotice:
 		LDA.l ScratchBufferV : CMP.b #$AF : BNE ++ : JMP .skip : ++
 		%CopyDialog(Notice_SmallKeyOf)
 		LDA.b #$01 : STA.l ScratchBufferNV ; set up a flip for small keys
-		BRA .dungeon
+		JMP .dungeon
 	+ : LDA.l FreeItemText : AND.b #$20 : BEQ + ; show message for crystal
 	LDA.l ScratchBufferV : CMP.b #$B0 : !BLT + ;  crystal #
                                CMP.b #$B7 : !BGE +
 		%CopyDialog(Notice_Crystal)
 		JMP .crystal
-        +
+    +
 	JMP .skip ; it's not something we are going to give a notice for
 
 	.dungeon

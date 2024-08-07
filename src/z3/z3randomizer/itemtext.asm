@@ -145,3 +145,81 @@ Notice_Six:
 Notice_Seven:
         db $75, $00, $D2, $00, $E1, $00, $E8, $00, $E2, $00, $E3, $00, $D0, $00, $DB, $00, $FF, $00, $E2, $00, $D4, $00, $E5, $00, $D4, $00, $DD
 	dw #$7F7F
+
+table dialog.tbl,rtl
+Notice_KeyCardOf:
+    db $74 : dw "Woah,an alien key! "
+    db $75 : dw "The text on it says"
+    dw #$7F7F
+
+Notice_CrateriaL1:
+    db $76 : dw " Crateria Level 1  "
+    dw #$7F7F
+Notice_CrateriaL2:
+    db $76 : dw " Crateria Level 2  "
+    dw #$7F7F
+Notice_CrateriaBoss:
+    db $76 : dw "   Crateria Boss   "
+    dw #$7F7F
+
+Notice_BrinstarL1:
+    db $76 : dw " Brinstar Level 1  "
+    dw #$7F7F
+Notice_BrinstarL2:
+    db $76 : dw " Brinstar Level 2  "
+    dw #$7F7F
+Notice_BrinstarBoss:
+    db $76 : dw "   Brinstar Boss   "
+    dw #$7F7F
+
+Notice_NorfairL1:
+    db $76 : dw "  Norfair Level 1  "
+    dw #$7F7F
+Notice_NorfairL2:
+    db $76 : dw "  Norfair Level 2  "
+    dw #$7F7F
+Notice_NorfairBoss:
+    db $76 : dw   "  Norfair Boss   "
+    dw #$7F7F
+
+Notice_MaridiaL1:
+    db $76 : dw "  Maridia Level 1  "
+    dw #$7F7F
+Notice_MaridiaL2:
+    db $76 : dw "  Maridia Level 2  "
+    dw #$7F7F
+Notice_MaridiaBoss:
+    db $76 : dw "   Maridia Boss    "
+    dw #$7F7F
+
+Notice_WreckedShipL1:
+    db $76 : dw " Wrecked Ship L. 1 "
+    dw #$7F7F
+Notice_WreckedShipBoss:
+    db $76 : dw " Wrecked Ship Boss "
+    dw #$7F7F
+
+Notice_LowerNorfairL1:
+	db $76 : dw "Lower Norfair L. 1 "
+    dw #$7F7F
+Notice_LowerNorfairBoss:
+    db $76 : dw "Lower Norfair Boss "
+    dw #$7F7F
+
+Notice_Brinstar:
+	db $76 : dw "     Brinstar      "
+	dw #$7F7F
+
+Notice_WreckedShip:
+	db $76 : dw "   Wrecked Ship    "
+	dw #$7F7F
+
+Notice_Maridia:
+	db $76 : dw "      Maridia      "
+	dw #$7F7F
+
+Notice_LowerNorfair:
+	db $76 : dw "  Lower Norfair    "
+	dw #$7F7F
+
+cleartable

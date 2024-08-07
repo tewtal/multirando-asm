@@ -797,7 +797,8 @@ db $01 ; #00 = Never Locked - #$01 = Locked During Escape (default) - #$02 = Loc
 org $B0816A ; PC 0x18016A
 FreeItemText:
 db $00 ; #00 = Off (default)
-;--po bmcs
+;k-po bmcs
+;k - enabled for SM keycards
 ;p - enabled for non-prize crystals
 ;o - enabled for outside dungeon items
 ;b - enabled for inside big key items

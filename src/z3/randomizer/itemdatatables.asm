@@ -263,8 +263,8 @@ endmacro
 %ReceiptProps($6D, -4, 0, $6D, $F36A, $FF, other, skip)  ; 6D - Ice Beam               (M1)
 %ReceiptProps($6E, -4, 0, $6E, $F36A, $FF, other, skip) ; 6E - Energy Tank            (M1)
 %ReceiptProps($6F, -4, 0, $6F, $F36A, $FF, other, skip) ; 6F - Missiles               (M1)
-%ReceiptProps($70, -4, 0, $70, $F36A, $FF, other, skip) ; 70 - Crateria L1 Key        (SM)
-%ReceiptProps($71, -4, 0, $71, $F36A, $FF, other, skip) ; 71 - Crateria L2 Key        (SM)
+%ReceiptProps($70, -4, 0, $70, $F36A, $FF, sm_keycard, skip) ; 70 - Crateria L1 Key        (SM)
+%ReceiptProps($71, -4, 0, $71, $F36A, $FF, sm_keycard, skip) ; 71 - Crateria L2 Key        (SM)
 %ReceiptProps($72, -4, 0, $21, $F36A, $FF, free_map, skip) ; 72 - Map of Ganon's Tower
 %ReceiptProps($73, -4, 0, $21, $F36A, $FF, free_map, skip) ; 73 - Map of Turtle Rock
 %ReceiptProps($74, -4, 0, $21, $F36A, $FF, free_map, skip) ; 74 - Map of Thieves' Town
@@ -274,14 +274,14 @@ endmacro
 %ReceiptProps($78, -4, 0, $21, $F36A, $FF, free_map, skip) ; 78 - Map of Misery Mire
 %ReceiptProps($79, -4, 0, $21, $F36A, $FF, free_map, skip) ; 79 - Map of Dark Palace
 %ReceiptProps($7A, -4, 0, $21, $F36A, $FF, free_map, skip) ; 7A - Map of Swamp Palace
-%ReceiptProps($7B, -4, 0, $7B, $F36A, $FF, other, skip) ; 7B - Crateria Boss Key      (SM)
+%ReceiptProps($7B, -4, 0, $7B, $F36A, $FF, sm_keycard, skip) ; 7B - Crateria Boss Key      (SM)
 %ReceiptProps($7C, -4, 0, $21, $F36A, $FF, free_map, skip) ; 7C - Map of Desert Palace
 %ReceiptProps($7D, -4, 0, $21, $F36A, $FF, free_map, skip) ; 7D - Map of Eastern Palace
-%ReceiptProps($7E, -4, 0, $7E, $F36A, $FF, other, skip) ; 7E - Maridia Boss Key       (SM)
+%ReceiptProps($7E, -4, 0, $7E, $F36A, $FF, sm_keycard, skip) ; 7E - Maridia Boss Key       (SM)
 %ReceiptProps($7F, -4, 0, $21, $F36A, $FF, hc_map, skip) ; 7F - Map of Sewers
 
-%ReceiptProps($80, -4, 0, $80, $F36A, $FF, other, skip) ; 80 - Brinstar L1 Key        (SM)
-%ReceiptProps($81, -4, 0, $81, $F36A, $FF, other, skip) ; 81 - Brinstar L2 Key        (SM)
+%ReceiptProps($80, -4, 0, $80, $F36A, $FF, sm_keycard, skip) ; 80 - Brinstar L1 Key        (SM)
+%ReceiptProps($81, -4, 0, $81, $F36A, $FF, sm_keycard, skip) ; 81 - Brinstar L2 Key        (SM)
 %ReceiptProps($82, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 82 - Compass of Ganon's Tower
 %ReceiptProps($83, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 83 - Compass of Turtle Rock
 %ReceiptProps($84, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 84 - Compass of Thieves' Town
@@ -291,16 +291,16 @@ endmacro
 %ReceiptProps($88, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 88 - Compass of Misery Mire
 %ReceiptProps($89, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 89 - Compass of Dark Palace
 %ReceiptProps($8A, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 8A - Compass of Swamp Palace
-%ReceiptProps($8B, -4, 0, $8B, $F36A, $FF, other, skip) ; 8B - Brinstar Boss Key      (SM)
+%ReceiptProps($8B, -4, 0, $8B, $F36A, $FF, sm_keycard, skip) ; 8B - Brinstar Boss Key      (SM)
 %ReceiptProps($8C, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 8C - Compass of Desert Palace
 %ReceiptProps($8D, -4, 0, $16, $F36A, $FF, free_compass, skip) ; 8D - Compass of Eastern Palace
-%ReceiptProps($8E, -4, 0, $8E, $F36A, $FF, other, skip) ; 8E - Wrecked Ship L1 Key    (SM)
-%ReceiptProps($8F, -4, 0, $8F, $F36A, $FF, other, skip) ; 8F - Wrecked Ship Boss Key  (SM)
+%ReceiptProps($8E, -4, 0, $8E, $F36A, $FF, sm_keycard, skip) ; 8E - Wrecked Ship L1 Key    (SM)
+%ReceiptProps($8F, -4, 0, $8F, $F36A, $FF, sm_keycard, skip) ; 8F - Wrecked Ship Boss Key  (SM)
 
 ; %ReceiptProps($90, -4, 0, $22, $F36A, $FF, skip, skip) ; 90 - Skull key
 ; %ReceiptProps($91, -4, 0, $22, $F36A, $FF, skip, skip) ; 91 - Reserved
-%ReceiptProps($90, -4, 0, $90, $F36A, $FF, other, skip) ; 90 - Norfair L1 Key         (SM)
-%ReceiptProps($91, -4, 0, $91, $F36A, $FF, other, skip) ; 91 - Norfair L2 Key         (SM)
+%ReceiptProps($90, -4, 0, $90, $F36A, $FF, sm_keycard, skip) ; 90 - Norfair L1 Key         (SM)
+%ReceiptProps($91, -4, 0, $91, $F36A, $FF, sm_keycard, skip) ; 91 - Norfair L2 Key         (SM)
 %ReceiptProps($92, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 92 - Big key of Ganon's Tower
 %ReceiptProps($93, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 93 - Big key of Turtle Rock
 %ReceiptProps($94, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 94 - Big key of Thieves' Town
@@ -310,11 +310,11 @@ endmacro
 %ReceiptProps($98, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 98 - Big key of Misery Mire
 %ReceiptProps($99, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 99 - Big key of Dark Palace
 %ReceiptProps($9A, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 9A - Big key of Swamp Palace
-%ReceiptProps($9B, -4, 0, $9B, $F36A, $FF, other, skip) ; 9B - Norfair Boss Key       (SM)
+%ReceiptProps($9B, -4, 0, $9B, $F36A, $FF, sm_keycard, skip) ; 9B - Norfair Boss Key       (SM)
 %ReceiptProps($9C, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 9C - Big key of Desert Palace
 %ReceiptProps($9D, -4, 0, $22, $F36A, $FF, free_bigkey, skip) ; 9D - Big key of Eastern Palace
-%ReceiptProps($9E, -4, 0, $9E, $F36A, $FF, other, skip) ; 9E - Lower Norfair L1 Key   (SM)
-%ReceiptProps($9F, -4, 0, $9F, $F36A, $FF, other, skip) ; 9F - Lower Norfair Boss Key (SM)
+%ReceiptProps($9E, -4, 0, $9E, $F36A, $FF, sm_keycard, skip) ; 9E - Lower Norfair L1 Key   (SM)
+%ReceiptProps($9F, -4, 0, $9F, $F36A, $FF, sm_keycard, skip) ; 9F - Lower Norfair Boss Key (SM)
 
 %ReceiptProps($A0, -4, 4, $0F, $F36A, $FF, hc_smallkey, skip) ; A0 - Small key of Sewers
 %ReceiptProps($A1, -4, 4, $0F, $F36A, $FF, hc_smallkey, skip) ; A1 - Small key of Hyrule Castle
@@ -332,8 +332,8 @@ endmacro
 %ReceiptProps($AD, -4, 4, $0F, $F36A, $FF, free_smallkey, skip) ; AD - Small key of Ganon's Tower
 ; %ReceiptProps($AE, -4, 4, $0F, $F36A, $FF, skip, skip) ; AE - Reserved
 ; %ReceiptProps($AF, -4, 4, $0F, $F36A, $FF, generic_smallkey, skip) ; AF - Generic small key
-%ReceiptProps($AE, -4, 0, $AE, $F36A, $FF, other, skip) ; AE - Maridia L1 Key         (SM)
-%ReceiptProps($AF, -4, 0, $AF, $F36A, $FF, other, skip) ; AF - Maridia L2 Key         (SM)
+%ReceiptProps($AE, -4, 0, $AE, $F36A, $FF, sm_keycard, skip) ; AE - Maridia L1 Key         (SM)
+%ReceiptProps($AF, -4, 0, $AF, $F36A, $FF, sm_keycard, skip) ; AF - Maridia L2 Key         (SM)
 
 %ReceiptProps($B0, -4, 0, $B0, $F36A, $FF, other, skip) ; B0 - 
 %ReceiptProps($B1, -4, 0, $B1, $F36A, $FF, other, skip) ; B1 - 
@@ -1578,3 +1578,7 @@ ItemBehavior_other:
 	rts
 
 	
+print "IB_sm_keycard = ", pc
+ItemBehavior_sm_keycard:
+	jsr ItemBehavior_other
+	rts

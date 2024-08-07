@@ -51,7 +51,6 @@ keycard_greydoor_preinstruction:
 keycard_plm_load:
     phy : phx 
     lda $1dc7, x            ; Load room argument (keycard item id)
-    sec : sbc #$00b0
 
     %a8()
     sta $4202

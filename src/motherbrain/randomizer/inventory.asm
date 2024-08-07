@@ -316,10 +316,10 @@ WriteItemToInventory:
 +   cmp #$0017
     bne +
         jmp .alttpSilvers
-+   cmp #$0018
++   cmp #$0019
     bne +
         jmp .alttpDungeon
-+   cmp #$0019
++   cmp #$001A
     bne +
         jmp .alttpDungeonKey
 +   cmp #$0020
@@ -958,22 +958,22 @@ ItemData:
     dw $0000, $0070, $0002, $4000        ; 9E - Lower Norfair L1 Key   (SM)
     dw $0000, $0070, $0002, $8000        ; 9F - Lower Norfair Boss Key (SM)
 
-    dw $0000, $007C, $001A, $0001        ; A0 - Hyrule Castle Small Key
-    dw $0000, $007C, $001A, $0001        ; A1 - Sewers Small Key
-    dw $0000, $007E, $001A, $0001        ; A2 - Eastern Palace Small Key
-    dw $0000, $007F, $001A, $0001        ; A3 - Desert Palace Small Key
-    dw $0000, $0080, $001A, $0001        ; A4 - Castle Tower Small Key
-    dw $0000, $0081, $001A, $0001        ; A5 - Swamp Palace Small Key
-    dw $0000, $0082, $001A, $0001        ; A6 - Palace of Darkness Small Key
-    dw $0000, $0083, $001A, $0001        ; A7 - Misery Mire Small Key
-    dw $0000, $0084, $001A, $0001        ; A8 - Skull Woods Small Key
-    dw $0000, $0085, $001A, $0001        ; A9 - Ice Palace Small Key
-    dw $0000, $0086, $001A, $0001        ; AA - Tower of Hera Small Key
-    dw $0000, $0087, $001A, $0001        ; AB - Thieves' Town Small Key
-    dw $0000, $0088, $001A, $0001        ; AC - Turtle Rock Small Key
-    dw $0000, $0089, $001A, $0001        ; AD - Ganons Tower Small Key
-    dw $0001, $0070, $0002, $0200        ; AE - Maridia L1 Key          (SM)
-    dw $0001, $0070, $0002, $0400        ; AF - Maridia L2 Key          (SM)
+    dw $0001, $007C, $001A, $0001        ; A0 - Hyrule Castle Small Key
+    dw $0001, $007C, $001A, $0001        ; A1 - Sewers Small Key
+    dw $0001, $007E, $001A, $0001        ; A2 - Eastern Palace Small Key
+    dw $0001, $007F, $001A, $0001        ; A3 - Desert Palace Small Key
+    dw $0001, $0080, $001A, $0001        ; A4 - Castle Tower Small Key
+    dw $0001, $0081, $001A, $0001        ; A5 - Swamp Palace Small Key
+    dw $0001, $0082, $001A, $0001        ; A6 - Palace of Darkness Small Key
+    dw $0001, $0083, $001A, $0001        ; A7 - Misery Mire Small Key
+    dw $0001, $0084, $001A, $0001        ; A8 - Skull Woods Small Key
+    dw $0001, $0085, $001A, $0001        ; A9 - Ice Palace Small Key
+    dw $0001, $0086, $001A, $0001        ; AA - Tower of Hera Small Key
+    dw $0001, $0087, $001A, $0001        ; AB - Thieves' Town Small Key
+    dw $0001, $0088, $001A, $0001        ; AC - Turtle Rock Small Key
+    dw $0001, $0089, $001A, $0001        ; AD - Ganons Tower Small Key
+    dw $0000, $0070, $0002, $0200        ; AE - Maridia L1 Key          (SM)
+    dw $0000, $0070, $0002, $0400        ; AF - Maridia L2 Key          (SM)
 
     dw $0000, $0000, $0020, $4000        ; B0 - Grapple beam            (SM)
     dw $0000, $0000, $0020, $8000        ; B1 - X-ray scope             (SM)
