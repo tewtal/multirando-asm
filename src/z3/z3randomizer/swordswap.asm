@@ -1,7 +1,7 @@
 ;================================================================================
 ; Master / Tempered / Golden Sword Swap
 ;================================================================================
-;$03348E: smith sword check (to see if uprade-able)
+;$03348E: smith sword check (to see if upgrade-able)
 ;================================================================================
 LoadSwordForDamage:
 	LDA.w SpriteTypeTable, X : CMP.b #$88 : BNE .notMoth
