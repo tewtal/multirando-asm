@@ -369,7 +369,7 @@ overlay_item_names:
     dw "                          "
     dw "                          "
     dw "       Sword Upgrade      "
-    dw "       Shield Uprade      "
+    dw "      Shield Upgrade      "
     
     dw "      Armour Upgrade      "  ; 60
     dw "       Glove Upgrade      "

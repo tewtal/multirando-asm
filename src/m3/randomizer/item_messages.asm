@@ -397,7 +397,7 @@ item_names:
     dw "___                          ___"
     dw "___                          ___"
     dw "___       Sword Upgrade      ___"
-    dw "___       Shield Uprade      ___"
+    dw "___      Shield Upgrade      ___"
     
     dw "___      Armour Upgrade      ___"  ; 60
     dw "___       Glove Upgrade      ___"
