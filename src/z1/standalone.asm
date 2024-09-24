@@ -97,6 +97,8 @@ incsrc "snes.asm"
 
 ; Include randomizer additions
 org $A99000
+incsrc "../nes-spc/dpcm.asm"
+org $AA9000
 incsrc "../nes-spc/spc.asm"
 org $AFFFFF
 db $00

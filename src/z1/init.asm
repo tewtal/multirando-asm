@@ -13,6 +13,7 @@ SnesBoot:
     CPX #$1000
     BNE -
 
+    jsl spc_init_dpcm
     JSL spc_init_driver
 
     SEP #$30

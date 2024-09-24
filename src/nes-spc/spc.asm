@@ -202,6 +202,11 @@ startpos start
 		no400D      =    $4D   ; $400D
 		no400E      =    $4E   ; $400E
 		no400F      =    $4F   ; $400F
+
+;  TODO: Check to see if any of the 4 values
+;  change below in z1 on dpcm sound;
+;  then write dmc hooks and check these again.
+
 		pcm_freq    =    $50   ; $4010
 		pcm_raw     =    $51   ; $4011
 		pcm_addr    =    $52   ; $4012
@@ -414,7 +419,7 @@ sq1_sample_change:
         mov $F2,#$04            ; sample # reg
         mov $F3,puls0_sample
 
-        mov $F2,#$4C            ; key on
+        mov $F2,#$5C            ; key on (DEBUG OFF)
         mov $F3,#%00000001
 
 sq1_no_change:
@@ -608,7 +613,7 @@ sq2_sample_change:
         mov $F2,#$14            ; sample # reg
         mov $F3,puls1_sample
 
-        mov $F2,#$4C            ; key on
+        mov $F2,#$5C            ; key on (DEBUG OFF)
         mov $F3,#%00000010
 
 sq2_no_change:
@@ -888,8 +893,8 @@ notimer:
                 mov tri_sample,a
                 mov $F2,#$24			; Sample # reg
                 mov $F3,a
-                mov $F2,#$4C			; Key on
-                mov $F3,#$04
+                ; mov $F2,#$4C			; Key on
+                ; mov $F3,#$04
 triangle_skip1:
 
 ;=====================================
@@ -1965,8 +1970,8 @@ change_pulse_1:
 
 			mov $F2,#$04            ; sample # reg
 			mov $F3,puls0_sample
-			mov $F2,#$4C            ; key on
-			mov $F3,#$01
+			; mov $F2,#$4C            ; key on
+			; mov $F3,#$01
 
 			; Apply frequency
 			mov $F2,x
@@ -1988,8 +1993,8 @@ change_pulse_pulse1:
 
 			mov $F2,#$14            ; sample # reg
 			mov $F3,puls1_sample
-			mov $F2,#$4C            ; key on
-			mov $F3,#$02
+			; mov $F2,#$4C            ; key on
+			; mov $F3,#$02
 
 change_pulse_rtn:
 		; Apply frequency
