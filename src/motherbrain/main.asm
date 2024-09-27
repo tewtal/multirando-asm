@@ -35,7 +35,6 @@ warnpc $FF0000
 
 org $FF0000
 namespace off
-incsrc "../nes-spc/dpcm.asm"
 incsrc "../nes-spc/spc.asm"
 namespace mb
 ; free space for more code here

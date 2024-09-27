@@ -25,5 +25,15 @@ incsrc "snes.asm"
 
 ; Include randomizer additions
 incsrc "randomizer/main.asm"
+incsrc "dpcm.asm"
+
+;  DPCM audio
+org $898000
+brr:
+.swordbeam:
+incbin "audio/sword-beam.brr"
+.swordbeamend:
+db $00
+warnpc $89ffff
 
 namespace off

@@ -609,6 +609,26 @@ WriteAPUControl:
     xba
     rts
 
+; WriteAPUDMCCounter:
+;     stx.w DmcCounter_4011
+; rts
+
+WriteAPUDMCFreq:
+    sta DmcFreq_4010
+rts
+
+WriteAPUDMCAddr:
+    sta DmcAddress_4012
+rts
+
+WriteAPUDMCLength:
+    sta DmcLength_4013
+rts
+
+print "WriteAPUDMCPlay = ", pc
+WriteAPUDMCPlay:
+    sta ApuStatus_4015
+rts
 
 
 Sound__EmulateLengthCounter_length_d3_mixed:

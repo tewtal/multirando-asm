@@ -202,11 +202,6 @@ startpos start
 		no400D      =    $4D   ; $400D
 		no400E      =    $4E   ; $400E
 		no400F      =    $4F   ; $400F
-
-;  TODO: Check to see if any of the 4 values
-;  change below in z1 on dpcm sound;
-;  then write dmc hooks and check these again.
-
 		pcm_freq    =    $50   ; $4010
 		pcm_raw     =    $51   ; $4011
 		pcm_addr    =    $52   ; $4012
@@ -284,6 +279,15 @@ start:
 
         mov $F2,#$5D           ; directory offset
         mov $F3,#$02           ; $200
+        ;  TODO:  Append dpcm voices to the directory at $0200
+
+        ;  Voices:
+        ;   0: Square Wave 0
+        ;   1: Square Wave 1
+        ;   2: Triangle Wave
+        ;   3: Noise
+        ;   TODO:
+        ;   4: dpcm samples (sword beam, link hurt, gleeok roar, manhandla roar, door unlock)
 
         mov $F2,#$05            ; ADSR off, GAIN enabled
         mov $F3,#0
@@ -292,6 +296,8 @@ start:
         mov $F2,#$25
         mov $F3,#0
         mov $F2,#$35
+        mov $F3,#0
+        mov $F2,#$45
         mov $F3,#0
 
         mov $F2,#$07            ; infinite gain
@@ -302,6 +308,8 @@ start:
         mov $F3,#$1F
         mov $F2,#$37
         mov $F3,#$1F
+        mov $F2,#$47
+        mov $F3,#$1F
         
 
         mov $F2,#$24            ; sample # for triangle
@@ -310,9 +318,12 @@ start:
         mov $F2,#$34
         mov $F3,#$00            ; sample # for noise
 
+        mov $F2,#$44
+        mov $F3,#dpcm_sample_num    ; sample # for dpcm
+
 
         mov $F2,#$4C            ; key on
-        mov $F3,#%00001111
+        mov $F3,#%00011111
 
         mov $F2,#$0C            ; main vol L
         mov $F3,#$7F
@@ -1012,7 +1023,45 @@ no_reset3:
 
 noise_off:
 
+
+;=====================================
+
+;-------------------------------------
+dmc:
+        mov a,no4016
+        and a,#%00010000        ; check for toggle on of dmc bit of $4015
+        bne dmc_play
+
+        mov a,sound_ctrl
+        and a,#%00010000        ; check for dmc bit of $4015
+        bne dmc_continue_playing
+
+dmc_silence:
+        mov $F2,#$40
+        mov $F3,#0
+        mov $F2,#$41
+        mov $F3,#0
+        ; mov $F2,#$5c
+        ; mov $F3,#%00010000  ;  KOFF dpcm channel
+
         jmp next_xfer
+
+dmc_play:
+        mov $F2,#$4c    
+        mov $F3,#%00010000  ;  KON dpcm channel
+
+dmc_continue_playing:
+        mov $F2,#$40
+        mov $F3,#$7f    ;  Max left volume (temp testing)
+        mov $F2,#$41
+        mov $F3,#$7f    ;  Max right volume (temp testing)
+        mov $F2,#$42
+        mov $F3,#$00    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$10    ;  Pitch higher bits
+
+        jmp next_xfer
+;  END processing loop
 
 
 ;======================================
@@ -1903,7 +1952,7 @@ set_directory:
         ;mov !$0341,a
         ;mov !$0343,a
 
-		mov	x, #$5f
+		mov	x, #(end_directory_lut-set_directory_lut-1)
 set_directory_loop:
 			mov	a,set_directory_lut+x
 			mov	$0200+x,a
@@ -1919,8 +1968,12 @@ set_directory_lut:
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
                 dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
+    ;  TODO: Add all dpcm directory entries and vary SRCN for Voice 4
+        dw  $4000,$4000
+end_directory_lut:
 
 			triangle_sample_num	 =	$10
+            dpcm_sample_num = $18
 
 ;======================================
 

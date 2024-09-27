@@ -40,23 +40,30 @@ waitUploadByteAck:
 rts
 
 
-print "spc dpcm start = ", pc
 spc_init_dpcm:
     pha : phx : phy : phb : php
 
     sep #$20    ; 8-bit A
 
-    ;  Testing:
     ldy #$4000  ;  Start an upload at $4000 aram
-
     jsr spc_begin_upload
 
-    lda #$fe  ;  upload test bytes
+    ;  Send brr_swordbeam to aram
+    ldx #$0000
+
+.nextbyte:
+    lda brr_swordbeam,x
     jsr spc_upload_byte
-    lda #$dc  ;  upload test bytes
-    jsr spc_upload_byte
-    lda #$ba  ;  upload test bytes
-    jsr spc_upload_byte
+    inx
+    cpx #(brr_swordbeamend-brr_swordbeam)
+    bne .nextbyte
+
+    ; lda #$fe  ;  upload test bytes
+    ; jsr spc_upload_byte
+    ; lda #$dc  ;  upload test bytes
+    ; jsr spc_upload_byte
+    ; lda #$ba  ;  upload test bytes
+    ; jsr spc_upload_byte
 
     ;  Set bit 0x80 in F1 control register
     ; ldx #$80f1    ;  prep to read IPL ROM
