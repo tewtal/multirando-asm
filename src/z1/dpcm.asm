@@ -1,3 +1,20 @@
+; Waits for SPC to finish booting. Call before first
+; using SPC or after bootrom has been re-run.
+; Preserved: X, Y
+spc_wait_boot:
+    lda #$AA
+.wait:  cmp $2140
+    bne .wait
+
+    ; Clear in case it already has $CC in it
+    ; (this actually occurred in testing)
+    sta $2140
+
+    lda #$BB
+.wait2: cmp $2141
+    bne .wait2
+rts
+
 ; Starts upload to SPC addr Y and sets Y to
 ; 0 for use as index with spc_upload_byte.
 ; Preserved: X
@@ -45,6 +62,8 @@ spc_init_dpcm:
 
     sep #$20    ; 8-bit A
 
+    jsr spc_wait_boot
+
     ldy #$4000  ;  Start an upload at $4000 aram
     jsr spc_begin_upload
 
@@ -58,12 +77,14 @@ spc_init_dpcm:
     cpx #(brr_swordbeamend-brr_swordbeam)
     bne .nextbyte
 
-    ; lda #$fe  ;  upload test bytes
-    ; jsr spc_upload_byte
-    ; lda #$dc  ;  upload test bytes
-    ; jsr spc_upload_byte
-    ; lda #$ba  ;  upload test bytes
-    ; jsr spc_upload_byte
+    ;  Send brr_linkhurt to aram
+    ldx #$0000
+.nextbyte2:
+    lda brr_linkhurt,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_linkhurtend-brr_linkhurt)
+    bne .nextbyte2
 
     ;  Set bit 0x80 in F1 control register
     ; ldx #$80f1    ;  prep to read IPL ROM

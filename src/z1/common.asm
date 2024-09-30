@@ -269,7 +269,9 @@ SnesTransferPatternBlock_Indexed:
     RTS
 
 CheckCaveTransitionOut_common:
-    ; jsl check_cave_transition_out
+if not(defined("STANDALONE"))
+    jsl check_cave_transition_out
+endif
     jmp $ea2b
 
 print "apu-routines = ", pc
@@ -625,9 +627,10 @@ WriteAPUDMCLength:
     sta DmcLength_4013
 rts
 
-print "WriteAPUDMCPlay = ", pc
 WriteAPUDMCPlay:
     sta ApuStatus_4015
+    and #%00010000
+    sta APUExtraControl
 rts
 
 

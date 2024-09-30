@@ -161,4 +161,4 @@ org !B0+$9ED0 : jsr WriteAPUNoiseCtrl3
 org !B0+$9bcf : jsr WriteAPUDMCFreq
 org !B0+$9bd5 : jsr WriteAPUDMCAddr
 org !B0+$9bdb : jsr WriteAPUDMCLength
-org !B0+$9bea : jsr WriteAPUControl; WriteAPUDMCPlay
+org !B0+$9bea : jsr WriteAPUDMCPlay

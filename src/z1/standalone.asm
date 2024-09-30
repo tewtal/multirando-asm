@@ -109,9 +109,23 @@ namespace off
 
 ; Include randomizer additions
 org $A99000
-incsrc "../nes-spc/dpcm.asm"
+incsrc "dpcm.asm"
 org $AA9000
 incsrc "../nes-spc/spc.asm"
+
+;  DPCM audio
+org $AB8000
+brr:
+.swordbeam:
+incbin "audio/sword-beam.brr"
+.swordbeamend:
+
+.linkhurt:
+incbin "audio/link-hurt.brr"
+.linkhurtend:
+db $00
+
+
 org $AFFFFF
 db $00
 
