@@ -123,22 +123,19 @@ incbin "audio/sword-beam.brr"
 .linkhurt:
 incbin "audio/link-hurt.brr"
 .linkhurtend:
+
+.boss1:
+incbin "audio/boss1.brr"
+.boss1end:
+
+.boss2:
+incbin "audio/boss2.brr"
+.boss2end:
+
+.doorunlock:
+incbin "audio/door-unlock.brr"
+.doorunlockend:
 db $00
 
-
-org $AFFFFF
-db $00
-
-; namespace mb
-; ; free space for more code here
-; warnpc $FFE000
-
-
-; org $FFE000
-; base $40E000
-; incsrc "../motherbrain/snes.asm"
-; incsrc "../motherbrain/sa1.asm"
-; incsrc "../motherbrain/transition.asm"
-; incsrc "../motherbrain/randomizer/main.asm"
-; print "MotherBrain ends = ", pc
-; namespace off
+warnpc $abffff
+print "dpcm audio end = ", pc

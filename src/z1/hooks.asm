@@ -157,7 +157,7 @@ org !B0+$9ED0 : jsr WriteAPUNoiseCtrl3
 
 ;  Hook writes to DMC
 
-; org !B0+$9bb7 : jsr WriteAPUDMCCounter
+org !B0+$9bb7 : jsr WriteAPUDMCCounter
 org !B0+$9bcf : jsr WriteAPUDMCFreq
 org !B0+$9bd5 : jsr WriteAPUDMCAddr
 org !B0+$9bdb : jsr WriteAPUDMCLength

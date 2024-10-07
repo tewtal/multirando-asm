@@ -1,3 +1,20 @@
+;  Send 2 copies of a 16-bit aram address to audio ram.
+;  e.g.: $4014,$4014
+macro uploadDirectoryEntry(entry)
+    rep #$30    ; 16-bit load
+    lda #<entry>
+    sep #$20    ; 8-bit A
+    jsr spc_upload_byte
+    xba
+    jsr spc_upload_byte
+    rep #$30    ; 16-bit load
+    lda #<entry>
+    sep #$20    ; 8-bit A
+    jsr spc_upload_byte
+    xba
+    jsr spc_upload_byte
+endmacro
+
 ; Waits for SPC to finish booting. Call before first
 ; using SPC or after bootrom has been re-run.
 ; Preserved: X, Y
@@ -67,6 +84,13 @@ spc_init_dpcm:
     ldy #$4000  ;  Start an upload at $4000 aram
     jsr spc_begin_upload
 
+    ;  Send scrn lookup entries to aram
+    %uploadDirectoryEntry($4014)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss1end-brr_boss1)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss1end-brr_boss1+brr_boss2end-brr_boss2)    ;  Initial position after the dmc lookup entries
+
     ;  Send brr_swordbeam to aram
     ldx #$0000
 
@@ -85,6 +109,33 @@ spc_init_dpcm:
     inx
     cpx #(brr_linkhurtend-brr_linkhurt)
     bne .nextbyte2
+
+    ;  Send brr_boss1 to aram
+    ldx #$0000
+.nextbyte3:
+    lda brr_boss1,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_boss1end-brr_boss1)
+    bne .nextbyte3
+
+    ;  Send brr_boss2 to aram
+    ldx #$0000
+.nextbyte4:
+    lda brr_boss2,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_boss2end-brr_boss2)
+    bne .nextbyte4
+
+    ;  Send brr_doorunlock to aram
+    ldx #$0000
+.nextbyte5:
+    lda brr_doorunlock,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_doorunlockend-brr_doorunlock)
+    bne .nextbyte5
 
     ;  Set bit 0x80 in F1 control register
     ; ldx #$80f1    ;  prep to read IPL ROM

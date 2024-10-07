@@ -260,7 +260,7 @@ startpos start
 		decay2rate			=	$8A
 		decay3volume		=	$8B
 		decay3rate			=	$8C
-		temp_add			=	$8D
+		; temp_add			=	$8D
                 tri_sample                      =       $8E
 
 ;========================================
@@ -279,7 +279,6 @@ start:
 
         mov $F2,#$5D           ; directory offset
         mov $F3,#$02           ; $200
-        ;  TODO:  Append dpcm voices to the directory at $0200
 
         ;  Voices:
         ;   0: Square Wave 0
@@ -309,17 +308,12 @@ start:
         mov $F3,#$1F
         mov $F2,#$47
         mov $F3,#$1F
-        
 
         mov $F2,#$24            ; sample # for triangle
         mov $F3,#triangle_sample_num
 
         mov $F2,#$34
         mov $F3,#$00            ; sample # for noise
-
-        mov $F2,#$44
-        mov $F3,#srcn_swordBeam    ; starting dpcm sample directory entry
-
 
         mov $F2,#$4C            ; key on
         mov $F3,#%00001111
@@ -337,16 +331,6 @@ start:
 
         mov $F2,#$3D            ; noise on voice 3
         mov $F3,#%00001000
-
-        ;  Init dmc voice (#4) volume and pitch
-        mov $F2,#$40
-        mov $F3,#$7f    ;  Max left volume
-        mov $F2,#$41
-        mov $F3,#$7f    ;  Max right volume
-        mov $F2,#$42
-        mov $F3,#$00    ;  Pitch lower bits
-        mov $F2,#$43
-        mov $F3,#$10    ;  Pitch higher bits
 
         call enable_timer3
 
@@ -826,13 +810,17 @@ tri_enabled:
         and a,#$20
         beq mono3
 
-        mov a,pcm_raw
-        lsr a
-        mov temp_add,a
+        ;  Why is triangle channel referencing pcm_raw??
+        ;  A likely bug.  removing block below
+        ; ----------------------------------------------
+        ; mov a,pcm_raw   
+        ; lsr a
+        ; mov temp_add,a
         mov a,#$7F
 
-        setc
-        sbc a,temp_add
+        ; setc
+        ; sbc a,temp_add
+        ; ----------------------------------------------
 
         mov $F2,#$20
         mov $F3,a
@@ -982,16 +970,19 @@ mono4:
         asl a
         mov x,a
 
-
-        mov a,pcm_raw
-        lsr a
-        lsr a
-        mov temp_add,a
-        mov a,x
-        setc
-        sbc a,temp_add
-        bcs just_fine
-        mov a,#0
+        ;  Why is noise channel referencing pcm_raw??
+        ;  A likely bug.  removing block below
+        ; ----------------------------------------------
+        ; mov a,pcm_raw
+        ; lsr a
+        ; lsr a
+        ; mov temp_add,a
+        ; mov a,x
+        ; setc
+        ; sbc a,temp_add
+        ; bcs just_fine
+        ; mov a,#0
+        ; ----------------------------------------------
 just_fine:
 
 ;        mov $F2,#$30
@@ -1033,9 +1024,6 @@ no_reset3:
 noise_off:
 
 
-;=====================================
-
-;-------------------------------------
 dmc:
         mov a,no4016
         and a,#%00010000        ; check for toggle on of dmc bit of $4015
@@ -1044,7 +1032,8 @@ dmc:
         mov $f2,#$7c
         mov a,$f3   ; check for if dmc voice is finished playing
         and a,#%00010000
-        beq dmc_continue_playing
+        bne dmc_silence
+        jmp dmc_continue_playing
 
 dmc_silence:
         mov $F2,#$4c
@@ -1055,38 +1044,89 @@ dmc_silence:
         jmp next_xfer
 
 dmc_play:
-        ;  TODO: check pcm_addr and set srcn reg $44 appropriately
         ;  TODO: check pcm_freq and set dsp pitch regs $42 and $43 appropriately
-        mov a,pcm_addr
-        cmp a,#$1d
-        bne .now
+        mov $F2,#$40
+        mov $F3,#$7f    ;  Full volume
+        mov $F2,#$41
+        mov $F3,#$7f    ;  Full volume
 
-        ;  TODO: remove hardcodes
+        mov a,pcm_addr
+        beq .swordbeam
+        cmp a,#$1d
+        beq .linkhurt
+        cmp a,#$4c
+        beq .boss1
+        cmp a,#$20
+        beq .boss2
+        cmp a,#$80
+        beq .keydoor
+        bne dmc_silence ;  Sample not found
+
+;  TODO: remove hardcodes and migrate to lookup
+.swordbeam:
+        mov $F2,#$44
+        mov $F3,#srcn_swordBeam
+        jmp .fastspeed
+.linkhurt:
         mov $F2,#$44
         mov $F3,#srcn_linkHurt
+        jmp .fastspeed
+.boss1:
+        mov $F2,#$44
+        mov $F3,#srcn_boss1
+
+        ;  Zelda 1 uses nonzero pcm_raw start values to attenuate the sample volume when desired.
+        ;  Mimic the behavior by halving the voice #4 channel volume
+        mov a,pcm_raw
+        beq .now
+        mov $F2,#$40
+        mov $F3,#$3f    ;  Half volume
+        mov $F2,#$41
+        mov $F3,#$3f    ;  Half volume
+
+        ;  Check for the faster frequency
+        mov a,pcm_freq
+        cmp a,#$0f
+        beq .fastspeed
+        jmp .normalspeed
+.boss2:
+        mov $F2,#$44
+        mov $F3,#srcn_boss2
+        jmp .normalspeed
+
+        ;  Zelda 1 uses nonzero pcm_raw start values to attenuate the sample volume when desired.
+        ;  Mimic the behavior by halving the voice #4 channel volume
+        mov a,pcm_raw
+        beq .now
+        mov $F2,#$40
+        mov $F3,#$3f    ;  Half volume
+        mov $F2,#$41
+        mov $F3,#$3f    ;  Half volume
+        jmp .now
+.keydoor:
+        mov $F2,#$44
+        mov $F3,#srcn_doorUnlock
+        jmp .fastspeed
+.normalspeed:
+        mov $F2,#$42
+        mov $F3,#$45    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$08    ;  Pitch higher bits
+        jmp .now
+.fastspeed:
+        mov $F2,#$42
+        mov $F3,#$06    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$0b    ;  Pitch higher bits
+        jmp .now
+
 .now:
-        ; mov $F2,#$44
-        ; mov $F3,#srcn_swordBeam
         mov $F2,#$5c
         mov $F3,#%00000000  ;  disable KOFF
         mov $F2,#$4c
         mov $F3,#%00010000  ;  KON dpcm channel
 
 dmc_continue_playing:
-        ; mov $F2,#$40
-        ; mov $F3,#$7f    ;  Max left volume (temp testing)
-        ; mov $F2,#$41
-        ; mov $F3,#$7f    ;  Max right volume (temp testing)
-        ; mov $F2,#$42
-        ; mov $F3,#$00    ;  Pitch lower bits
-        ; mov $F2,#$43
-        ; mov $F3,#$10    ;  Pitch higher bits
-
-        ;  TODO: decrement pcm_length appropriately
-        mov a,pcm_length
-        dec a
-        mov pcm_length,a
-
         jmp next_xfer
 ;  END processing loop
 
@@ -1979,14 +2019,25 @@ set_directory:
         ;mov !$0341,a
         ;mov !$0343,a
 
-		mov	x, #(end_directory_lut-set_directory_lut-1)
-set_directory_loop:
-			mov	a,set_directory_lut+x
-			mov	$0200+x,a
-			dec	x
-			bpl	set_directory_loop
+        mov x, #(end_directory_lut-set_directory_lut-1)
 
-        ret
+set_directory_loop:
+        mov	a,set_directory_lut+x
+        mov	$0200+x,a
+        dec	x
+        bpl	set_directory_loop
+
+        ;  Append dynamic dmc entries from $4000
+        mov x, #0
+
+add_dynamic_entries:
+        mov a,$4000+x
+        mov ($200+end_directory_lut-set_directory_lut)+x,a
+        inc x
+        cmp x,#$1f
+        bne add_dynamic_entries
+ret
+
 
 set_directory_lut:
 		dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
@@ -1995,16 +2046,14 @@ set_directory_lut:
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
                 dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
-    ;  TODO: Add all dpcm directory entries and vary SRCN for Voice 4
-        dw  $4000,$4000, $6010,$6010
 end_directory_lut:
 
         triangle_sample_num	 =	$10
         srcn_swordBeam = $18
         srcn_linkHurt = $19
-        srcn_boss1 = $20
-        srcn_boss2 = $21
-        srcn_doorUnlock = $22
+        srcn_boss1 = $1a
+        srcn_boss2 = $1b
+        srcn_doorUnlock = $1c
 
 ;======================================
 

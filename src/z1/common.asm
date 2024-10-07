@@ -611,9 +611,9 @@ WriteAPUControl:
     xba
     rts
 
-; WriteAPUDMCCounter:
-;     stx.w DmcCounter_4011
-; rts
+WriteAPUDMCCounter:
+    stx.w DmcCounter_4011
+rts
 
 WriteAPUDMCFreq:
     sta DmcFreq_4010
