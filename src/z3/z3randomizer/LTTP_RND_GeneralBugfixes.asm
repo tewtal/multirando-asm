@@ -297,7 +297,11 @@ incsrc staticrng.asm
 warnpc $AF8401
 ;================================================================================
 org $AF8400
-;incsrc tournament.asm
+
+if getfilestatus("tournament.asm") == 0
+    incsrc tournament.asm
+endif
+
 incsrc eventdata.asm
 warnpc $B08000
 ;================================================================================
