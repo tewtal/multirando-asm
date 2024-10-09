@@ -73,6 +73,8 @@ waitUploadByteAck:
     bne waitUploadByteAck
 rts
 
+;  Constant
+dmc_lookup_start_pos = $4060
 
 spc_init_dpcm:
     pha : phx : phy : phb : php
@@ -81,15 +83,49 @@ spc_init_dpcm:
 
     jsr spc_wait_boot
 
+    ;  $4000-$400f:  dmc address bytes (see ../nes-spc/spc.asm:267)
     ldy #$4000  ;  Start an upload at $4000 aram
     jsr spc_begin_upload
 
+    lda #$00
+    jsr spc_upload_byte
+    lda #$1d
+    jsr spc_upload_byte
+    lda #$20
+    jsr spc_upload_byte
+    lda #$4c
+    jsr spc_upload_byte
+    lda #$80
+    jsr spc_upload_byte
+
+    ;  $4010-$401f:  frequency cutoff values (see ../nes-spc/spc.asm:268)
+    ldy #$4010  ;  Start an upload at $4010 aram
+    jsr spc_begin_upload
+
+    lda #$0f
+    jsr spc_upload_byte
+    lda #$0f
+    jsr spc_upload_byte
+    lda #$0e
+    jsr spc_upload_byte
+    lda #$0f
+    jsr spc_upload_byte
+    lda #$0d
+    jsr spc_upload_byte
+
+    ;  $4020-$405f: SRCN lookup entries (see ../nes-spc/spc.asm:271)
+    ldy #$4020  ;  Start an upload at $4020 aram
+    jsr spc_begin_upload
+
     ;  Send scrn lookup entries to aram
-    %uploadDirectoryEntry($4014)    ;  Initial position after the dmc lookup entries
-    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam)    ;  Initial position after the dmc lookup entries
-    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt)    ;  Initial position after the dmc lookup entries
-    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss1end-brr_boss1)    ;  Initial position after the dmc lookup entries
-    %uploadDirectoryEntry($4014+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss1end-brr_boss1+brr_boss2end-brr_boss2)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry(dmc_lookup_start_pos)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam)
+    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt)
+    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2)
+    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2+brr_boss1end-brr_boss1)
+
+    ldy #$4060  ;  Start an upload at $4060 aram
+    jsr spc_begin_upload
 
     ;  Send brr_swordbeam to aram
     ldx #$0000
@@ -110,22 +146,22 @@ spc_init_dpcm:
     cpx #(brr_linkhurtend-brr_linkhurt)
     bne .nextbyte2
 
-    ;  Send brr_boss1 to aram
-    ldx #$0000
-.nextbyte3:
-    lda brr_boss1,x
-    jsr spc_upload_byte
-    inx
-    cpx #(brr_boss1end-brr_boss1)
-    bne .nextbyte3
-
     ;  Send brr_boss2 to aram
     ldx #$0000
-.nextbyte4:
+.nextbyte3:
     lda brr_boss2,x
     jsr spc_upload_byte
     inx
     cpx #(brr_boss2end-brr_boss2)
+    bne .nextbyte3
+
+    ;  Send brr_boss1 to aram
+    ldx #$0000
+.nextbyte4:
+    lda brr_boss1,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_boss1end-brr_boss1)
     bne .nextbyte4
 
     ;  Send brr_doorunlock to aram
@@ -137,30 +173,18 @@ spc_init_dpcm:
     cpx #(brr_doorunlockend-brr_doorunlock)
     bne .nextbyte5
 
-    ;  Set bit 0x80 in F1 control register
+    ;  Set bit 0x80 in F1 control register (already set; not needed)
     ; ldx #$80f1    ;  prep to read IPL ROM
     ; jsr write_dsp
 
-    ;  Jump spc to $ffc0 to reset to the IPC ROM after we've finished loading to aram
-    jsr run_spc_program
+    ;  Reset to the IPC ROM after we've finished loading to aram
+    jsr reset_to_ipc_rom
 
     plp : plb : ply : plx : pla
 rtl
 
-write_dsp:
-    phx
-    ; Just do a two-byte upload to $00F2-$00F3, so we
-    ; set the DSP address, then write the byte into that.
-    ldy #$00F2
-    jsr spc_begin_upload
-    pla
-    jsr spc_upload_byte     ; low byte of X to $F2
-    pla
-    jsr spc_upload_byte     ; high byte of X to $F3
-rts
-
-;  Execute spc starting at location in Destination
-run_spc_program:
+;  Execute spc starting at location in Destination (the IPC rom at $ffc0)
+reset_to_ipc_rom:
   Destination = $ffc0 ; Program's address in SPC700 RAM
   lda.b #Destination&$00ff
   sta $2142
@@ -170,8 +194,7 @@ run_spc_program:
   stz $2141          ; Zero = start the program that was sent over
 
   lda $2140          ; Must be at least 2 higher than the previous APUIO0 value.
-  inc
-  inc
+  inc : inc
   sta $2140          ; Tell the SPC700 to start running the new program.
 
 .wait:                 ; Wait for the SPC700 to acknowledge this.

@@ -260,9 +260,24 @@ startpos start
 		decay2rate			=	$8A
 		decay3volume		=	$8B
 		decay3rate			=	$8C
-		; temp_add			=	$8D
                 tri_sample                      =       $8E
 
+;  To enable dmc audio, preload a lookup table in aram at address $4000 as follows:
+;  $4000-$400f:  (Up to) 16 one-byte dmc address bytes that appear in NES register $4012 (pcm_addr)
+;  $4010-$401f:  (Up to) 16 one-byte frequency cutoff value that dictates the playback speed to be used.
+;                        Values less than these bytes will trigger the .slowspeed playback rate.
+;                        Appears in NES register $4010 (pcm_freq)
+;  $4020-$405f:  (Up to) 16 directory entries for the brr samples in audio ram.
+;                        This data is appended directly after the static directory lookup data at aram $0200
+;  One byte value below indicating volume attenuation cutoff as it appears in NES register $4011 (pcm_raw)
+;  (this is very game specific, and most games do not use this trickery (Zelda 1 does)):
+dmc_attenuation_cutoff: db $20
+
+;  Example dmc table (for Zelda 1):
+;  $4000-$400f:  $00,$1d,$20,$4c,$80
+;  $4010-$401f:  $0f,$0f,$0e,$0f,$0d
+;  $4020-$405f:  $4014,$4014,$5631,$5631,$58b0,$58b0,$7cc2,$7cc2,$9e28,$9e28
+;                (little endian, as it appears in aram: 14 40 14 40 31 56 31 56 B0 58 B0 58 C2 7C C2 7C 28 9E 28 9E)
 ;========================================
 
 
@@ -1024,13 +1039,14 @@ no_reset3:
 noise_off:
 
 
+;  
 dmc:
         mov a,no4016
         and a,#%00010000        ; check for toggle on of dmc bit of $4015
         bne dmc_play
 
         mov $f2,#$7c
-        mov a,$f3   ; check for if dmc voice is finished playing
+        mov a,$f3   ; check if dmc voice is finished playing
         and a,#%00010000
         bne dmc_silence
         jmp dmc_continue_playing
@@ -1044,83 +1060,58 @@ dmc_silence:
         jmp next_xfer
 
 dmc_play:
-        ;  TODO: check pcm_freq and set dsp pitch regs $42 and $43 appropriately
-        mov $F2,#$40
-        mov $F3,#$7f    ;  Full volume
-        mov $F2,#$41
-        mov $F3,#$7f    ;  Full volume
+        mov x,#$00
+.selectSample:
+        mov a,$4000+x
+        cmp a,pcm_addr
+        beq .setSample
+        inc x
+        cmp x,#$10
+        beq dmc_silence ;  Sample not found
+        jmp .selectSample
 
-        mov a,pcm_addr
-        beq .swordbeam
-        cmp a,#$1d
-        beq .linkhurt
-        cmp a,#$4c
-        beq .boss1
-        cmp a,#$20
-        beq .boss2
-        cmp a,#$80
-        beq .keydoor
-        bne dmc_silence ;  Sample not found
-
-;  TODO: remove hardcodes and migrate to lookup
-.swordbeam:
+        ;  X now contains the index of the chosen sample
+.setSample:
+        mov a,x
+        clrc : adc a,#srcn_base  ;  Calculate the SRCN
         mov $F2,#$44
-        mov $F3,#srcn_swordBeam
-        jmp .fastspeed
-.linkhurt:
-        mov $F2,#$44
-        mov $F3,#srcn_linkHurt
-        jmp .fastspeed
-.boss1:
-        mov $F2,#$44
-        mov $F3,#srcn_boss1
+        mov $F3,a       ;  Set srcn with the selected sample from pcm_addr
 
-        ;  Zelda 1 uses nonzero pcm_raw start values to attenuate the sample volume when desired.
-        ;  Mimic the behavior by halving the voice #4 channel volume
-        mov a,pcm_raw
-        beq .now
-        mov $F2,#$40
-        mov $F3,#$3f    ;  Half volume
-        mov $F2,#$41
-        mov $F3,#$3f    ;  Half volume
-
-        ;  Check for the faster frequency
+.selectPlaybackSpeed:
         mov a,pcm_freq
-        cmp a,#$0f
-        beq .fastspeed
-        jmp .normalspeed
-.boss2:
-        mov $F2,#$44
-        mov $F3,#srcn_boss2
-        jmp .normalspeed
+        cmp a,$4010+x
+        bcc .slowspeed        ;  If pcm_freq < threshold value in a, slow speed
 
-        ;  Zelda 1 uses nonzero pcm_raw start values to attenuate the sample volume when desired.
-        ;  Mimic the behavior by halving the voice #4 channel volume
-        mov a,pcm_raw
-        beq .now
-        mov $F2,#$40
-        mov $F3,#$3f    ;  Half volume
-        mov $F2,#$41
-        mov $F3,#$3f    ;  Half volume
-        jmp .now
-.keydoor:
-        mov $F2,#$44
-        mov $F3,#srcn_doorUnlock
-        jmp .fastspeed
-.normalspeed:
-        mov $F2,#$42
-        mov $F3,#$45    ;  Pitch lower bits
-        mov $F2,#$43
-        mov $F3,#$08    ;  Pitch higher bits
-        jmp .now
-.fastspeed:
+.normalspeed:                 ;  Otherwise, normal speed
         mov $F2,#$42
         mov $F3,#$06    ;  Pitch lower bits
         mov $F2,#$43
         mov $F3,#$0b    ;  Pitch higher bits
-        jmp .now
+        jmp .selectPlaybackVolume
+.slowspeed:                     
+        mov $F2,#$42
+        mov $F3,#$45    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$08    ;  Pitch higher bits
 
-.now:
+.selectPlaybackVolume:
+        mov a,dmc_attenuation_cutoff
+        cmp a,pcm_raw
+        bcc .halfvolume         ;  If pcm_raw > threshold value in dmc_attenuation_cutoff, half volume
+
+.fullvolume:                    ;  Otherwise, full volume
+        mov $F2,#$40
+        mov $F3,#$7f    ;  Full volume
+        mov $F2,#$41
+        mov $F3,#$7f    ;  Full volume
+        jmp .turnOn
+.halfvolume:
+        mov $F2,#$40
+        mov $F3,#$3f    ;  Half volume
+        mov $F2,#$41
+        mov $F3,#$3f    ;  Half volume
+
+.turnOn:
         mov $F2,#$5c
         mov $F3,#%00000000  ;  disable KOFF
         mov $F2,#$4c
@@ -1984,41 +1975,6 @@ clear5:
 ;======================================
 
 set_directory:
-        ;mov a,#pulse0&255     ; directory for Pulse 0
-        ;mov !$0200,a
-        ;mov !$0202,a
-        ;mov a,#pulse0/256
-        ;mov !$0201,a
-        ;mov !$0203,a
-
-        ;mov a,#pulse1&255     ; directory for Pulse 1
-        ;mov !$0204,a
-        ;mov !$0206,a
-        ;mov a,#pulse1/256
-        ;mov !$0205,a
-        ;mov !$0207,a
-
-        ;mov a,#pulse2&255     ; directory for Pulse 2
-        ;mov !$0208,a
-        ;mov !$020A,a
-        ;mov a,#pulse2/256
-        ;mov !$0209,a
-        ;mov !$020B,a
-
-        ;mov a,#pulse3&255     ; directory for Pulse 3 (same as pulse1)
-        ;mov !$020C,a
-        ;mov !$020E,a
-        ;mov a,#pulse3/256
-        ;mov !$020D,a
-        ;mov !$020F,a
-
-        ;mov a,#triang&255     ; directory for Triangle
-        ;mov !$0240,a
-        ;mov !$0342,a
-        ;mov a,#triang/256
-        ;mov !$0341,a
-        ;mov !$0343,a
-
         mov x, #(end_directory_lut-set_directory_lut-1)
 
 set_directory_loop:
@@ -2027,14 +1983,14 @@ set_directory_loop:
         dec	x
         bpl	set_directory_loop
 
-        ;  Append dynamic dmc entries from $4000
+        ;  Append dynamic dmc entries from $4020 (see spc.asm:270)
         mov x, #0
 
 add_dynamic_entries:
-        mov a,$4000+x
+        mov a,$4020+x
         mov ($200+end_directory_lut-set_directory_lut)+x,a
         inc x
-        cmp x,#$1f
+        cmp x,#$40
         bne add_dynamic_entries
 ret
 
@@ -2049,11 +2005,7 @@ set_directory_lut:
 end_directory_lut:
 
         triangle_sample_num	 =	$10
-        srcn_swordBeam = $18
-        srcn_linkHurt = $19
-        srcn_boss1 = $1a
-        srcn_boss2 = $1b
-        srcn_doorUnlock = $1c
+        srcn_base = $18
 
 ;======================================
 
