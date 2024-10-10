@@ -86,7 +86,6 @@ org !B0+$982B : jsr WriteAPUControl
 org !B0+$9928 : jsr WriteAPUControl
 org !B0+$9BA6 : jsr WriteAPUControl
 ; org !B0+$9BE1 : sta $0915
-org !B0+$9BE8 : jsr WriteAPUControl
 org !B0+$9D4B : jsr WriteAPUControl
 ; org !B0+$9D5C : sta $0915
 org !B7+$E467 : jsr WriteAPUControl
@@ -138,7 +137,6 @@ org !B0+$9E84 : jsr WriteAPUTriCtrl2_X
 org !B0+$9C50 : jsr WriteAPUTriCtrl3
 
 ; Hook writes to Noise Channel
-
 org !B0+$997B : jsr WriteAPUNoiseCtrl0
 org !B0+$9989 : jsr WriteAPUNoiseCtrl0
 org !B0+$9A2A : jsr WriteAPUNoiseCtrl0
@@ -152,3 +150,10 @@ org !B0+$9ECA : jsr WriteAPUNoiseCtrl2
 org !B0+$9980 : jsr WriteAPUNoiseCtrl3
 org !B0+$9A34 : jsr WriteAPUNoiseCtrl3
 org !B0+$9ED0 : jsr WriteAPUNoiseCtrl3
+
+;  Hook writes to DMC
+org !B0+$9bb7 : jsr WriteAPUDMCCounter
+org !B0+$9bcf : jsr WriteAPUDMCFreq
+org !B0+$9bd5 : jsr WriteAPUDMCAddr
+org !B0+$9bdb : jsr WriteAPUDMCLength
+org !B0+$9bea : jsr WriteAPUDMCPlay

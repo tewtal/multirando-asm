@@ -12,6 +12,7 @@ transition_to_z1:
     phk : plb
     ldx.w #$1FFF : txs
 
+    jsl spc_init_dpcm
     jsl spc_init_driver
 
     sep #$30

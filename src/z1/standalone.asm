@@ -76,11 +76,14 @@ IsrReset:
 IsrNmi:
     JML [$0811]
 
+;  Non-rom dependencies
+incsrc "../macros.asm"
+incsrc "../defines.asm"
+
 incsrc "labels.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
-
 
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
 ; The reason for this is that the main "common" MMC1 bank at $C000-$FFFF is more or less full
@@ -94,9 +97,45 @@ warnpc $A7C000
 org $A88000
 incsrc "init.asm"
 incsrc "snes.asm"
+; Include randomizer additions
+; incsrc "randomizer/main.asm"
+
+; Common NES code/data
+namespace nes
+org $9F8000
+incsrc "../common/nes/overlay.asm"
+warnpc $9FFFFF
+namespace off
 
 ; Include randomizer additions
 org $A99000
+incsrc "dpcm.asm"
+org $AA9000
 incsrc "../nes-spc/spc.asm"
-org $AFFFFF
+
+;  DPCM audio
+org $AB8000
+brr:
+.swordbeam:
+incbin "audio/sword-beam.brr"
+.swordbeamend:
+
+.linkhurt:
+incbin "audio/link-hurt.brr"
+.linkhurtend:
+
+.boss1:
+incbin "audio/boss1.brr"
+.boss1end:
+
+.boss2:
+incbin "audio/boss2.brr"
+.boss2end:
+
+.doorunlock:
+incbin "audio/door-unlock.brr"
+.doorunlockend:
 db $00
+
+warnpc $abffff
+print "dpcm audio end = ", pc

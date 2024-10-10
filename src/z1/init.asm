@@ -13,6 +13,7 @@ SnesBoot:
     CPX #$1000
     BNE -
 
+    jsl spc_init_dpcm
     JSL spc_init_driver
 
     SEP #$30
@@ -35,7 +36,10 @@ SnesBoot:
     BNE -
 
     SEP #$30
+    
+if not(defined("STANDALONE"))
     jsl UploadItemPalettes
+endif
     jsl nes_overlay_init
     JML (!BASE_BANK<<16)+$FF76 ; Startup
 
