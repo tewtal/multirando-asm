@@ -106,7 +106,7 @@ spc_init_dpcm:
     jsr spc_upload_byte
     lda #$0f
     jsr spc_upload_byte
-    lda #$0e
+    lda #$0f
     jsr spc_upload_byte
     lda #$0f
     jsr spc_upload_byte
