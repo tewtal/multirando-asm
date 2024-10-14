@@ -989,7 +989,7 @@ no_reset3:
 ;---------------------------------------
                                 ; write noise frequency
         mov a,no400E
-        and a,#%00001111
+        and a,#%00001111        ;  Look only at nes noise timer period (TODO: check if games ever use mode flag #$80)
         mov x,a
         mov a,noise_freq_table+X
 
@@ -2020,26 +2020,27 @@ change_pulse_rtn:
 ;        db $82                 ; $0D   17Hz 3.529 sec  3.1 seconds
 ;        db $81                 ; $0E   16Hz 3.75 sec   4.1 seconds
 ;        db $81                 ; $0F   15Hz 4 sec      4.1 seconds
+
 ;======================================================================
-;       DSP value            NES reg    NES noise freq  SPC noise freq
+;       DSP value     old val           NES reg         NES noise freq
 ;----------------------------------------------------------------------
-noise_freq_table:
-        db %00111111           ; $0                    32mhz
-        db %00111111           ; $1                    32mhz
-        db %00111111           ; $2                    32mhz
-        db %00111111           ; $3                    32mhz
-        db %00111111           ; $4                    32mhz
-        db %00111111           ; $5                    32mhz
-        db %00111110           ; $6                    16mhz
-        db %00111110           ; $7                    16mhz
-        db %00111110           ; $8    16744.04mhz     16mhz
-        db %00111110           ; $9    14080hz         16mhz
-        db %00111100           ; $A    9397.28hz       8.0mhz
-        db %00111011           ; $B    7040hz          6.4mhz
-        db %00111001           ; $C    4698.64hz       4.0mhz
-        db %00111000           ; $D    35200hz         3.2mhz
-        db %00110101           ; $E    17600 hz        1.6mhz
-        db %00110010           ; $F    880 hz          800hz
+noise_freq_table:     ;  Added $20 to all values to keep bit 5 always set
+        db #$3f       ;%00111111        $0              447kHz  
+        db #$3f       ;%00111111        $1              224kHz  
+        db #$3f       ;%00111111        $2              112kHz  
+        db #$3f       ;%00111111        $3              55,930Hz
+        db #$3f       ;%00111111        $4              27,965Hz
+        db #$3e       ;%00111111        $5              18,643Hz
+        db #$3e       ;%00111110        $6              13,983Hz
+        db #$3d       ;%00111110        $7              11,186Hz
+        db #$3c       ;%00111110        $8              8,860Hz 
+        db #$3b       ;%00111110        $9              7,046Hz 
+        db #$3a       ;%00111100        $A              4,710Hz 
+        db #$38       ;%00111011        $B              3,523Hz 
+        db #$36       ;%00111001        $C              2,349Hz 
+        db #$35       ;%00111000        $D              1,762Hz 
+        db #$32       ;%00110101        $E              880Hz   
+        db #$2f       ;%00110010        $F              440Hz   
 ;======================================================================
 
 ; 1 sample
