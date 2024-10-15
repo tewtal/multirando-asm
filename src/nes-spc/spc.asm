@@ -391,15 +391,17 @@ square0:
         and a,#%00000001
         bne sq0_enabled
 silence:
-        mov $F2,#0
-        mov $F3,#0
-        mov $F2,#1
-        mov $F3,#0
+        ;  DEBUGGING SQ0
+        ; mov $F2,#0
+        ; mov $F3,#0
+        ; mov $F2,#1
+        ; mov $F3,#0
+        mov x,#%00000001        ; Square 0 voice
+        call stopVoiceInX
+
         jmp square1
 
 sq0_enabled:
-
-
 
 ;-------------------------------------
                                 ; emulate duty cycle (select sample #)
@@ -420,8 +422,9 @@ sq1_sample_change:
         mov $F2,#$04            ; sample # reg
         mov $F3,puls0_sample
 
-        mov $F2,#$4C            ; key on
-        mov $F3,#%00000001
+        ;  DEBUGGING srcn change:
+        ; mov $F2,#$4C            ; key on
+        ; mov $F3,#%00000001
 
 sq1_no_change:
 
@@ -571,10 +574,12 @@ write_volume:
         mov $F3,a
         mov $F2,#1
         mov $F3,a
-;        mov $F3,#0
 
 no_reset:
 
+        ;  ENABLE HERE:
+        mov x,#%00000001        ; Square 0 voice
+        call playVoiceInX
 
 
 ;=====================================
@@ -765,7 +770,6 @@ mono2:
 
 write_volume2:
         mov $F2,#$10            ; write volume
-;        mov $F3,#0
         mov $F3,a
         mov $F2,#$11
         mov $F3,a
@@ -1079,7 +1083,9 @@ playVoiceInX:
         mov a,x
         and a,$F3       ;  Check if selected voice has KON
         bne .alreadyPlaying
-        mov $F3,x      ;  KON selected voice only
+        mov a,x
+        or  a,$F3      ;  Add all playing voices
+        mov $F3,a      ;  KON all playing voices + selected voice
         mov $F2,#$5c    ; KOFF
         mov a,x
         eor a,#$ff     ;  invert [A]
@@ -1229,7 +1235,14 @@ ooykd:
         bra okd1
 
 silenced1:
-        mov x,#0
+        ;  DEBUGGING SQ0
+        ;  Instead of falling through okd1 or monod1 with x=0, stop
+        ;  voice properly.
+        ; mov x,#0
+
+        mov x,#%00000001        ; Square 0 voice
+        call stopVoiceInX
+        bra no_decay1
 okd1:
         mov a,no4016
         and a,#$20
@@ -1509,11 +1522,14 @@ timer3_complete:
 
 
 silencex1:
-        mov $F2,#0
-        mov $F3,#0
-        mov $F2,#1
-        mov $F3,#0
-        
+        ;  DEBUGGING SQ0
+        ; mov $F2,#0
+        ; mov $F3,#0
+        ; mov $F2,#1
+        ; mov $F3,#0
+        mov x,#%00000001        ; Square 0 voice
+        call stopVoiceInX
+
 nonsweep:
         ret
 
@@ -1689,11 +1705,14 @@ swzero:
 
 
 silencex2:
-        mov $F2,#0
-        mov $F3,#0
-        mov $F2,#1
-        mov $F3,#0
-        ret
+        ;  DEBUGGING SQ0
+        ; mov $F2,#0
+        ; mov $F3,#0
+        ; mov $F2,#1
+        ; mov $F3,#0
+        mov x,#%00000001        ; Square 0 voice
+        call stopVoiceInX
+ret
 
 
 
