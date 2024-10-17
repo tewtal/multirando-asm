@@ -186,82 +186,93 @@ startpos start
 ;========================================
 ;       NES Registers
 ;----------------------------------------
-		sq4000      =    $40   ; $4000
-		sq4001      =    $41   ; $4001
-		sq4002      =    $42   ; $4002
-		sq4003      =    $43   ; $4003
-		sq4004      =    $44   ; $4004
-		sq4005      =    $45   ; $4005
-		sq4006      =    $46   ; $4006
-		sq4007      =    $47   ; $4007
-		tr4008      =    $48   ; $4008
-		tr4009      =    $49   ; $4009
-		tr400A      =    $4A   ; $400A
-		tr400B      =    $4b   ; $400B
-		no400C      =    $4C   ; $400C
-		no400D      =    $4D   ; $400D
-		no400E      =    $4E   ; $400E
-		no400F      =    $4F   ; $400F
-		pcm_freq    =    $50   ; $4010
-		pcm_raw     =    $51   ; $4011
-		pcm_addr    =    $52   ; $4012
-		pcm_length  =    $53   ; $4013
+sq4000     = $40 ; $4000 - Pulse/square 0 channel
+sq4001     = $41 ; $4001
+sq4002     = $42 ; $4002
+sq4003     = $43 ; $4003
+sq4004     = $44 ; $4004 - Pulse/square 1 channel
+sq4005     = $45 ; $4005
+sq4006     = $46 ; $4006
+sq4007     = $47 ; $4007
+tr4008     = $48 ; $4008 - Triangle channel
+tr4009     = $49 ; $4009
+tr400A     = $4A ; $400A
+tr400B     = $4b ; $400B
+no400C     = $4C ; $400C - Noise channel
+no400D     = $4D ; $400D
+no400E     = $4E ; $400E
+no400F     = $4F ; $400F
+pcm_freq   = $50 ; $4010 - DMC channel
+pcm_raw    = $51 ; $4011
+pcm_addr   = $52 ; $4012
+pcm_length = $53 ; $4013
 
-		sound_ctrl	=	$55   ; $4015
-		no4016		=	$56   ; $4016
-		; 0x01 = Reset square 0
-		; 0x02 = Reset square 1
-		; 0x04 = Reset triangle
-		; 0x08 = Reset noise
-		; 0x10 = 
-		; 0x20 = Mono
-		; 0x40 = Square 0 sweep
-		; 0x80 = Square 1 sweep
-;========================================
-;       SPC Memory
-;----------------------------------------
+sound_ctrl = $55 ; $4015
 
-		pulse0duty			=	$60
-		pulse0dutyold		=	$61
-		pulse1duty			=	$62
-		pulse1dutyold		=	$63
-		puls0_sample		=	$64
-		puls1_sample		=	$65
-		puls0_sample_old    =    $66
-		puls1_sample_old    =    $67
-		temp1				=	$68
-		temp2				=	$69
-		temp3				=	$6A
-		temp4				=	$6B
-		temp5				=	$6C
-		temp6				=	$6D
-		temp7				=	$6E
-		temp8				=	$6F
-		old4003				=	$70
+no4016     = $56 ; $4016
+; Bit flags for no4016:
+; 0x01 = Reset square 0
+; 0x02 = Reset square 1
+; 0x04 = Reset triangle
+; 0x08 = Reset noise
+; 0x10 = Initiate dmc playback
+; 0x20 = Mono
+; 0x40 = Square 0 sweep
+; 0x80 = Square 1 sweep
 
-		sweeptemp1			=	$78
-		sweeptemp2			=	$79
-		sweep_freq_lo		=	$7A
-		sweep_freq_hi		=	$7B
 
-		linear_count_lo		=	$7D
-		linear_count_hi		=	$7E
-		timer3count_lo		=	$7F
-		timer3count_hi		=	$80
-		sweep1				=	$81
-		sweep2				=	$82
-		sweep_freq_lo2		=	$83
-		sweep_freq_hi2		=	$84
-		timer3val			=	$85
-		decay1volume		=	$86
-		decay1rate			=	$87
-		decay_status		=	$88
-		decay2volume		=	$89
-		decay2rate			=	$8A
-		decay3volume		=	$8B
-		decay3rate			=	$8C
-		temp_add			=	$8D
-                tri_sample                      =       $8E
+;=====================
+;     SPC Memory
+;---------------------
+
+pulse0duty       = $60
+pulse0dutyold    = $61
+pulse1duty       = $62
+pulse1dutyold    = $63
+puls0_sample     = $64
+puls1_sample     = $65
+puls0_sample_old = $66
+puls1_sample_old = $67
+temp1            = $68
+temp2            = $69
+temp3            = $6A
+temp4            = $6B
+temp5            = $6C
+temp6            = $6D
+temp7            = $6E
+temp8            = $6F
+old4003          = $70
+
+sweeptemp1    = $78
+sweeptemp2    = $79
+sweep_freq_lo = $7A
+sweep_freq_hi = $7B
+
+linear_count_lo = $7D
+linear_count_hi = $7E
+timer3count_lo  = $7F
+timer3count_hi  = $80
+sweep1          = $81
+sweep2          = $82
+sweep_freq_lo2  = $83
+sweep_freq_hi2  = $84
+timer3val       = $85 ; Captures up counter for Timer 3. Value only ever 0, 1, or 2
+decay1volume    = $86
+decay1rate      = $87 ; Square 0 channel
+decay_status    = $88 ; Voice bit flags indicating which have currently decrementing length counters(?)
+decay2volume    = $89
+decay2rate      = $8A ; Square 1 channel
+decay3volume    = $8B
+decay3rate      = $8C ; Noise channel
+tri_sample      = $8E
+voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
+
+
+;=====================
+;     Constants
+;---------------------
+
+
 
 ;========================================
 
@@ -418,7 +429,6 @@ sq0_enabled:
         beq sq1_no_change
 
 sq1_sample_change:
-
         mov $F2,#$04            ; sample # reg
         mov $F3,puls0_sample
 
@@ -541,8 +551,9 @@ volume_decay_rates:
 ;        bra write_volume
 
 decay_disabled:
-        mov $F2,#$07
-        mov $F3,#$1F
+        ;  TESTING:  Gain is never changed for this channel
+        ; mov $F2,#$07
+        ; mov $F3,#$1F
 
         mov a,no4016
         and a,#$20
@@ -561,7 +572,6 @@ decay_disabled:
         mov $F3,a
         bra no_reset
 
-
 mono:
         mov a,sq4000            ; emulate volume, square 0
         and a,#%00001111
@@ -576,11 +586,9 @@ write_volume:
         mov $F3,a
 
 no_reset:
-
-        ;  ENABLE HERE:
+        ;  TESTING: ENABLE HERE:
         mov x,#%00000001        ; Square 0 voice
         call playVoiceInX
-
 
 ;=====================================
 
@@ -591,10 +599,15 @@ square1:
         and a,#%00000010
         bne sq1_enabled
 silence2:
-        mov $F2,#$10
-        mov $F3,#0
-        mov $F2,#$11
-        mov $F3,#0
+        ;  DEBUGGING:
+        ; mov $F2,#$10
+        ; mov $F3,#0
+        ; mov $F2,#$11
+        ; mov $F3,#0
+
+        mov x,#%00000010        ; Square 1 voice
+        call stopVoiceInX
+
         jmp triangle
 
 sq1_enabled:
@@ -775,8 +788,9 @@ write_volume2:
         mov $F3,a
 
 no_reset2:
- 
-
+        ;  TESTING: ENABLE HERE:
+        mov x,#%00000010        ; Square 1 voice
+        call playVoiceInX
 
 ;=====================================
 
@@ -874,10 +888,13 @@ noise:
         and a,#%00001000
         bne noise_enabled
 
-        mov $F2,#$30
-        mov $F3,#0
-        mov $F2,#$31
-        mov $F3,#0
+        mov x,#%00001000
+        call stopVoiceInX
+
+        ; mov $F2,#$30
+        ; mov $F3,#0
+        ; mov $F2,#$31
+        ; mov $F3,#0
 
         bra noise_off
 
@@ -914,8 +931,9 @@ noise_enabled:
 ;        bra write_volume3
 
 decay_disabled3:
-        mov $F2,#$37
-        mov $F3,#$1F
+        ;  TESTING:  Gain is never changed for this channel
+        ; mov $F2,#$37
+        ; mov $F3,#$1F
 
         mov a,no4016
         and a,#$20
@@ -931,16 +949,41 @@ mono4:
         asl a
         mov x,a
 
+        ;  TODO: impelement no400f lenght counter.
+        ;  Length lookup table for bits 7-3 of $400f: llll l---
+;      |  0   1   2   3   4   5   6   7    8   9   A   B   C   D   E   F
+; -----+----------------------------------------------------------------
+; 00-0F  10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
+; 10-1F  12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 
-        mov a,pcm_raw
-        lsr a
-        lsr a
-        mov temp_add,a
-        mov a,x
-        setc
-        sbc a,temp_add
-        bcs just_fine
-        mov a,#0
+        ;  The length counter (I guess) refers to the NES $4017 "frame counter" which tracks
+        ;  NES APU clocks (which is every other CPU clock, or halved).  So, calculate what each
+        ;  of these frame counter ticks means in time, and convert to the spc-700 timers accordingly.
+
+        ;  See https://www.nesdev.org/wiki/APU_Frame_Counter for what these length numbers mean.
+        ;  Per Zelda 1's $4017 value of $ff, the frame counter runs in 5-step mode and clocks length
+        ;  counters (half frame) on 7456.5 apu frames and 18640.5 apu frames
+        ;  Metroid 1 has a $4017 value of $c0, which makes it functionally identical to z1: a 5-step mode.
+        ;  First is ~120Hz, next is ~48hz, but the sequence together is ~96.0Hz (2 or more ticks will be at 96.0Hz)
+
+        ;  So, for z1:  10.415 ms per uneven tick.  So value $03 from noise lenght lookup table of "2"
+        ;  is a definite 20.83 ms.
+        ;  Longest supported length value would be 254 * 10.415 = 2.6454 s
+
+
+        ;  Why is noise channel referencing pcm_raw??
+        ;  A likely bug.  removing block below
+        ; ----------------------------------------------
+        ; mov a,pcm_raw
+        ; lsr a
+        ; lsr a
+        ; mov temp_add,a
+        ; mov a,x
+        ; setc
+        ; sbc a,temp_add
+        ; bcs just_fine
+        ; mov a,#0
+        ; ----------------------------------------------
 just_fine:
 
 ;        mov $F2,#$30
@@ -978,9 +1021,12 @@ no_reset3:
 ;        asl a
 ;        or  a,#%00100000        ; set echo disable
 ;        mov $F3,a               ; write noise frequency
+enable_noise:
+        ;  TESTING:  ENABLE NOISE VOICE HERE
+        mov x,#%00001000
+        call playVoiceInX
 
 noise_off:
-
 
 ;  
 dmc:
@@ -995,13 +1041,9 @@ dmc:
         jmp dmc_continue_playing
 
 dmc_silence:
-        mov $F2,#$4c
-        mov a,$F3
-        and a,#%00010000        ;  Check dmc KON
-        beq .noAction
-        mov $F3,#%00000000  ;  disable KON
-        mov $F2,#$5c
-        mov $F3,#%00010000  ;  KOFF dpcm channel
+        mov x,#%00010000        ; DMC voice
+        call stopVoiceInX
+
 .noAction:
         jmp next_xfer
 
@@ -1058,10 +1100,8 @@ dmc_play:
         mov $F3,#$3f    ;  Half volume
 
 .turnOn:
-        mov $F2,#$5c
-        mov $F3,#%00000000  ;  disable KOFF
-        mov $F2,#$4c
-        mov $F3,#%00010000  ;  KON dpcm channel
+        mov x,#%00010000        ; DMC voice
+        call playVoiceInX
 
 dmc_continue_playing:
         jmp next_xfer
@@ -1074,18 +1114,21 @@ dmc_continue_playing:
 ;=================================
 
 
-;  Initiates playback of the voice indicated
+;  Initiates playback of the voice(s) indicated
 ;  by the flag value in [X], but only if the
 ;  voice is not already playing.  Does not affect
 ;  other voices.
 playVoiceInX:
-        mov $F2,#$4c    ; KON
         mov a,x
-        and a,$F3       ;  Check if selected voice has KON
+        and a,voicesPlaying     ;  Check if selected voice is playing
         bne .alreadyPlaying
+        
         mov a,x
-        or  a,$F3      ;  Add all playing voices
-        mov $F3,a      ;  KON all playing voices + selected voice
+        or  a,voicesPlaying
+        mov voicesPlaying,a      ;  Set voice as playing in voicesPlaying var
+
+        mov $F2,#$4c    ; KON
+        mov $F3,x       ;  KON selected voice only
         mov $F2,#$5c    ; KOFF
         mov a,x
         eor a,#$ff     ;  invert [A]
@@ -1098,12 +1141,11 @@ ret
 ;  by the flag value in [X].  Does not affect
 ;  other voices.
 stopVoiceInX:
-        mov $F2,#$4c    ; KON
         mov a,x
-        and a,$F3       ;  Check if selected voice has KON
-        beq .offOnly
-        mov $F3,#$00       ;  update KON
-.offOnly:
+        eor a,#$ff     ;  invert [A]
+        and a,voicesPlaying       ;  AND voicesPlaying with [X']
+        mov voicesPlaying,a      ;  to reset playing flag for selected voice only
+
         mov $F2,#$5c    ; KOFF
         mov $F3,x      ;  Update selected voice only
 ret
@@ -1111,12 +1153,17 @@ ret
 ;======================================
 ; timer notes:
 ;               linear counter
-;               267.094 Timer2 units (15.6ms) for 1/240hz
+;               267.094 Timer2 units (15.6ms) for 1/240hz [ATS - what??]
 ;               267.094 / 3 = 89.031 (timer value)
 ;               4-bit counter / 3 is number of .25-frames passed
 ;                       maxmimum time allowed between checks
 ;                       before 4-bit overflow: 22.2 milliseconds!
 ;                       
+
+;Write 120 (0x78) to FA (15/(1000/8000) = 15*8 = 120)
+; $FA timer:  22/8 = 2.75 ms
+; $FB timer:  22/8 = 2.75 ms
+; $FC timer:  89/64 = 1.3906 ms
 
 enable_timer3:
         mov $F1,#0                              ; disable timers
@@ -1366,7 +1413,15 @@ ooykd2:
         bra okd2
 
 silenced2:
-        mov x,#0
+        ;  DEBUGGING SQ1
+        ;  Instead of falling through okd1 or monod1 with x=0, stop
+        ;  voice properly.
+        ; mov x,#0
+
+        mov x,#%00000010        ; Square 1 voice
+        call stopVoiceInX
+        bra no_decay2
+
 okd2:
         mov a,no4016
         and a,#$20
@@ -1386,8 +1441,6 @@ monod2:
 
 
 no_decay2:
-
-
         mov a,no400C
         and a,#%00010000
         bne no_decay3
@@ -1721,11 +1774,15 @@ sweeptimes:
 
 
 silencex12:
-        mov $F2,#$10
-        mov $F3,#0
-        mov $F2,#$11
-        mov $F3,#0
-        
+        ;  DEBUGGING:
+        ; mov $F2,#$10
+        ; mov $F3,#0
+        ; mov $F2,#$11
+        ; mov $F3,#0
+
+        mov x,#%00000010        ; Square 1 voice
+        call stopVoiceInX
+
 nonsweepx:
         ret
 
@@ -1894,11 +1951,15 @@ swzero2:
 
 
 silencex22:
-        mov $F2,#$10
-        mov $F3,#0
-        mov $F2,#$11
-        mov $F3,#0
-        ret
+        ;  DEBUGGING:
+        ; mov $F2,#$10
+        ; mov $F3,#0
+        ; mov $F2,#$11
+        ; mov $F3,#0
+
+        mov x,#%00000010        ; Square 1 voice
+        call stopVoiceInX
+ret
 
 
 
@@ -2068,8 +2129,9 @@ change_pulse_1:
 
 			mov $F2,#$04            ; sample # reg
 			mov $F3,puls0_sample
-			mov $F2,#$4C            ; key on
-			mov $F3,#$01
+
+			; mov $F2,#$4C            ; key on
+			; mov $F3,#$01
 
 			; Apply frequency
 			mov $F2,x
