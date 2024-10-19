@@ -297,7 +297,7 @@ incsrc staticrng.asm
 warnpc $AF8401
 ;================================================================================
 org $AF8400
-incsrc tournament.asm
+;incsrc tournament.asm
 incsrc eventdata.asm
 warnpc $B08000
 ;================================================================================
