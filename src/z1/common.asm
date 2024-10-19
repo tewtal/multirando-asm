@@ -269,7 +269,9 @@ SnesTransferPatternBlock_Indexed:
     RTS
 
 CheckCaveTransitionOut_common:
+if not(defined("STANDALONE"))
     jsl check_cave_transition_out
+endif
     jmp $ea2b
 
 print "apu-routines = ", pc
