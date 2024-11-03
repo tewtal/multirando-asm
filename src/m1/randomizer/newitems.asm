@@ -568,7 +568,7 @@ ItemData:
     dw $8980, pal_0        ; 8B - Brinstar Boss Key      (S
     dw $AD00, pal_0        ; 8C - Desert Palace Compass
     dw $AD00, pal_0        ; 8D - Eastern Palace Compass
-    dw $AF99, pal_0        ; 8E - Wrecked Ship L1 Key    (S
+    dw $AF00, pal_0        ; 8E - Wrecked Ship L1 Key    (S
     dw $8980, pal_0        ; 8F - Wrecked Ship Boss Key  (S
 
     dw $AF00, pal_0        ; 90 - Norfair L1 Key         (S
