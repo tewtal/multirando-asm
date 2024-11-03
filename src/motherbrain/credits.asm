@@ -1218,6 +1218,12 @@ tilemap_data:
     dw "              total             "
     dw "                                "
     dw "                                "
+    !ORANGE
+    dw "      ADDITIONAL DEVELOPERS     "
+    !BIG
+    dw "                                "
+    dw "            ANDYPRO             "
+    dw "            andypro             "
     dw "                                "
     dw "                                "
 .alttp_sprite_credits
@@ -1278,6 +1284,8 @@ tilemap_data:
     dw "  SMALLHACKER     CHRISTOSOWEN  "
     dw "  smallhacker     christosowen  "
     dw "                                "
+    dw "      BHAAL         ORPHIS      "
+    dw "      bhaal         orphis      "
     dw "                                "
     dw "                                "
     dw "                                "
@@ -1293,7 +1301,6 @@ tilemap_data:
     dw "                                "
     dw "      MADDO        KYLEB        "
     dw "      maddo        kyleb        "
-    dw "                                "
     dw "                                "
     dw "                                "
     dw "                                "

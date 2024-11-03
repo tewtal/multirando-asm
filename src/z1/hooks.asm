@@ -40,6 +40,10 @@ org ((!BASE_BANK+5)<<16)+$8581 : jsl UpdateHScrollHDMA : rts
 org ((!BASE_BANK+5)<<16)+$8559 : jsl SnesUpdateVerticalGameScroll : rts
 org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 
+; Hook Init mode 4 for setting up after entering a dungeon
+; 858824  20 13 70       JSR $7013
+org ((!BASE_BANK+5)<<16)+$8824 : jsr InitMode_EnterRoom_UW_Hook
+
 ; Hook the start and end of NMI to be able to inject code to NMI
 %zhook($E484, "jmp NMIStart")
 %zhook($E573, "jmp NMIEnd")

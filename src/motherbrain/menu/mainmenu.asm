@@ -216,9 +216,11 @@ action_submenu_jump:
 
 MainMenu:
     dw #sgm_start
-    ; dw #mm_goto_setup
-    ; dw $FFFF
-    ; dw #mm_goto_debug
+    if defined("DEBUG")
+        dw #mm_goto_setup
+        dw $FFFF
+        dw #mm_goto_debug
+    endif
 
     dw #$0000
     %cm_version_header(cm_title_header)
@@ -234,7 +236,7 @@ mm_goto_startgame:
     %cm_mainmenu("Start Game", #StartGameMenu)
 
 mm_goto_setup:
-    %cm_mainmenu("Configuration", #SetupMenu)
+     %cm_mainmenu("Configuration", #SetupMenu)
 
 mm_goto_debug:
     %cm_mainmenu("Debug", #DebugMenu)

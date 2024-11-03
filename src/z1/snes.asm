@@ -322,6 +322,58 @@ EmulateMMC1:
 .End
     RTL
 
+
+; Since the original game uses sprite overload to hide link in doorways we can't do the same here efficiently,
+; so instead we'll flip the priority bit of the BG tiles to make Link appear behind the doorways
+SnesApplyBGPriority:
+    pha : phx : phy : php
+    sep #$30
+
+    lda.w NeedsBGPriorityUpdate   ; Check if we need to update the BG priority
+    beq .end
+    lda.b $10                     ; Load current level
+    beq .end                    ; If zero, exit
+
+    lda #$80
+    sta $2115
+
+    stz.w NeedsBGPriorityUpdate
+
+    ; Set the two tiles above the doorways to a solid white tile with a blank palette to mask link properly
+    rep #$30
+    ldx #$20EF
+    stx $2116
+    lda #$3025
+    sta $2118
+    sta $2118
+
+    ; Loop through and modify the priority bit of the BG tiles in the top and bottom doorways
+    ldx #$210F
+-
+    stx $2116
+    lda $2139
+    ora #$2000
+    stx $2116
+    sta $2118
+
+    inx : stx $2116
+    lda $2139
+    ora #$2000
+    stx $2116
+    sta $2118
+
+    txa : clc : adc #$001f : tax
+    cpx #$214f
+    bne +
+    ldx #$238f
++
+    cpx #$23cf
+    bne -
+
+.end:
+    plp : ply : plx : pla
+    rtl
+
 ; Use autojoypad-read instead of manual controller reads to read all controllers fast
 ; X = which controller to read
 

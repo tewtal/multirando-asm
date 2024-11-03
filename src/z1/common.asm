@@ -35,6 +35,7 @@ NMIStart:
     jsl SnesOamDMA
     jsl SnesProcessPPUString
     jsl nes_overlay_handle
+    jsl SnesApplyBGPriority
 
     lda $ff
     ldx $5c
@@ -273,6 +274,11 @@ if not(defined("STANDALONE"))
     jsl check_cave_transition_out
 endif
     jmp $ea2b
+
+InitMode_EnterRoom_UW_Hook:
+    inc.w NeedsBGPriorityUpdate
+    jsr $7013
+    rts
 
 print "apu-routines = ", pc
 ; APU Update routines

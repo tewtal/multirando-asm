@@ -1099,7 +1099,7 @@ dmc_play:
         ;  X now contains the index of the chosen sample
 .setSample:
         mov a,x
-        clrc : adc a,#srcn_base  ;  Calculate the SRCN
+        clrc : adc a,#srcn_base&$ff  ;  Calculate the SRCN
 
         mov $F2,!DmcSRCN
         mov $F3,a       ;  Set srcn with the selected sample from pcm_addr

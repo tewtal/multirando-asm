@@ -612,6 +612,8 @@ TransferTarget = $0B18
 TransferSourceSet = $0B20
 PalIdx = $0B0E
 
+NeedsBGPriorityUpdate = $0B22
+
 PPUAddrTmpLo = $0A30
 PPUAddrTmpHi = $0A32
 ScrollYDMA = $0A40
