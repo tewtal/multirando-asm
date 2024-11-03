@@ -36,7 +36,7 @@ SnesBoot:
     BNE -
 
     SEP #$30
-    
+
 if not(defined("STANDALONE"))
     jsl UploadItemPalettes
 endif
