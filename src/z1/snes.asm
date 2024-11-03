@@ -1283,6 +1283,8 @@ SnesUpdateAudio:
     CMP #$D7
     BNE -
 
+;;  Loop which transfers the ~22 bytes of audio status data (see labels:460)
+;;  to the spc-700 receiving loop in ../nes-spc/spc.asm:355-366
     LDX #$00
 
 --

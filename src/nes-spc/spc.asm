@@ -260,9 +260,24 @@ startpos start
 		decay2rate			=	$8A
 		decay3volume		=	$8B
 		decay3rate			=	$8C
-		temp_add			=	$8D
                 tri_sample                      =       $8E
 
+;  To enable dmc audio, preload a lookup table in aram at address $4000 as follows:
+;  $4000-$400f:  (Up to) 16 one-byte dmc address bytes that appear in NES register $4012 (pcm_addr)
+;  $4010-$401f:  (Up to) 16 one-byte frequency cutoff value that dictates the playback speed to be used.
+;                        Values less than these bytes will trigger the .slowspeed playback rate.
+;                        Appears in NES register $4010 (pcm_freq)
+;  $4020-$405f:  (Up to) 16 directory entries for the brr samples in audio ram.
+;                        This data is appended directly after the static directory lookup data at aram $0200
+;  One byte value below indicating volume attenuation cutoff as it appears in NES register $4011 (pcm_raw)
+;  (this is very game specific, and most games do not use this trickery (Zelda 1 does)):
+dmc_attenuation_cutoff: db $20
+
+;  Example dmc table (for Zelda 1):
+;  $4000-$400f:  $00,$1d,$20,$4c,$80
+;  $4010-$401f:  $0f,$0f,$0f,$0f,$0d
+;  $4020-$405f:  $4014,$4014,$5631,$5631,$58b0,$58b0,$7cc2,$7cc2,$9e28,$9e28
+;                (little endian, as it appears in aram: 14 40 14 40 31 56 31 56 B0 58 B0 58 C2 7C C2 7C 28 9E 28 9E)
 ;========================================
 
 
@@ -280,6 +295,13 @@ start:
         mov $F2,#$5D           ; directory offset
         mov $F3,#$02           ; $200
 
+        ;  Voices:
+        ;   0: Square Wave 0
+        ;   1: Square Wave 1
+        ;   2: Triangle Wave
+        ;   3: Noise
+        ;   4: dmc
+
         mov $F2,#$05            ; ADSR off, GAIN enabled
         mov $F3,#0
         mov $F2,#$15            ; ADSR off, GAIN enabled
@@ -287,6 +309,8 @@ start:
         mov $F2,#$25
         mov $F3,#0
         mov $F2,#$35
+        mov $F3,#0
+        mov $F2,#$45
         mov $F3,#0
 
         mov $F2,#$07            ; infinite gain
@@ -297,14 +321,14 @@ start:
         mov $F3,#$1F
         mov $F2,#$37
         mov $F3,#$1F
-        
+        mov $F2,#$47
+        mov $F3,#$1F
 
         mov $F2,#$24            ; sample # for triangle
         mov $F3,#triangle_sample_num
 
         mov $F2,#$34
         mov $F3,#$00            ; sample # for noise
-
 
         mov $F2,#$4C            ; key on
         mov $F3,#%00001111
@@ -317,16 +341,16 @@ start:
         mov $F2,#$6C
         mov $F3,#%00100000      ; soft reset, mute, and echo disabled
 
-        mov $F2,#$6D				; Echo buffer address
-		mov	$F3,#$7d
+        mov $F2,#$6D            ; Echo buffer address
+        mov $F3,#$7d
 
         mov $F2,#$3D            ; noise on voice 3
         mov $F3,#%00001000
 
         call enable_timer3
 
-		; Zero port 4 for CPU-side optimization
-		mov $F7,#0
+        ; Zero port 4 for CPU-side optimization
+        mov $F7,#0
 
 next_xfer:
         mov $F4,#$7D            ; move $7D to port 0 (SPC ready)
@@ -801,13 +825,17 @@ tri_enabled:
         and a,#$20
         beq mono3
 
-        mov a,pcm_raw
-        lsr a
-        mov temp_add,a
+        ;  Why is triangle channel referencing pcm_raw??
+        ;  A likely bug.  removing block below
+        ; ----------------------------------------------
+        ; mov a,pcm_raw   
+        ; lsr a
+        ; mov temp_add,a
         mov a,#$7F
 
-        setc
-        sbc a,temp_add
+        ; setc
+        ; sbc a,temp_add
+        ; ----------------------------------------------
 
         mov $F2,#$20
         mov $F3,a
@@ -888,8 +916,8 @@ notimer:
                 mov tri_sample,a
                 mov $F2,#$24			; Sample # reg
                 mov $F3,a
-                mov $F2,#$4C			; Key on
-                mov $F3,#$04
+                ; mov $F2,#$4C			; Key on
+                ; mov $F3,#$04
 triangle_skip1:
 
 ;=====================================
@@ -957,16 +985,19 @@ mono4:
         asl a
         mov x,a
 
-
-        mov a,pcm_raw
-        lsr a
-        lsr a
-        mov temp_add,a
-        mov a,x
-        setc
-        sbc a,temp_add
-        bcs just_fine
-        mov a,#0
+        ;  Why is noise channel referencing pcm_raw??
+        ;  A likely bug.  removing block below
+        ; ----------------------------------------------
+        ; mov a,pcm_raw
+        ; lsr a
+        ; lsr a
+        ; mov temp_add,a
+        ; mov a,x
+        ; setc
+        ; sbc a,temp_add
+        ; bcs just_fine
+        ; mov a,#0
+        ; ----------------------------------------------
 just_fine:
 
 ;        mov $F2,#$30
@@ -1007,7 +1038,88 @@ no_reset3:
 
 noise_off:
 
+
+;  
+dmc:
+        mov a,no4016
+        and a,#%00010000        ; check for toggle on of dmc bit of $4015
+        bne dmc_play
+
+        mov $f2,#$7c
+        mov a,$f3   ; check if dmc voice is finished playing
+        and a,#%00010000
+        bne dmc_silence
+        jmp dmc_continue_playing
+
+dmc_silence:
+        mov $F2,#$4c
+        mov $F3,#%00000000  ;  disable KON
+        mov $F2,#$5c
+        mov $F3,#%00010000  ;  KOFF dpcm channel
+
         jmp next_xfer
+
+dmc_play:
+        mov x,#$00
+.selectSample:
+        mov a,$4000+x
+        cmp a,pcm_addr
+        beq .setSample
+        inc x
+        cmp x,#$10
+        beq dmc_silence ;  Sample not found
+        jmp .selectSample
+
+        ;  X now contains the index of the chosen sample
+.setSample:
+        mov a,x
+        clrc : adc a,#srcn_base  ;  Calculate the SRCN
+        mov $F2,#$44
+        mov $F3,a       ;  Set srcn with the selected sample from pcm_addr
+
+.selectPlaybackSpeed:
+        mov a,pcm_freq
+        cmp a,$4010+x
+        bcc .slowspeed        ;  If pcm_freq < threshold value in a, slow speed
+
+.normalspeed:                 ;  Otherwise, normal speed
+        mov $F2,#$42
+        mov $F3,#$06    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$0b    ;  Pitch higher bits
+        jmp .selectPlaybackVolume
+.slowspeed:                     
+        mov $F2,#$42
+        mov $F3,#$45    ;  Pitch lower bits
+        mov $F2,#$43
+        mov $F3,#$08    ;  Pitch higher bits
+
+.selectPlaybackVolume:
+        mov a,dmc_attenuation_cutoff
+        cmp a,pcm_raw
+        bcc .halfvolume         ;  If pcm_raw > threshold value in dmc_attenuation_cutoff, half volume
+
+.fullvolume:                    ;  Otherwise, full volume
+        mov $F2,#$40
+        mov $F3,#$7f    ;  Full volume
+        mov $F2,#$41
+        mov $F3,#$7f    ;  Full volume
+        jmp .turnOn
+.halfvolume:
+        mov $F2,#$40
+        mov $F3,#$3f    ;  Half volume
+        mov $F2,#$41
+        mov $F3,#$3f    ;  Half volume
+
+.turnOn:
+        mov $F2,#$5c
+        mov $F3,#%00000000  ;  disable KOFF
+        mov $F2,#$4c
+        mov $F3,#%00010000  ;  KON dpcm channel
+
+dmc_continue_playing:
+        jmp next_xfer
+;  END processing loop
 
 
 ;======================================
@@ -1863,49 +1975,25 @@ clear5:
 ;======================================
 
 set_directory:
-        ;mov a,#pulse0&255     ; directory for Pulse 0
-        ;mov !$0200,a
-        ;mov !$0202,a
-        ;mov a,#pulse0/256
-        ;mov !$0201,a
-        ;mov !$0203,a
+        mov x, #(end_directory_lut-set_directory_lut-1)
 
-        ;mov a,#pulse1&255     ; directory for Pulse 1
-        ;mov !$0204,a
-        ;mov !$0206,a
-        ;mov a,#pulse1/256
-        ;mov !$0205,a
-        ;mov !$0207,a
-
-        ;mov a,#pulse2&255     ; directory for Pulse 2
-        ;mov !$0208,a
-        ;mov !$020A,a
-        ;mov a,#pulse2/256
-        ;mov !$0209,a
-        ;mov !$020B,a
-
-        ;mov a,#pulse3&255     ; directory for Pulse 3 (same as pulse1)
-        ;mov !$020C,a
-        ;mov !$020E,a
-        ;mov a,#pulse3/256
-        ;mov !$020D,a
-        ;mov !$020F,a
-
-        ;mov a,#triang&255     ; directory for Triangle
-        ;mov !$0240,a
-        ;mov !$0342,a
-        ;mov a,#triang/256
-        ;mov !$0341,a
-        ;mov !$0343,a
-
-		mov	x, #$5f
 set_directory_loop:
-			mov	a,set_directory_lut+x
-			mov	$0200+x,a
-			dec	x
-			bpl	set_directory_loop
+        mov	a,set_directory_lut+x
+        mov	$0200+x,a
+        dec	x
+        bpl	set_directory_loop
 
-        ret
+        ;  Append dynamic dmc entries from $4020 (see spc.asm:270)
+        mov x, #0
+
+add_dynamic_entries:
+        mov a,$4020+x
+        mov ($200+end_directory_lut-set_directory_lut)+x,a
+        inc x
+        cmp x,#$40
+        bne add_dynamic_entries
+ret
+
 
 set_directory_lut:
 		dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
@@ -1914,8 +2002,10 @@ set_directory_lut:
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
                 dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
+end_directory_lut:
 
-			triangle_sample_num	 =	$10
+        triangle_sample_num	 =	$10
+        srcn_base = $18
 
 ;======================================
 
@@ -1965,8 +2055,8 @@ change_pulse_1:
 
 			mov $F2,#$04            ; sample # reg
 			mov $F3,puls0_sample
-			mov $F2,#$4C            ; key on
-			mov $F3,#$01
+			; mov $F2,#$4C            ; key on
+			; mov $F3,#$01
 
 			; Apply frequency
 			mov $F2,x
@@ -1988,8 +2078,8 @@ change_pulse_pulse1:
 
 			mov $F2,#$14            ; sample # reg
 			mov $F3,puls1_sample
-			mov $F2,#$4C            ; key on
-			mov $F3,#$02
+			; mov $F2,#$4C            ; key on
+			; mov $F3,#$02
 
 change_pulse_rtn:
 		; Apply frequency
