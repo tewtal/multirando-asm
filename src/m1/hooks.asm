@@ -24,6 +24,9 @@ endmacro
 %hook($C0D9, "jmp NMIStart")
 %hook($C10D, "jmp NMIEnd")
 
+; Hook NMIOn routine to read from RDNMI instead of PPUStatus
+%hook($C487, "lda.w $4210")
+
 ; Patch all copies of the MMC register write routine
 %hook($C4FA, "jml MMCWriteReg3")
 
