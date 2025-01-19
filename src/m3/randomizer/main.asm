@@ -34,6 +34,7 @@ incsrc "messagebox.asm"       ; Super Metroid Messagebox improvements
 incsrc "rewards.asm"          ; Super Metroid Custom Boss Rewards
 incsrc "tables.asm"           ; Super Metroid Data Tables
 incsrc "titlescreen.asm"      ; Super Metroid Title Screen
+incsrc "skiptitle.asm"        ; Super Metroid Skip Title Screen
 
 ;
 ; Cross-game transitions

@@ -2,12 +2,8 @@ CheckEndingSequence:
     php
     rep #$30
 
-    lda #$0001
-    sta.l !SRAM_M1_COMPLETED      ; Set zelda 1 as completed
-    
-    lda.l !SRAM_ALTTP_COMPLETED
-    and.l !SRAM_SM_COMPLETED
-    and.l !SRAM_Z1_COMPLETED
+    lda #$0004
+    jsl mb_check_and_set_ending
     bne .all_done
 
     sep #$30

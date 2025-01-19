@@ -4,3 +4,4 @@
 ;
 
 incsrc "inventory.asm"
+incsrc "ending.asm"

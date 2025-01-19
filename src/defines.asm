@@ -16,14 +16,14 @@
 
 ; This covers SRAM from $6876 to $6882 (with padding)
 !M1_BUFFER_START #= !Z1_BUFFER_END
-!M1_BUFFER_END #= !M1_BUFFER_START+$0100
+!M1_BUFFER_END #= !M1_BUFFER_START+$0200
 
 ; Temp buffer for item data
 !INVENTORY_TEMP_1 #= !M1_BUFFER_END
 !INVENTORY_TEMP_2 #= !INVENTORY_TEMP_1+$0002
 !INVENTORY_TEMP_3 #= !INVENTORY_TEMP_2+$0002
 
-print "SRAM buffer ends at ", hex(!M1_BUFFER_END)
+print "SRAM buffer ends at ", hex(!INVENTORY_TEMP_3)
 
 !SRAM_CURRENT_GAME = $40A000
 
@@ -63,16 +63,18 @@ print "SRAM buffer ends at ", hex(!M1_BUFFER_END)
 !SRAM_RANDOLIVE = $40AD00   ; to $40AEFF
 
 ; New multiworld communication stuff
-!SRAM_MW_ITEMS_RECV = $40B000
-!SRAM_MW_ITEMS_RECV_RPTR = $40B600
-!SRAM_MW_ITEMS_RECV_WPTR = $40B602
-!SRAM_MW_ITEMS_RECV_SPTR = $40B604  ; This gets updated on game save and reloaded into RPTR on game load
+; !SRAM_MW_ITEMS_RECV = $40B000
+; !SRAM_MW_ITEMS_RECV_RPTR = $40B600
+; !SRAM_MW_ITEMS_RECV_WPTR = $40B602
+; !SRAM_MW_ITEMS_RECV_SPTR = $40B604  ; This gets updated on game save and reloaded into RPTR on game load
 
-!SRAM_MW_ITEMS_SENT_RPTR = $40B680
-!SRAM_MW_ITEMS_SENT_WPTR = $40B682
-!SRAM_MW_ITEMS_SENT = $40B700       ; [worldId, itemId, itemIndex] (need unique item index to prevent duping)
+; !SRAM_MW_ITEMS_SENT_RPTR = $40B680
+; !SRAM_MW_ITEMS_SENT_WPTR = $40B682
+; !SRAM_MW_ITEMS_SENT = $40B700       ; [worldId, itemId, itemIndex] (need unique item index to prevent duping)
 
-!SRAM_MW_SEED_DATA = $40B6a0
+; !SRAM_MW_SEED_DATA = $40B6a0
+
+!SRAM_FILE_MARKER = $40BFFC
 
 ; --- SA-1 IRAM ---
 
@@ -88,6 +90,8 @@ print "SRAM buffer ends at ", hex(!M1_BUFFER_END)
 ; Temp things
 !IRAM_INVENTORY_TEMP_1 = $003510
 !IRAM_INVENTORY_TEMP_2 = $003512
+
+!IRAM_ENDING_TEMP = $003514
 
 ; Z3 things
 !IRAM_ALTTP_GFX_POINTER = $003520

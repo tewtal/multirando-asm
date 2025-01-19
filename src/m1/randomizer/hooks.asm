@@ -119,3 +119,15 @@ org $939EDE
 
 org $909BCD
     jsl StartCredits
+
+; ==============================================
+; Skip intro and start the game right away
+; ==============================================
+
+; Go directly to "start pressed" mode
+org $90802C
+    dw $90e4
+
+; Don't reset items on game start
+org $9090E4
+    jsl LoadItems : rts

@@ -17,6 +17,23 @@ config_sm_sprite:    ; $FFFF04
 ; Enables keysanity specific code sections.
 config_keysanity:    ; $FFFF06
     dw #$0000
+    
+; Game-selection flags
+org $FFFFE0
+; Which game to start with
+config_start:       ; $FFFFE0
+    dw #$0000       ; 0 = SM, 1 = Z3, 2 = Z1, 3 = M1
+
+; Which games are enabled
+config_sm:          ; $FFFFE2
+    dw #$0001
+config_z3:          ; $FFFFE4
+    dw #$0001
+config_z1:          ; $FFFFE6
+    dw #$0001
+config_m1:          ; $FFFFE8
+    dw #$0001
+
 
 org $FFFFF0
 base $40FFF0

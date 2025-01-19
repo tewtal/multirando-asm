@@ -269,10 +269,32 @@ sgm_start:
     %cm_jsl("Start Game", .startgame, #$0000)
     .startgame
   
+    lda.l config_start
+    cmp.w #$0000    ; SM
+    bne +
+        lda.w #mb_snes_run_m3>>16 : pha
+        lda.w #mb_snes_run_m3 : pha
+        bra .boot
++   cmp.w #$0001    ; Z3
+    bne +
+        lda.w #mb_snes_run_z3>>16 : pha
+        lda.w #mb_snes_run_z3 : pha
+        bra .boot
++   cmp.w #$0002    ; Z1
+    bne +
+        lda.w #mb_snes_run_z1>>16 : pha
+        lda.w #mb_snes_run_z1 : pha
+        bra .boot
++
+    lda.w #mb_snes_run_m1>>16 : pha
+    lda.w #mb_snes_run_m1 : pha
+
+.boot
+
     lda.l SNES_CMD_PTR : tax
     lda.w #$0008 : sta.l $000000, x : inx #2
-    lda.w #mb_snes_run_m3 : sta.l $000000, x : inx #2
-    lda.w #mb_snes_run_m3>>16 : sta.l $000000, x : inx #2
+    pla : sta.l $000000, x : inx #2
+    pla : sta.l $000000, x : inx #2
     lda.w #$0000 : sta.l $000000, x
     txa : sta.l SNES_CMD_PTR
     jml mb_main ; Return to main kernel loop  

@@ -146,3 +146,19 @@ org $8580DA
 ; ==============================================
 org $858600
     jsr InitMode8_SaveItems
+
+; ==============================================
+; Skip intro and file select and start the first file directly
+; ==============================================
+
+; Disable title music
+org $829545
+    lda.b #$00
+
+; Make demo end directly to the file select screen
+org $829035
+    dw $905d
+
+; Go to submode 1 of menu 
+org $82A596
+    dw $a5df

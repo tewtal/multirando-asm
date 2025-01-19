@@ -6,12 +6,13 @@
 ;--------------------------------------------------------------------------------
 Init_Primary:
 	LDA.b #$00
-	LDX.b #$14
-	-
-		LDA.l RomNameSRAM, X : CMP.w $FFC0, X : BNE .clear
-		DEX
-	BPL -
-        REP #$30
+	; LDX.b #$14
+	; -
+	; 	LDA.l RomNameSRAM, X : CMP.w $FFC0, X : BNE .clear
+	; 	DEX
+	; BPL -
+
+    REP #$30
 	LDX.w #$00D9 ; initalize our ram
 	-
 		STA.l $7EC025, X

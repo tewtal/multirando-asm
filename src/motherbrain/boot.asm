@@ -62,17 +62,9 @@ snes_reset:
     plb
 
     jsr sa1_setup
-    jsr randomizer_setup
+    jsl randomizer_init
     jml snes_main
     
-randomizer_setup:
-    %a16()
-    lda #$00ff
-    sta !SRAM_CURRENT_GAME
-    lda #$0000
-    sta !SRAM_SAVING
-
-    rts
 
 sa1_setup:    
     sep #$20    ; Initialize SA-1 ROM Mapping    

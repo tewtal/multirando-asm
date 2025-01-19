@@ -42,3 +42,19 @@ zelda_vram:
     incbin "../../data/zelda-vram-2.bin"
 
 sa1rom 0,0,0,7
+
+org $F90000
+m1_initram:
+    incbin "../../data/m1-initram.bin"
+m1_initsram:
+    incbin "../../data/m1-initsram.bin"
+z1_initram:
+    incbin "../../data/z1-initram.bin"
+z1_initsram:
+    incbin "../../data/z1-initsram.bin"
+print "Alttp init sram = ", pc
+alttp_initsram:
+    incbin "../../data/z3-initsram.bin"
+sm_initsram:
+    incbin "../../data/sm-initsram.bin"
+

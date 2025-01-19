@@ -30,4 +30,16 @@ RestoreSamusHealth:
     plp
     rtl
 
+; Runs at startup, restore items from SRAM backup
+LoadItems:
+    php
+    rep #$30
+    lda.w #$0003
+    jsl mb_RestoreItemBuffer
+    plp
+
+    lda.b #$02
+    sta.b $24
+
+    rtl
 
