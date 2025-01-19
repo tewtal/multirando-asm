@@ -642,8 +642,7 @@ ItemBehavior:
 
         .free_crystal
         REP #$20
-        LSR : TAX
-        LDA.l ItemReceipts_value, X ; Load the crystal value
+        LSR
         AND.w #$000F : TAX
         LDA.w #$0000
         SEC
