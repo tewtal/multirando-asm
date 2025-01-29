@@ -69,7 +69,7 @@ snes_reset:
 sa1_setup:    
     sep #$20    ; Initialize SA-1 ROM Mapping    
 
-    lda #$80
+    lda #$03
     sta $2222   ; Map LoROM banks 80-9F using first 1MB of ROM
     
     lda #$07

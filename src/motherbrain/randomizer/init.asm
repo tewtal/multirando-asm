@@ -28,6 +28,7 @@ check_and_create_file:
     ; Initialize randomizer SRAM
     jsr clear_randomizer_ram
     jsr copy_initial_ram
+    jsr init_files
     jsl CopyItemBuffers
     
     ; Write file marker
@@ -96,8 +97,6 @@ copy_initial_ram:
     cpx.w #$4000
     bne -
     
-    jsr fix_alttp_checksum
-
     ; Copy SM initram to BW-RAM buffer
     ldx.w #$0000
 -
@@ -109,6 +108,20 @@ copy_initial_ram:
     
     rts    
 
+init_files:
+    ; Do any additional things to the files after copying that's required
+    
+    ; Copy SM initial event flags to SRAM
+    lda.l $ef0202
+    sta.l $400070
+
+    lda.l $ef0203
+    sta.l $400071
+
+    jsr fix_alttp_checksum
+    jsr fix_sm_checksum
+
+    rts
 
 
 fix_alttp_checksum:
@@ -145,6 +158,44 @@ fix_alttp_checksum:
     sta $4033fe
     pla
     plp
+    plx
+    pla
+    rts
+
+fix_sm_checksum:
+    pha
+    phx
+    phy
+    php
+
+    %ai16()
+    
+    lda $14
+    pha
+    stz $14
+    ldx #$0010
+ -
+    lda.l $400000,x
+    clc
+    adc $14
+    sta $14
+    inx
+    inx
+    cpx #$065c
+    bne -
+
+    ldx #$0000
+    lda $14
+    sta.l $400000,x
+    sta.l $401ff0,x
+    eor #$ffff
+    sta.l $400008,x
+    sta.l $401ff8,x
+    pla
+    sta $14
+
+    plp
+    ply
     plx
     pla
     rts

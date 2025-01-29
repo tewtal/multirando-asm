@@ -22,10 +22,10 @@ incsrc "config.asm"
 org $878000+(CommonBankEnd-CommonBankStart)
 base $7E1000+(CommonBankEnd-CommonBankStart)
 incsrc "common.asm"
-warnpc $879000
+warnpc $87A000
 base off
 
 ; Put the transition table data at the end of the "common code" bank
-org $87E000
+org $87A000
 incsrc "transition_tables.asm"
 warnpc $888000

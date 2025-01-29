@@ -216,8 +216,8 @@ action_submenu_jump:
 
 MainMenu:
     dw #sgm_start
+    dw #mm_goto_setup
     if defined("DEBUG")
-        dw #mm_goto_setup
         dw $FFFF
         dw #mm_goto_debug
     endif
@@ -236,7 +236,7 @@ mm_goto_startgame:
     %cm_mainmenu("Start Game", #StartGameMenu)
 
 mm_goto_setup:
-     %cm_mainmenu("Configuration", #SetupMenu)
+    %cm_mainmenu("Configuration", #SetupMenu)
 
 mm_goto_debug:
     %cm_mainmenu("Debug", #DebugMenu)
@@ -291,6 +291,12 @@ sgm_start:
 
 .boot
 
+    ; SM Controls are stored in the SM item buffer as well so we need to copy them there as well
+    jsr sm_copy_controls
+
+    ; Fix SM checksum in case we changed controller settings or moonwalk
+    jsr sm_fix_checksum
+
     lda.l SNES_CMD_PTR : tax
     lda.w #$0008 : sta.l $000000, x : inx #2
     pla : sta.l $000000, x : inx #2
@@ -338,18 +344,108 @@ sgm_z3_crystals:
 
 SetupMenu:
     dw #sm_moonwalk
-    dw #sm_quickswap
     dw $FFFF
-    dw #sm_controller
+    dw #sm_goto_controller
     dw #$0000
-    %cm_header("Z1Z3M1M3 - Configuration")
+    %cm_header("Quad - Configuration")
 
 sm_moonwalk:
-    %cm_toggle("SM - Moonwalk", $40A01A, 1, 0)
-sm_quickswap:
-    %cm_toggle("Z3 - Quick Swap", $40A034, 1, 0)
-sm_controller:
-    %cm_draw_text("Configure Controller")
+    %cm_toggle("SM - Moonwalk", $400052, 1, 0)
+sm_goto_controller:
+    %cm_submenu("Configure controller", #ControllerMenu)
+
+ControllerMenu:
+    dw #controls_save_to_file
+    dw #$FFFF
+    dw #controls_shot
+    dw #controls_jump
+    dw #controls_dash
+    dw #controls_item_select
+    dw #controls_item_cancel
+    dw #controls_angle_up
+    dw #controls_angle_down
+    dw #$0000
+    %cm_header("CONTROLLER SETTING MODE")
+
+controls_shot:
+    %cm_ctrl_input("        SHOT", !IH_INPUT_SHOT, action_submenu, #AssignControlsMenu)
+
+controls_jump:
+    %cm_ctrl_input("        JUMP", !IH_INPUT_JUMP, action_submenu, #AssignControlsMenu)
+
+controls_dash:
+    %cm_ctrl_input("        DASH", !IH_INPUT_RUN, action_submenu, #AssignControlsMenu)
+
+controls_item_select:
+    %cm_ctrl_input(" ITEM SELECT", !IH_INPUT_ITEM_SELECT, action_submenu, #AssignControlsMenu)
+
+controls_item_cancel:
+    %cm_ctrl_input(" ITEM CANCEL", !IH_INPUT_ITEM_CANCEL, action_submenu, #AssignControlsMenu)
+
+controls_angle_up:
+    %cm_ctrl_input("    ANGLE UP", !IH_INPUT_ANGLE_UP, action_submenu, #AssignAngleControlsMenu)
+
+controls_angle_down:
+    %cm_ctrl_input("  ANGLE DOWN", !IH_INPUT_ANGLE_DOWN, action_submenu, #AssignAngleControlsMenu)
+
+controls_save_to_file:
+    %cm_jsl("Save to File", .routine, #0)
+  .routine
+    JML cm_previous_menu
+
+AssignControlsMenu:
+    dw controls_assign_A
+    dw controls_assign_B
+    dw controls_assign_X
+    dw controls_assign_Y
+    dw controls_assign_Select
+    dw controls_assign_L
+    dw controls_assign_R
+    dw #$0000
+    %cm_header("ASSIGN AN INPUT")
+
+AssignAngleControlsMenu:
+    dw #controls_assign_L
+    dw #controls_assign_R
+    dw #$0000
+    %cm_header("ASSIGN AN INPUT")
+
+controls_assign_A:
+    %cm_jsl("A", action_assign_input, !CTRL_A)
+
+controls_assign_B:
+    %cm_jsl("B", action_assign_input, !CTRL_B)
+
+controls_assign_X:
+    %cm_jsl("X", action_assign_input, !CTRL_X)
+
+controls_assign_Y:
+    %cm_jsl("Y", action_assign_input, !CTRL_Y)
+
+controls_assign_Select:
+    %cm_jsl("Select", action_assign_input, !CTRL_SELECT)
+
+controls_assign_L:
+    %cm_jsl("L", action_assign_input, !CTRL_L)
+
+controls_assign_R:
+    %cm_jsl("R", action_assign_input, !CTRL_R)
+
+
+action_assign_input:
+{
+    LDA !ram_cm_ctrl_assign : TAX  ; input address in $C2 and X
+    TYA : STA $400000, x
+
+    ; determine which sfx to play
+    CMP #$FFFF : BEQ .undetected
+    %sfxconfirm()
+    BRA .done
+  .undetected
+  .done
+    JML cm_previous_menu
+}
+
 
 DebugMenu:
     dw #dm_boot_z1
@@ -430,3 +526,59 @@ init_wram_based_on_sram:
     ; JSL GameModeExtras
     RTL
 }
+
+sm_copy_controls:
+    pha
+    phx
+    ldx.w #$0020
+-
+    lda.l $400000,x
+    sta.l !SM_BUFFER_START-$10, x
+    inx #2
+    cpx #$002E
+    bne -
+
+    lda.l $400052
+    sta.l !SM_BUFFER_START+$42
+
+    plx
+    pla
+    rts
+
+sm_fix_checksum:
+    pha
+    phx
+    phy
+    php
+
+    %ai16()
+    
+    lda $14
+    pha
+    stz $14
+    ldx #$0010
+ -
+    lda.l $400000,x
+    clc
+    adc $14
+    sta $14
+    inx
+    inx
+    cpx #$065c
+    bne -
+
+    ldx #$0000
+    lda $14
+    sta.l $400000,x
+    sta.l $401ff0,x
+    eor #$ffff
+    sta.l $400008,x
+    sta.l $401ff8,x
+    pla
+    sta $14
+
+    plp
+    ply
+    plx
+    pla
+    rts

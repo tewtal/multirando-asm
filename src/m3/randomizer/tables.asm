@@ -29,7 +29,12 @@ config_sm_bosses:    ; DF0200
 ; 03C0 is G4 statues already grey (no animation)
 config_events:       ; DF0202
     dw #$0001
+    dw #$0000        ; DF0204
+
+
+config_keycards:     ; DF0206
+    dw #$0000
 
 ; Sprite screw attack config flag
-config_screw_attack: ; DF0204
+config_screw_attack: ; DF0208
     dw #$0000

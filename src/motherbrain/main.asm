@@ -3,7 +3,7 @@ namespace mb
 sa1rom 0,0,0,7      ; Set boot configuration
 incsrc "boot.asm"
 
-sa1rom 0,0,0,7      ; Set main configuration
+sa1rom 0,0,3,7      ; Set main configuration
 org $F00000
 incsrc "randomizer/data.asm" ; Up to 12 banks of randomizer specific data
 ; Uses up banks F0-F8 right now, so F9-FA remains free

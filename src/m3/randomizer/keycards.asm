@@ -111,7 +111,7 @@ keycard_update_layer3:
     dex #2
     bpl -
 
-    lda config_keysanity
+    lda config_keycards
     beq keycard_maptext_skip
     jsr keycard_draw_maptext
 keycard_maptext_skip:

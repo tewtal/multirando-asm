@@ -13,11 +13,7 @@ config_alttp_sprite: ; $FFFF02
     dw #$0000
 config_sm_sprite:    ; $FFFF04
     dw #$0000
-
-; Enables keysanity specific code sections.
-config_keysanity:    ; $FFFF06
-    dw #$0000
-    
+   
 ; Game-selection flags
 org $FFFFE0
 ; Which game to start with

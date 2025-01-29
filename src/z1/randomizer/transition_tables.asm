@@ -8,7 +8,7 @@ transition_table_in:
 dw $0066, $0001, $0220, $0000
 dw $0000
 
-org $87F000
+org $87B000
 ; Transition table when exiting a dungeon/cave
 transition_table_out:
 ;  room_id,  game,  destination, args

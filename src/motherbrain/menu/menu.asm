@@ -907,7 +907,7 @@ draw_controller_input:
     TXA : CLC : ADC #$0020 : TAX
 
     ; check if anything to draw
-    LDA (!DP_Address) : AND #$E0F0 : BEQ .unbound
+    LDA [!DP_Address] : AND #$E0F0 : BEQ .unbound
 
     ; determine which input to draw, using Y to refresh A
     TAY : AND !CTRL_A : BEQ + : LDY #$0000 : BRA .draw
@@ -1835,6 +1835,11 @@ cm_divide_100:
     RTS
 }
 
+cm_previous_menu:
+{
+    JSL cm_go_back
+    JML cm_calculate_max
+}
 
 ; -----------
 ; Main menu

@@ -39,7 +39,7 @@ TAX
     AND #$00FF
     CMP.l #$0001
     BNE +
-    LDA.l config_keysanity
+    LDA.l config_keycards
     BNE .draw
     TXA
     BRA .next
@@ -47,7 +47,7 @@ TAX
 +
     CMP.l #$0002
     BNE .draw
-    LDA.l config_keysanity
+    LDA.l config_keycards
     BEQ .draw
     LDA $0000, x
     XBA : AND #$00FF        ; Get boss id

@@ -29,6 +29,7 @@ Bank                Content
 8F:EB00-EBFF        -- Zebes awake fix --
 8F:EC00-ECFF        -- New shaft door ASM --
 8F:ED00-EDFF        -- New LN Refill Room --
+8F:F600-F700        -- Extra door ASM --
 8F:F700-F800        -- PLM Injection Code --
 8F:F800-FFFF        -- PLM Injection Table --
 99:F000-FFFF        -- Boss reward code --
