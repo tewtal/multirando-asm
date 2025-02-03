@@ -9,7 +9,7 @@ org $8fea00
     ; Count number of set SM boss flags
     ; using the new event bits for the SM boss credits
 
-    lda $7ed832
+    lda $7ed834
     stz $12
     ldx #$0000
 

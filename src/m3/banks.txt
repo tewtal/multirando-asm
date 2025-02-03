@@ -15,6 +15,7 @@ Bank                Content
 82:F800-FB7F        -- Seed display --
 82:FB80-FFFF        -- Map icons --
 83:AE00-AE7F        -- New LN Refill Exit (Teleport) Door Data --
+83:F000-F100        -- Map Area Code --
 84:86D1-870B        -- Keycard setup ---
 84:D410-D490        -- Keycard PLM:s --
 84:EFE0-FDFF        -- New Item PLM:s, tables and code --

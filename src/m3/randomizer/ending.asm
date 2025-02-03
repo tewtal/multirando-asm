@@ -17,10 +17,10 @@ org $8bde80
     jml sm_setup_credits
 
 org $b7fd00
-sm_check_ending_door:        ; Check if all games has been beaten, and only then activate the escape.
+sm_check_ending_door:        ; Check if all the other games has been beaten, and only then activate the escape.
     pha
     lda #$0001
-    jsl mb_check_and_set_ending
+    jsl mb_check_other_games_ending
 
     bne .alttp_done
     pla

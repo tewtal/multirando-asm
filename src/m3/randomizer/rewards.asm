@@ -73,8 +73,9 @@ boss_death_reward:
         ; Although in a future update adding the option of this also setting those flags should be a possibility
         lda.l boss_rewards+$2, x
         sta !DP_MsgBitFlag
-        ora.l $7ed832
-        sta.l $7ed832
+        ora.l $7ed834
+        sta.l $7ed834
+        jsr rewards_check_bosses
         bra .exit
 
     .exit
@@ -86,6 +87,42 @@ boss_death_reward:
     jsl $858080
 
     plp : plx
+    rts
+
+rewards_check_bosses:
+    pha
+    phx
+    php
+
+    %ai16()
+
+    ; Count number of set SM boss flags
+    ; using the new event bits for the SM boss credits
+
+    lda $7ed834
+    stz $12
+    ldx #$0000
+
+-
+    lsr : bcc +
+    inc $12 ; If C is set, count this as a killed boss
++
+    inx
+    cpx #$0004
+    bne -
+
+    lda $12
+    cmp.l config_sm_bosses
+    bcc +
+
+    ; Set our new G4 grey door opening flag (using the keydoor events)
+    lda.l $7ed7c0+$72   
+    ora.l #$0001      
+    sta.l $7ed7c0+$72
+    
++   plp
+    plx
+    pla
     rts
 
 rewards_draw_map_icons:
@@ -172,7 +209,7 @@ rewards_draw_map_icons:
         jsl $81879f    
     +
 
-    lda $7ed832 : bit #$0001 : beq +
+    lda $7ed834 : bit #$0001 : beq +
         ldy.w #BossKraid_Icon_Spritemap
         lda #$0020 : sta $12
         lda #$00DE : sta $14
@@ -180,7 +217,7 @@ rewards_draw_map_icons:
         jsl $81879f
     +
 
-    lda $7ed832 : bit #$0002 : beq +
+    lda $7ed834 : bit #$0002 : beq +
         ldy.w #BossPhantoon_Icon_Spritemap
         lda #$0020 : sta $12
         lda #$00E6 : sta $14
@@ -188,7 +225,7 @@ rewards_draw_map_icons:
         jsl $81879f
     +
 
-    lda $7ed832 : bit #$0004 : beq +
+    lda $7ed834 : bit #$0004 : beq +
         ldy.w #BossDraygon_Icon_Spritemap
         lda #$0020 : sta $12
         lda #$00EE : sta $14
@@ -196,7 +233,7 @@ rewards_draw_map_icons:
         jsl $81879f
     +
 
-    lda $7ed832 : bit #$0008 : beq +
+    lda $7ed834 : bit #$0008 : beq +
         ldy.w #BossRidley_Icon_Spritemap
         lda #$0020 : sta $12
         lda #$00F6 : sta $14

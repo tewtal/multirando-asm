@@ -1,6 +1,6 @@
 ; prevent ending without beating both games
 ;
-
+print "alttp_check_ending", pc
 alttp_check_ending:
     lda.b #$02
     jsl mb_check_and_set_ending

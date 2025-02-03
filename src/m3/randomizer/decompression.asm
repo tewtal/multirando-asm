@@ -5,6 +5,7 @@
 
 ;Compression format: One byte(XXX YYYYY) or two byte (111 XXX YY-YYYYYYYY) headers
 ;XXX = instruction, YYYYYYYYYY = counter
+lorom
 org $80B0FF
 	
 	LDA $02, S

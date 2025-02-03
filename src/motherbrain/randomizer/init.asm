@@ -181,7 +181,7 @@ fix_sm_checksum:
     sta $14
     inx
     inx
-    cpx #$065c
+    cpx #$0a00
     bne -
 
     ldx #$0000

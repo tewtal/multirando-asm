@@ -59,6 +59,49 @@ org $84ee02
 org $82b4c5
     db $0c
 
+; Use door direction ($0791) to check in Big Boy room if we are coming in from the left vs. right.
+; The vanilla game instead uses layer 1 X position ($0911) in a way that doesn't work if
+; door scrolling finishes before enemy initialization, a race condition which doesn't
+; happen to occur in the vanilla game but can in the randomizer, for example due to a combination of 
+; fast doors and longer room load time (from reloading CRE) in case we enter from Kraid's Room.
+org $A9EF6C
+fix_big_boy:
+	LDA $0791              ; door direction
+	BNE .spawn_big_boy
+	LDA #$2D00			   ;\ Set enemy as intangible and invisible
+	STA $0F86,x            ;/
+	LDA #$EFDF             ; Enemy function = $EFDF (disappeared)
+	BRA .done
+.spawn_big_boy
+	LDA #$EFE6             ; Enemy function = $EFE6
+	NOP
+org $A9EF80 
+.done
+
+; Graphical fix for loading to start location with camera not aligned to screen boundary, by strotlog:
+; (See discussion in Metconst: https://discord.com/channels/127475613073145858/371734116955193354/1010003248981225572)
+org $80C473
+	stz $091d
+
+org $80C47C
+	stz $091f
+
+; Fix 32 sprite bug/crash that can occur during door transition
+; Possible when leaving Kraid mid-fight, killing Shaktool with wave-plasma, etc.
+; Documented by PJBoy: https://patrickjohnston.org/bank/B4#fBD97
+org $b4bda3
+    bpl $f8 ; was bne $f8
+
+
+; Originally from https://forum.metroidconstruction.com/index.php/topic,145.msg73993.html#msg73993
+
+; From PJ: (https://patrickjohnston.org/bank/82#fE4A9)
+; Because scrolling updates take precedence over PLM draw updates, and because the scrolling updates were carried out prior to any PLM level data modifications,
+; PLM draw updates that affect the top row of (the visible part of) the room for upwards doors or the bottom row of the room for downwards doors aren't visible
+; This is the cause of the "red and green doors appear blue in the Crateria -> Red Brinstar room" bug
+
+org $82E53C : JSL $808338 : JSL $8485B4 ; Waits for scrolling updates to happen before drawing the PLMs
+
 
 ; Mother Brain Cutscene Edits
 org $a98824

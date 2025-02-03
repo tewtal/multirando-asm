@@ -4,6 +4,7 @@
 incsrc "g4_skip.asm"
 incsrc "wake_zebes.asm"
 incsrc "patches.asm"
+incsrc "shaktool.asm"
 incsrc "seed_display.asm"
 incsrc "bomb_torizo.asm"
 incsrc "aim_any_button.asm"
@@ -36,6 +37,8 @@ incsrc "rewards.asm"          ; Super Metroid Custom Boss Rewards
 incsrc "tables.asm"           ; Super Metroid Data Tables
 incsrc "titlescreen.asm"      ; Super Metroid Title Screen
 incsrc "skiptitle.asm"        ; Super Metroid Skip Title Screen
+incsrc "saveload.asm"         ; Super Metroid Save/Load improvements
+incsrc "map_area.asm"         ; Super Metroid Map-specific Areas
 
 ;
 ; Cross-game transitions

@@ -1,13 +1,13 @@
 ; Handles an incoming transition into SM
 
-org $818003
-    jml sm_save_hook
+; org $818003
+;     jml sm_save_hook
 
-org $81807F
-    jml sm_save_done_hook
+; org $81807F
+;     jml sm_save_done_hook
 
-org $818087
-    jml sm_load_hook
+; org $818087
+;     jml sm_load_hook
 
 org $d04000
 transition_to_sm:
@@ -110,8 +110,6 @@ sm_spc_load:
 
 sm_save_hook:
     phb : phx : phy : pha
-
-
     pea $7e00
     plb
     plb
@@ -121,19 +119,24 @@ sm_save_hook:
 
     lda #$0000
     jsl mb_RestoreItemBuffers ; Save all found items to actual SRAM
-    lda #$0000
-    jsl mb_CopyItemBuffer     ; Copy SM buffer back to prevent item loss on reset
-    
+   
     ;jsl sm_save_alttp_items
     ;jsl stats_save_sram
     ;jsl mw_save_sram
     pla
-    jml $81800b
+    ply
+    plx
+    plb
+    rtl
 
 sm_save_done_hook:
+    pha
     lda #$0000
     sta.l !SRAM_SAVING
-    ply : plx : clc : plb : plp
+    lda #$0000
+    jsl mb_CopyItemBuffer     ; Copy SM buffer back to prevent item loss on reset    
+    pla
+    ;ply : plx : clc : plb : plp
     rtl
 
 sm_load_hook:
@@ -148,7 +151,11 @@ sm_load_hook:
     ;jsl mw_load_sram
 
     pla
-    jml $81808f
+    ply
+    plx
+    plb
+    ;jml $81808f
+    rtl
 
 copy_to_wram:       ; Copies 4 banks of ROM data to WRAM (start bank in X)
 

@@ -16,6 +16,7 @@ config_sm_sprite:    ; $FFFF04
    
 ; Game-selection flags
 org $FFFFE0
+base $40FFE0
 ; Which game to start with
 config_start:       ; $FFFFE0
     dw #$0000       ; 0 = SM, 1 = Z3, 2 = Z1, 3 = M1

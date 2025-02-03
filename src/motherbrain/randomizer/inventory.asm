@@ -204,7 +204,7 @@ FixSMChecksum:
     sta.l !IRAM_INVENTORY_TEMP_1
     inx
     inx
-    cpx.w #$065c
+    cpx.w #$0a00
     bne -
 
     ldx.w #$0000

@@ -14,6 +14,7 @@ incsrc "spc.asm"
 incsrc "transition_in.asm"
 incsrc "transition_out.asm"
 incsrc "skiptitle.asm"
+incsrc "misc.asm"
 
 print "Z3 Randomizer Extras End = ", pc
 
