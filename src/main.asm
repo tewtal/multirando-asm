@@ -20,6 +20,9 @@ incsrc "common/main.asm"
 ; Zelda 1
 incsrc "z1/main.asm"
 
+; Zelda 2
+incsrc "z2/main.asm"
+
 ; Metroid 1
 incsrc "m1/main.asm"
 

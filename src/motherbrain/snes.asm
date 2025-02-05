@@ -434,6 +434,9 @@ snes_run_z1:
     lda #$07
     sta $2223   ; Swap Z1 bank into $80-9F
 
+    lda #$07
+    sta $2220   ; Swap Z1 bank into $80-9F
+
     lda #$03
     sta $2224
 
@@ -456,6 +459,49 @@ snes_run_z1:
     sep #$30
     jml z1_SnesBoot
 
+snes_run_z2:
+    sep #$20
+
+	lda #$00
+	sta.l $004200
+
+	lda #$80
+	sta.l $002100    
+
+    lda #$86
+    sta $2222   ; Swap Z1 bank into $80-9F
+
+    lda #$85
+    sta $2223   ; Swap ALTTP bank into $A0-BF
+
+    lda #$07
+    sta $2220   ; Swap Common bank into $C0-CF
+
+    lda #$03
+    sta $2221   ; Swap SM bank into $D0-DF
+
+    lda #$08    ; Set 41:0000-41:1FFF to be SRAM at xx:6000-xx:7FFF
+    sta $2224
+
+    ; Set stack to be NES-compatible
+    rep #$30
+    ldx #$01FF
+    txs
+
+    ; Write Z1 NMI to I-RAM
+    lda #$105c
+    sta.l !IRAM_NMI
+
+    lda #$0008
+    sta.l !IRAM_NMI+2
+
+	; Ack NMI/IRQs
+	lda.l $004210
+
+    ; Jump to zelda 1 init code
+    sep #$30
+    jml z2_SnesBoot
+
 snes_run_m1:
     sep #$20
 
@@ -470,6 +516,9 @@ snes_run_m1:
 
     lda #$07
     sta.l $002223   ; Swap M1 bank into $80-9F
+
+    lda #$07
+    sta.l $002220   ; Swap Z1 bank into $80-9F	
 
     lda #$04
     sta.l $002224

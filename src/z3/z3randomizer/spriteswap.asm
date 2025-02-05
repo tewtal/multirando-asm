@@ -12,7 +12,7 @@ RTL
 
 !BANK_BASE = $A9
 
-org $BF8000
+org $B5F000
 SwapSpriteIfNecessary:
 	PHP
 		SEP #$20 ; set 8-bit accumulator

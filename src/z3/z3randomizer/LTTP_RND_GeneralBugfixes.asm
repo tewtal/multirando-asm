@@ -26,8 +26,8 @@ db $0B ; mark rom as 16mbit
 org $80FFD8 ; <- 7FD8 - Bank00.asm : 9178 (db $03   ; ram size (sram size))
 db $05 ; mark sram as 32k
 
-org $BFFFFF ; <- 1FFFFF
-db $00 ; expand file to 2mb
+;org $BFFFFF ; <- 1FFFFF
+;db $00 ; expand file to 2mb
 
 org $9FFFF8 ; <- FFFF8 timestamp rom
 db $20, $19, $08, $31 ; year/month/day
@@ -196,6 +196,8 @@ incsrc spc.asm
 
 org $B58000
 incsrc roomheaders.asm
+warnpc $B5F000
+
 org $B18000 ; bank #$31
 GFX_Mire_Bombos:
 incbin "data/99ff1_bombos.gfx"

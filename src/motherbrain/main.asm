@@ -6,24 +6,12 @@ incsrc "boot.asm"
 sa1rom 0,0,3,7      ; Set main configuration
 org $F00000
 incsrc "randomizer/data.asm" ; Up to 12 banks of randomizer specific data
-; Uses up banks F0-F8 right now, so F9-FA remains free
+; Uses up banks F0-F9 right now,
+warnpc $FA0000
 print "Randomizer data ends = ", pc
 
-; Bank FB - Used by NES games common data
-
-org $FC0000
-namespace menu
-incsrc "menu/main.asm"
-namespace mb
-incsrc "randomizer/init.asm"
-warnpc $FC8000
-namespace off
-
-org $FC8000
-namespace data
-incsrc "data.asm"
-warnpc $FD0000
-namespace off
+; Bank FA - FB - Zelda 2 CHR-ROM
+; Bank FC - Free space
 
 ; FD0000 - FDFFFF
 ; SPC data for credits
@@ -36,11 +24,19 @@ namespace mb
 warnpc $FF0000
 
 org $FF0000
+base $CF0000
 namespace off
 incsrc "../nes-spc/spc.asm"
+
+org $FF4000
+namespace menu
+incsrc "menu/main.asm"
 namespace mb
-; free space for more code here
-warnpc $FFE000
+incsrc "randomizer/init.asm"
+warnpc $FF8000
+
+; FF8000 - FFE000
+; Nes games common data
 
 
 org $FFE000

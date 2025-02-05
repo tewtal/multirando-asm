@@ -30,7 +30,7 @@ org $80ffc0
     db "MOTHER BRAIN   "
 
 org $80ffd5
-    db $23, $35, $0D, $06, $00, $33, $00
+    db $23, $35, $0D, $07, $00, $33, $00
 
 org $80ffea
     dw !IRAM_NMI

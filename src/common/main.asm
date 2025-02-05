@@ -9,6 +9,6 @@ warnpc $9FFFFF
 
 ; FB0000-FB7FFFF (free)
 ; Align data to $8000 to match pointers
-org $FB8000
+org $FF8000
 incsrc "nes/data.asm"
-warnpc $FC0000
+warnpc $FFE000

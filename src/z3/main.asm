@@ -15,4 +15,6 @@ incsrc "z3randomizer/LTTP_RND_GeneralBugfixes.asm"
 ; Include additional changes required for this randomizer
 incsrc "randomizer/main.asm"
 
+; Banks $B8-$BF are reserved for Zelda 2
+
 namespace off

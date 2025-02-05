@@ -449,6 +449,7 @@ action_assign_input:
 
 DebugMenu:
     dw #dm_boot_z1
+    dw #dm_boot_z2
     dw #dm_boot_z3
     dw #dm_boot_m1
     dw #dm_boot_sm
@@ -469,6 +470,19 @@ dm_boot_z1:
     lda.w #$0000 : sta.l $000000, x
     txa : sta.l SNES_CMD_PTR
     jml mb_main ; Return to main kernel loop    
+
+dm_boot_z2:
+    %cm_jsl("Boot Z2", .boot_z2, #$0000)
+    .boot_z2
+
+    ; Tell the main SNES cpu to jump to .boot_z2_snes
+    lda.l SNES_CMD_PTR : tax
+    lda.w #$0008 : sta.l $000000, x : inx #2
+    lda.w #mb_snes_run_z2 : sta.l $000000, x : inx #2
+    lda.w #mb_snes_run_z2>>16 : sta.l $000000, x : inx #2
+    lda.w #$0000 : sta.l $000000, x
+    txa : sta.l SNES_CMD_PTR
+    jml mb_main ; Return to main kernel loop   
 
 dm_boot_z3:
     %cm_jsl("Boot Z3", .boot_z3, #$0000)
