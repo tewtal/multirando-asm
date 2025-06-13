@@ -1,0 +1,15 @@
+001f8000 in main_z1.sfc is start
+002bf130 in main_z1.sfc is EOF
+00208000 in main_z1.sfc is start of bank 0:
+
+org $A08000
+incbin "../../resources/zelda1prg0.nes":($0010)-($4010)
+incbin "../../resources/zelda1prg0.nes":($1C010)-($20010)
+
+
+
+00608000 in main.sfc is start of bank 0
+007fffff in main.sfc is EOF
+
+
+get script to copy byte range into new file

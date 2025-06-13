@@ -1,4 +1,5 @@
 build/*
+!build/notes.txt
 resources/*.sfc
 resources/*.nes
 resources/*.bps
