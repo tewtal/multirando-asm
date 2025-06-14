@@ -24,15 +24,17 @@ transition_to_m1:
     lda #$8f : sta $2100
     jsl SetupScrollHDMA
 
+    %initOAMBuffer()  ; Clear SNES OAM Buffer
+
     ; Clear SNES port buffers
     rep #$30
     ldx #$0000
     lda #$0000
 
 -
-    sta.l $7e2000, x
+    sta.l $7e2200, x
     inx #2
-    cpx #$2000
+    cpx #$1e00
     bne -
 
     ldx #$0000
@@ -65,7 +67,7 @@ transition_to_m1:
 +
     sta $74        ; Set the area we're going to
 
-    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS     ;  wrong for z3->m1 portal: is $0000 but should be something like $0100?
     and.w #$8000    ; if bit 8000 is clear it's a right-to-left transition
     beq .right_to_left
 
@@ -93,12 +95,17 @@ transition_to_m1:
     and.w #$4000    ; check scrolling direction
     bne +
     lda.w #$0481 : sta $56
+    ; lda.w #$0482 : sta $56  ;  TESTING DOOR TRANSITION TO LEFT
     bra ++
 +
     lda.w #$0181 : sta $56
 ++
 
     lda.w #$0303 : sta $49
+    ; lda.w #$0202 : sta $49  ;  TESTING SCROLL DIRECTION CHANGE HERE
+    ; lda.w #$0101 : sta $4d  ;  facing left, scrolling left
+    ; lda.w #$7113 : sta $51  ;  set samus pos entering left doorway (game doesn't update samus pos until door exit)
+    
     ;lda.w #$0000 : sta $4D
     ;lda.w #$71ED : sta $51
     ;lda.w #$FE71 : sta $30D

@@ -1,3 +1,18 @@
+;  Initialize the SNES OAM buffer in wram to a known, blank state
+macro initOAMBuffer()
+  php
+  REP #$30
+  LDA #$F0F0
+  LDX #$0000
+
+  -
+  STA $7E2000, X
+  INX #4
+  CPX #$0200
+  BNE -
+  plp
+endmacro
+
 
 ; Custom boot routine for M1 SNES
 SnesBoot:
@@ -22,17 +37,7 @@ SnesBoot:
     LDA #$15 : STA $212C
     JSL SetupScrollHDMA
 
-    ; Clear SNES OAM Buffer
-    REP #$10
-    LDA #$F0
-    LDX #$0000
-
--
-    STA $7E2000, X
-    STA $7E2001, X
-    INX #4
-    CPX #$0200
-    BNE -
+    %initOAMBuffer()  ; Clear SNES OAM Buffer
 
     SEP #$30
     JSL UploadItemPalettes

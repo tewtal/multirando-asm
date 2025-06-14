@@ -155,10 +155,10 @@ SnesOamDMA:
     LDA #$0400
     STA $4300
     LDA #$2000
-    STA $4302
-    LDA #$007E
+    STA $4302   
+    LDA #$007E  ;  source address $7e2000
     STA $4304
-    LDA #$0220
+    LDA #$0220  ;  transfer 544 bytes (full OAM table)
     STA $4305
     STZ $2102
 

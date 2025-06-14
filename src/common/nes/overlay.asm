@@ -382,7 +382,7 @@ overlay_item_names:
     dw "       M1 Morph Ball      "
     dw "       M1 Varia Suit      "
     dw "         Goal Single      "
-    dw "          Goal Multi      "
+    dw "      Triforce Shard      "
     dw "       M1 Wave Beam       "
     dw "        M1 Ice Beam       "
     dw "         M1 ETank         "
