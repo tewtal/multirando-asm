@@ -7,9 +7,34 @@ incbin "../../resources/zelda1prg0.nes":($0010)-($4010)
 incbin "../../resources/zelda1prg0.nes":($1C010)-($20010)
 
 
+00600000 in main.sfc is start of bank 0 (but rom.asm says it should be 608000?)
+00608000 in main.sfc is start of bank 1
+00610000 in main.sfc is start of bank 2
+00618000 in main.sfc is start of bank 3
+00620000 in main.sfc is start of bank 4
+...
+0063c000 in main.sfc is start of (final copy) bank 7
 
-00608000 in main.sfc is start of bank 0
 007fffff in main.sfc is EOF
 
 
 get script to copy byte range into new file
+
+
+ring/tunic subroutine:
+[0x8E, 0x02, 0x06, 0x8E, 0x72, 0x06, 0xEE, 0x4F, 0x03, 0x60]
+STX $0602   ;  Duplicating the overwritten code (writing #$02)
+STX $0672   ;  Copying [X (#$02)] to $0672 also (tunic palette maybe? rammap dunnos)
+INC $034f   ;  Enemies killed on current screen (...)
+RTS
+
+byte-compare a z1r seed with Z.nes to see if there is a patch in bank 1 in a similar spot to HandleClass2, etc.
+
+8e 02 06 8e 72 06 ee 4f 03 60  - z1r has same tunic sub as above.  hmm.
+
+20 e4 ff  z1r hook in exact same spot too..
+The code does not seem to have anything to do with palettes or tunics or anything.
+** Code runs on Ganon kill.  Makes more sense - it must be some type of ganon bugfix patch.
+
+Create a patch from a vanilla rom change and apply it to a changed rom (different rando seed; whatever)
+D:\Projects\multirando-asm\resources>flips --ignore-checksum --apply ..\build\Z-slowtext.bps ..\build\z1r.nes z1r-slowtext.nes
