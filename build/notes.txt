@@ -38,3 +38,14 @@ The code does not seem to have anything to do with palettes or tunics or anythin
 
 Create a patch from a vanilla rom change and apply it to a changed rom (different rando seed; whatever)
 D:\Projects\multirando-asm\resources>flips --ignore-checksum --apply ..\build\Z-slowtext.bps ..\build\z1r.nes z1r-slowtext.nes
+
+***  Bank_1_Code starts in SAVE RAM AT 006C90!!, not at 0x8000 where the rest of the swapped banks start
+test offsets.
+@Take is (in theory) offset 066d.  66d + 6c90 = 72fd (or add 010 for header offset)
+TakeItem: code starts with:  a2 08 8e 02 06 c9 0e
+Located at ABE0 in "bank 1 8000 offset",
+which is   6bf0 in the full rom
+which is   6be0 without the header
+so subtract 4000 from the offsets in https://www.computerarcheology.com/NES/Zelda/Bank1.html
+
+find this code in the mesen debugger
