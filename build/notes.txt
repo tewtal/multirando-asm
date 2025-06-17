@@ -41,7 +41,13 @@ D:\Projects\multirando-asm\resources>flips --ignore-checksum --apply ..\build\Z-
 
 ***  Bank_1_Code starts in SAVE RAM AT 006C90!!, not at 0x8000 where the rest of the swapped banks start
 test offsets.
-@Take is (in theory) offset 066d.  66d + 6c90 = 72fd (or add 010 for header offset)
+
+__Bank 1 low prg bank location example__
+@Take: code starts with 20 xx xx B5(or BD) xx oo 29 3f 48
+Located at 890f in cpu space
+Located at 490f in the full rom (sans header)
+
+__Bank 1 in save ram example__
 TakeItem: code starts with:  a2 08 8e 02 06 c9 0e
 Located at ABE0 in "bank 1 8000 offset",
 which is   6bf0 in the full rom
@@ -49,3 +55,10 @@ which is   6be0 without the header
 so subtract 4000 from the offsets in https://www.computerarcheology.com/NES/Zelda/Bank1.html
 
 find this code in the mesen debugger
+TakeItem: is at CPU 7370.  (1370 of sram)  
+BANK1_CODE starts in rom (sans offset) at 6500.
+BANK1_Code starts in sram at 0c90
+So, CPU offsets into bank1 are <desired ROM location> + 0790.
+
+sram 1484 is HandleClass2:
+
