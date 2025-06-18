@@ -65,3 +65,18 @@ The ring portion at the end of this sub just stores the new palette byte
 in 6804 (sram).  Then, stores #$18 (hardcode; not contingent on ring type)
 in zero page $14 (TileBufSelector / ppu loading index)
 and increments zero page $13 (game submode / routine index)
+
+The motherbrain item obtain code references SRAM_ITEM_BUFFER
+which unfortunately only stores the small snapshot of z1 ram that tracks items.
+neither zero page nor wram at 6000 is stored in this shared sram space.
+So: use the debugger and set a write breakpoint in wram at 6804, then trigger
+a z1 transition to see if you can identify what code actually writes/restores
+wram for z1.  Then do the same for a zero page value.
+    - If this storage can be written by the motherbrain item obtain code, prefer that.
+    - If not, find some other way
+    - If in the unfathomable event that zero page and wram for z1 gets recreated from scratch
+    on each and every game transition and values never get stored, you'll have to hack in the
+    ring code somewhere during the transition / initialization (see transition_in.asm).
+    There is specific manhandling of various zero page values in there, e.g.:
+        stz $13     ; Clear submode
+
