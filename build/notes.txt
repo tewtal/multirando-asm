@@ -61,4 +61,7 @@ BANK1_Code starts in sram at 0c90
 So, CPU offsets into bank1 are <desired ROM location> + 0790.
 
 sram 1484 is HandleClass2:
-
+The ring portion at the end of this sub just stores the new palette byte
+in 6804 (sram).  Then, stores #$18 (hardcode; not contingent on ring type)
+in zero page $14 (TileBufSelector / ppu loading index)
+and increments zero page $13 (game submode / routine index)
