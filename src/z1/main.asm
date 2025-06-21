@@ -9,6 +9,9 @@ incsrc "rom.asm"
 ; Include hooks
 incsrc "hooks.asm"
 
+;  Rom patches
+incsrc "patches.asm"
+
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
 ; The reason for this is that the main "common" MMC1 bank at $C000-$FFFF is more or less full
 ; so instead we use this free space in WRAM for code accessible from all banks
