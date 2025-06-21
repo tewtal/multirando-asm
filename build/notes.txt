@@ -21,16 +21,14 @@ incbin "../../resources/zelda1prg0.nes":($1C010)-($20010)
 get script to copy byte range into new file
 
 
-ring/tunic subroutine:
+ring/tunic subroutine (no - this is something related to ganon/ganon triforce):
 [0x8E, 0x02, 0x06, 0x8E, 0x72, 0x06, 0xEE, 0x4F, 0x03, 0x60]
 STX $0602   ;  Duplicating the overwritten code (writing #$02)
 STX $0672   ;  Copying [X (#$02)] to $0672 also (tunic palette maybe? rammap dunnos)
 INC $034f   ;  Enemies killed on current screen (...)
 RTS
 
-byte-compare a z1r seed with Z.nes to see if there is a patch in bank 1 in a similar spot to HandleClass2, etc.
-
-8e 02 06 8e 72 06 ee 4f 03 60  - z1r has same tunic sub as above.  hmm.
+8e 02 06 8e 72 06 ee 4f 03 60  - z1r has same [ganon-related] sub as above.  hmm.
 
 20 e4 ff  z1r hook in exact same spot too..
 The code does not seem to have anything to do with palettes or tunics or anything.
@@ -38,6 +36,8 @@ The code does not seem to have anything to do with palettes or tunics or anythin
 
 Create a patch from a vanilla rom change and apply it to a changed rom (different rando seed; whatever)
 D:\Projects\multirando-asm\resources>flips --ignore-checksum --apply ..\build\Z-slowtext.bps ..\build\z1r.nes z1r-slowtext.nes
+Done.  Works!
+
 
 ***  Bank_1_Code starts in SAVE RAM AT 006C90!!, not at 0x8000 where the rest of the swapped banks start
 test offsets.
@@ -80,3 +80,46 @@ wram for z1.  Then do the same for a zero page value.
     There is specific manhandling of various zero page values in there, e.g.:
         stz $13     ; Clear submode
 
+
+__Creating and distributing patches__
+
+    Create bps patch with all branch changes:
+    .\resources\flips.exe --create --exact --ignore-checksum --bps-delta .\build\unpatched-quad.sfc .\build\main.sfc quad-patch.bps
+
+    Apply patch to a quad beta seed:
+    .\resources\flips.exe --apply --ignore-checksum .\build\quad-patch.bps .\build\seed.sfc .\build\seed-patched.sfc
+
+    Apply patch to a quad alpha seed:
+    .\resources\flips.exe --apply --ignore-checksum .\build\quad-patch.bps .\build\seed-alpha.sfc .\build\seed-alpha-patched.sfc
+
+    Fast cmd binary differences view (for verification):
+    fc /b build\seed.sfc build\seed-patched.sfc
+
+    Do a visual vim diff compare for the following:
+        - main.sfc and seed.sfc (vanilla build vs. a beta seed)
+        - seed.sfc and seed-alpha.sfc (beta vs. alpha)
+    to get a sense of what blocks of data get loaded where, and how beta differs from alpha.
+
+    Use https://www.marcrobledo.com/RomPatcher.js/ ,
+    localStorage ,
+    and ChatGPT to create a basic Svelte page which uses localStorage / filesystem api
+    to store/open a seed rom on the user's pc.  The page action will then use 
+    the client-side rom patcher library to apply the andy-testing bps patch to the seed rom,
+    and then prompt the user to save the patched rom.
+    Save the patched rom with filename:
+        QUAD-v0.1.11b (#841c625)-1761507134[-andypropatch-2bea].sfc
+        New part in [].
+        This way, the full quad semver, commit id, seed id, my patch commit id, and the fact that
+        it's been patched with this method is all contained in the filename.
+
+    Copy/duplicate the quad site css for the most part
+    It uses Bootstrap 4.6.2 yuck; maybe just duplicate the general look by hand with modern css
+
+    For now, place a single precomputed bps patch in the project to be uploaded
+    with the project assets to Netlify.
+
+    Later:
+    See what the best way automate putting particular bps patches named with last 4 chars of commit id
+    into the web location.
+    Seems like there could be a premade github action which does this or something netlify-specific.
+    How would the svelte page know what files are available in the web dir?
