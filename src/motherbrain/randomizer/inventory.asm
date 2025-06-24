@@ -340,9 +340,14 @@ WriteItemToInventory:
 +   cmp #$0030
     bne +
         jmp .z1Rupees
+        ;jmp .z1Rings ; jmp .z1Rupees   ;  Mis-labeled in item table comments: rupees should be 0031
 +   cmp #$0031
     bne +
         jmp .z1HeartContainer
+        ;jmp .z1Rupees; jmp .z1HeartContainer   ;  Mis-labeled in item table comments: heart container should be 0032
+; +   cmp #$0032
+;     bne +
+;         jmp .z1Rings ;jmp .z1HeartContainer   ;  (added)
 +   cmp #$0040
     bne +
         jmp .m1Ammo
@@ -541,6 +546,25 @@ WriteItemToInventory:
     sta.w !SRAM_ITEM_BUFFER+$2, y       ; Write the ammo to the SRAM buffer
     jmp .end
 
+; .z1Rings
+;     lda.w ItemData+6, x                 ; Get the item value
+;     %a8()
+;     cmp.w !SRAM_ITEM_BUFFER, y          ; Compare to the current value
+;     bcc ..preventDowngrade               ; If the new value is less than the current value, don't update
+;     sta.w !SRAM_ITEM_BUFFER, y          ; Write the item to the SRAM buffer
+
+;     ;  Update sram with the appropriate tunic value
+;     tax                                 ;  Move ring value to x
+;     lda.b $817325, x                    ;  Index into color table
+;     sta.b $816804                       ;  Write to sram $6804
+
+;     bra ..z1RingsEnd
+; ..preventDowngrade
+;     lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value so we can return it
+; ..z1RingsEnd
+;     %a16()
+;     jmp .end
+
 .z1Rupees
     %a16()
     lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value
@@ -728,7 +752,7 @@ CheckItemGame:
     rtl
 
 
-AlttpProgressiveItems:
+AlttpProgressiveItems:  ; rom: 007fed36
     db $5E, $59, $04, $49, $01, $02, $03, $00     ; Progressive sword
     db $5F, $5A, $03, $04, $05, $06, $00, $00     ; Progressive shield
     db $60, $5B, $02, $22, $23, $00, $00, $00     ; Progressive armor
@@ -1032,8 +1056,8 @@ ItemData:
 
     dw $0002, $0008, $0000, $0001        ; E0 - Magical Rod          (Z1)
     dw $0002, $000A, $0000, $0001        ; E1 - Book of Magic        (Z1)
-    dw $0002, $000B, $0000, $0001        ; E2 - Blue Ring            (Z1)
-    dw $0002, $000B, $0000, $0002        ; E3 - Red Ring             (Z1)
+    dw $0002, $000B, $0000, $0001        ; E2 - Blue Ring            (Z1)  ;  new type $0032
+    dw $0002, $000B, $0000, $0002        ; E3 - Red Ring             (Z1)  ;  new type $0032
     dw $0002, $000E, $0000, $0001        ; E4 - Power Bracelet       (Z1)
     dw $0002, $000F, $0000, $0001        ; E5 - Letter               (Z1)
     dw $0002, $0010, $0000, $0000        ; E6 - Compass              (Z1)  ; Bitmask per level (don't place this)

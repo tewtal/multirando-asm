@@ -102,7 +102,7 @@ transition_to_z1:
     ; Set game mode
     lda #$02 : sta $12
     stz $11     
-    stz $13     ; Clear submode
+    stz $13     ; Clear submode   ; prg: 6481ED  cpu: 8981ed
     stz $E3     ; Clear sprite 0 flag
 
     ; Set rendering to off

@@ -80,11 +80,22 @@ wram for z1.  Then do the same for a zero page value.
     There is specific manhandling of various zero page values in there, e.g.:
         stz $13     ; Clear submode
 
+Try debug catching obtaining blue ring from shop, leaving z1, and reentering z1.  See what gets
+written to $13, $14, and $6804 and what does the writing.
+    - $13 and $14 get constantly written by z1 game code and by the transition_in initialization method.
+    - $6804 (and sram in general) gets written only by z1 game code, and that sram is never touched by any quad code.
+
+inventory.asm locations:
+    007fed36 in rom file
+    WriteItemToInventory: is at $e90b in snes sram (seed-patched-5.sfc)
+    crashes on BRK #$C0 in .normalItem code (indexing into bad/misaligned data probably?)
+    TODO: Debug how this operates under normal conditions in seed.sfc.
+    
 
 __Creating and distributing patches__
 
     Create bps patch with all branch changes:
-    .\resources\flips.exe --create --exact --ignore-checksum --bps-delta .\build\unpatched-quad.sfc .\build\main.sfc quad-patch.bps
+    .\resources\flips.exe --create --exact --ignore-checksum --bps-delta .\build\baseline.sfc .\build\main.sfc .\build\quad-patch.bps
 
     Apply patch to a quad beta seed:
     .\resources\flips.exe --apply --ignore-checksum .\build\quad-patch.bps .\build\seed.sfc .\build\seed-patched.sfc
