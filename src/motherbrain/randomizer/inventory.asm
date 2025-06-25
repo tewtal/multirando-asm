@@ -553,8 +553,8 @@ WriteItemToInventory:
 
     ;  Update sram with the appropriate tunic value
     tax                                 ;  Move ring value to x
-    lda.l $407325, x                    ;  Index into color table
-    sta.l $406804                       ;  Write to sram $6804
+    lda.l !Z1_TunicTable, x             ;  Index into color table
+    sta.l !Z1_TunicColor                ;  Write to sram $6804
 
     bra ..z1RingsEnd
 ..preventDowngrade
