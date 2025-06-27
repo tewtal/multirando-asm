@@ -1,6 +1,6 @@
 ; Sets the ending flag (in A) for the current game and check if all other requirements are met
 ; If true, returns 1 in A if all games are completed, otherwise 0
-check_and_set_ending:
+check_and_set_ending:   ; rom ~007ff57e
     php
     rep #$20
     and.w #$00ff
@@ -68,4 +68,4 @@ check_other_games_ending:
 
     plp : plx
     lda.w !IRAM_ENDING_TEMP
-    rtl
+    rtl     ; rom ~007ff666

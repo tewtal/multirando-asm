@@ -1,24 +1,33 @@
-001f8000 in main_z1.sfc is start
-002bf130 in main_z1.sfc is EOF
-00208000 in main_z1.sfc is start of bank 0:
+__ROM and CPU address layout discovery__
 
-org $A08000
-incbin "../../resources/zelda1prg0.nes":($0010)-($4010)
-incbin "../../resources/zelda1prg0.nes":($1C010)-($20010)
+    001f8000 in main_z1.sfc is start
+    002bf130 in main_z1.sfc is EOF
+    00208000 in main_z1.sfc is start of bank 0:
 
-
-00600000 in main.sfc is start of bank 0 (but rom.asm says it should be 608000?)
-00608000 in main.sfc is start of bank 1
-00610000 in main.sfc is start of bank 2
-00618000 in main.sfc is start of bank 3
-00620000 in main.sfc is start of bank 4
-...
-0063c000 in main.sfc is start of (final copy) bank 7
-
-007fffff in main.sfc is EOF
+    org $A08000
+    incbin "../../resources/zelda1prg0.nes":($0010)-($4010)
+    incbin "../../resources/zelda1prg0.nes":($1C010)-($20010)
 
 
-get script to copy byte range into new file
+    00600000 in main.sfc is start of bank 0 (but rom.asm says it should be 608000?)
+    00608000 in main.sfc is start of bank 1
+    00610000 in main.sfc is start of bank 2
+    00618000 in main.sfc is start of bank 3
+    00620000 in main.sfc is start of bank 4
+    ...
+    0063c000 in main.sfc is start of (final copy) bank 7
+
+    007fffff in main.sfc is EOF
+
+    ** Zelda 1 starts at 00600000 in rom
+        length 4576e-976e == 3c000
+    ** Metroid 1 starts at 00680004 in rom
+        length == 38000
+    Note that we can use asar's "print bytes" to determine ranges accurately, but NOT final offsets
+    e.g., it correctly calculated the metroid rom taking 0x38000 bytes in main.sfc, but says its start offset is
+    0x4effc (actual rom offset: 0x680004; not even close)
+
+
 
 
 ring/tunic subroutine (no - this is something related to ganon/ganon triforce):
@@ -92,7 +101,16 @@ inventory.asm locations:
     TODO: Debug how this operates under normal conditions in seed.sfc.
     
 
+
+
+
+
+
 __Creating and distributing patches__
+
+    ** Note: bps (bps-delta) patching produces erroneous results for what I need: applying target byte changes (and changes ONLY)
+    to a crc-mismatched but length-equal seed (alpha or beta).  All other patch types tested (epb, rup, aps, ups, ppf, and ips) seem suitable.
+    Let's use ebp since it works and is supported by the client library.
 
     Create bps patch with all branch changes:
     .\resources\flips.exe --create --exact --ignore-checksum --bps-delta .\build\baseline.sfc .\build\main.sfc .\build\quad-patch.bps
