@@ -582,8 +582,13 @@ WriteItemToInventory:
     %a8()
     lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value
     lsr #4                              ; Divide by 16
+
+    cmp #$0f                          ; Check for max heart containers
+    bcs ..preventOverflow               ; Prevent adding above max
+
     clc
     adc.w ItemData+6, x                 ; Add to the current heart containers
+..preventOverflow
     sta.w !INVENTORY_TEMP_1             ; Store the new value
     asl #4
     ora.w !INVENTORY_TEMP_1             ; OR the new value to refill hearts
