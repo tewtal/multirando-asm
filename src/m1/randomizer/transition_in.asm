@@ -24,7 +24,7 @@ transition_to_m1:
     lda #$8f : sta $2100
     jsl SetupScrollHDMA
 
-    %initOAMBuffer()  ; Clear SNES OAM Buffer
+    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
 
     ; Clear SNES port buffers
     rep #$30

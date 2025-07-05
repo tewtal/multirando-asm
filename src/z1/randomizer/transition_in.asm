@@ -27,10 +27,9 @@ transition_to_z1:
     
     lda #$00 : sta.l $002130
     lda #$00 : sta.l $002131
-
-    
     jsl SetupScrollHDMA
-    jsl UploadItemPalettes
+
+    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
 
     ; Clear SNES port buffers
     rep #$30
@@ -38,9 +37,9 @@ transition_to_z1:
     lda #$0000
 
 -
-    sta.l $7e2000, x
+    sta.l $7e2200, x
     inx #2
-    cpx #$2000
+    cpx #$1e00
     bne -
 
     ldx #$0000
@@ -48,7 +47,12 @@ transition_to_z1:
     sta.l $7e0800, x
     inx #2
     cpx #$0400
-    bne -
+    bne -    
+
+    sep #$30
+    jsl UploadItemPalettes
+    
+    %ai16()
 
     lda #$845C : sta $000810
     lda #$80E4 : sta $000812

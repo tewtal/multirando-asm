@@ -97,11 +97,9 @@ written to $13, $14, and $6804 and what does the writing.
 inventory.asm locations:
     007fed36 in rom file
     WriteItemToInventory: is at $e90b in snes sram (seed-patched-5.sfc)
-    crashes on BRK #$C0 in .normalItem code (indexing into bad/misaligned data probably?)
-    TODO: Debug how this operates under normal conditions in seed.sfc.
+        DONE:  Check on changes to WriteItemToInventory by collecting a z1 item in kak in an actual seed;
+        then manipulate mem and register values to simulate z1 heart container overflow in the breakpoint
     
-
-
 
 
 

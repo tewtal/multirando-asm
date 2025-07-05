@@ -5,6 +5,8 @@ sa1rom 0,0,6,7
 namespace nes
 org $9F8000
 incsrc "nes/overlay.asm"
+print "nes/overlay.asm end: ", pc
+incsrc "nes/video.asm"
 warnpc $9FFFFF
 
 ; FB0000-FB7FFFF (free)
