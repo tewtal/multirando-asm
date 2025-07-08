@@ -101,6 +101,46 @@ inventory.asm locations:
         then manipulate mem and register values to simulate z1 heart container overflow in the breakpoint
     
 
+m1 up+A palette glitch:
+    $67 and $68 control the currently loaded/loading tile palettes.  $00 $00 in these ram locations would
+    cause the black and white palette.  But freezing the values doesn't fix the issue.
+    
+    Debug memory locations:
+        prg 69488b [hooks.asm]
+        prg 684b23 [hook location]
+        prg 684158 [hook location]
+        prg 6b98ed [UploadStartTilemap]
+        prg 6B96EA [PrepareAttributesDMA]: Converts to snes format and loads tile attributes to ram @ 3000
+            ->  Norfair Up+A snes ppu string sequence built by the above method:
+                - a tilemap with 9 bytes of data at vram(?) 214b
+                - DMA data with xxxxxxxxxxxxxxx at VMAIN (0080)
+                ? what game process does hook at c30c attempt to capture?  It must be some type of
+                "nes ppu string buffer transfer is complete," but perhaps there are other things that
+                trigger this and need to be hooked as well.
+            .TileAttr part of sub is at prg 6B940F (breakpoint)  - this does not appear to get run in normal game operation.
+
+        memviewers:  wram 7a0 (nes ppu string buffer);  cpu 7e3000 (snes ppu string buffer)
+
+
+        * After up+A, start in Norfair, the NES ppu string data at 7a0-7ff gets populated with the "ff" bytes
+        representing the tile palette attributes for the first screen in Norfair.  The PrepareAttributesDMA never
+        picks this up and runs the snes conversion.  Find out why not.
+
+
+    * Found likely problem at sub UploadStartTilemap [snes.asm:1025].
+    Total left a todo comment: ; TODO: Properly copy attribute data here as well
+    $0c in VMDATAH for each tilemap entry produces the correct palette index of 03.
+    Let's check what the actual game code does here.  NES doesn't add palette data per tile since it's handled per room.
+    So I guess let's just read the Palette number for room from wram $68, shift it into position, and keep it
+    in either a free register or a temp memory location.  Then palette info will be added to each tilemap entry loaded.
+
+
+palette ram on elevator to norfair:                     palette ram on up+A to norfair:
+[identical]
+
+https://github.com/nmikstas/metroid-disassembly/blob/4270d57f9468daebdeea485686e31e26218a780c/Source_Files/Bank07.asm#L306
+nes m1 $c195 writes to ppuio during ClearNameTable, and that causes the palette index to change, tile by tile, from 0 to 3.
+Check what this code does in quad.
 
 
 
