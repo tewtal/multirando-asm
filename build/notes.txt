@@ -69,6 +69,26 @@ BANK1_CODE starts in rom (sans offset) at 6500.
 BANK1_Code starts in sram at 0c90
 So, CPU offsets into bank1 are <desired ROM location> + 0790.
 
+
+Finding World_FillHearts sub:
+    prg 628000 for bank 05.
+    Bank 05 offset $3126(ish).  Find bytes below:
+                   $B1E6:
+171E6  A5 63          LDA $63                  ; else add 6.
+171E8  F0 29          BEQ $B213
+171EA  A9 10          LDA #$10
+171EC  8D 04 06       STA $0604
+171EF  AD 70 06       LDA $0670
+171F2  C9 F8          CMP #$F8
+171F4  B0 07          BCS $B1FD
+171F6  18             CLC
+                   ; They're equal, so make HeartPartial full by
+171F7  69 06          ADC #$06
+171F9  8D 70 06       STA $0670
+171FC  60             RTS
+
+
+
 sram 1484 is HandleClass2:
 The ring portion at the end of this sub just stores the new palette byte
 in 6804 (sram).  Then, stores #$18 (hardcode; not contingent on ring type)
