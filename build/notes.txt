@@ -27,6 +27,10 @@ __ROM and CPU address layout discovery__
     e.g., it correctly calculated the metroid rom taking 0x38000 bytes in main.sfc, but says its start offset is
     0x4effc (actual rom offset: 0x680004; not even close)
 
+    Metroid 1 org vs. rom offset: $288000
+    So bank 0 should start at $680000 rom / $908000 org
+    Metroid 1 supplementary snes code vs. rom offset: $2c0000
+    snes.asm should end at    $6b9c06 rom / $979c06 org
 
 
 

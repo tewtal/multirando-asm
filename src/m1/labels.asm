@@ -60,6 +60,8 @@ m1_SnesPPUDataString = $7E3002
 m1_SnesPPUDataStringPtr = $7E3000
 
 ; Internal M1 RAM Labels
+m1_RoomPalette = $68
+m1_CurrentArea = $74    ;  $10 = Brinstar, $11 = Norfair, $12 = Kraid, $13 = Tourian, $14 = Ridley
 m1_MirrorCntrl = $fa
 m1_ScrollY = $fc
 m1_ScrollX = $fd

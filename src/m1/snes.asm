@@ -1025,23 +1025,244 @@ print "uploadstart = ", pc
 UploadStartTilemap:
     lda #$00
     sta $2115
-    lda #$00
-    sta $2116
-    lda #$20
+    lda #$00    ;
+    sta $2116   ;
+    lda #$20    ;  Start at vram $2000
     sta $2117
 
     rep #$10
     ldx #$03C0
     ldy #$0000
+
 -
+    ; Calculate tile attribute byte to load into VMDATAH
+    ; TODO: Proper implementation (see notes below)
+    lda m1_RoomPalette  ;  The palette number that applies to the vast majority of tiles in the current room
+    asl #2      ;  Shift the palette into the VMDATAH palette bits
+    sta $2119   ;  Attribute data to VMDATAH
     lda ($00), y
-    sta $2118
+    sta $2118   ;  Tile data to VMDATAL
+
     iny
     dex
     bne -    
 
-    ; TODO: Properly copy attribute data here as well
+    ;  Handle non-room palette tiles
+    ;  This section is a hack which hardcodes the handful of bytes
+    ;  in each of the 5 respawn screens that require different palette numbers
+    ;  than the room palette stored in m1 zero page at $68.
+    ;  The proper way to handle this is to find out why SnesProcessPPUString
+    ;  is not called after up+A/death restart sequences even though the NES ppu string data
+    ;  is being populated at $7a0-$7ff.  Perhaps one or more hook locations is missing in hooks.asm.
 
+    ;  Load Current level from m1 zero page ($10 = Brinstar, $11 = Norfair, $12 = Kraid, $13 = Tourian, $14 = Ridley)
+    ldy #$0000  ;  Reset indexes; [X] is already #$0000
+    lda m1_CurrentArea
+    ;  No .brinstar label needed.  The wrong palette $00 is being used, but as a happy coincidence,
+    ;  the bg tile colors in palette $00 and $03 are identical in brinstar.
+    cmp #$11
+    beq .norfair
+    cmp #$12
+    beq .gokraidslair
+    cmp #$13
+    beq .gotourian
+    cmp #$14
+    beq .goridleyslair
+    sep #$30
+    rtl
+
+.gokraidslair:
+    jmp .kraidslair
+.gotourian:
+    jmp .tourian
+.goridleyslair:
+    jmp .ridleyslair
+
+.norfairHorizSequenceLengths: db $08
+.norfairHorizSequencePalette: db $00
+.norfairHorizSequenceAddrs:
+    dw $224c
+    dw $226c
+..end
+.norfairVertSequenceLengths: db $04
+.norfairVertSequencePalette: db $04
+.norfairVertSequenceAddrs:
+    dw $21cc
+    dw $21cd
+    dw $21d2
+    dw $21d3
+..end
+.norfair:
+..horizSequences
+    ;  First set VMAIN and vram write location:
+    lda #$80    ;  For horizontal sequences
+    sta $2115
+
+..loop:
+    lda.l .norfairHorizSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .norfairHorizSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .norfairHorizSequenceLengths
+    rep #$20 : and.w #$00ff  ;  
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .norfairHorizSequencePalette
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.norfairHorizSequenceAddrs_end-.norfairHorizSequenceAddrs)
+    beq ..vertSequences
+    jmp ..loop
+
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .norfairVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .norfairVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .norfairVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .norfairVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.norfairVertSequenceAddrs_end-.norfairVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
+    sep #$30
+    rtl
+
+
+.kraidsVertSequenceLengths: db $04
+.kraidsVertSequencePalette: db $04
+.kraidsVertSequenceAddrs:
+    dw $2104
+    dw $219b
+..end
+.kraidslair:
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .kraidsVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .kraidsVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .kraidsVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .kraidsVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.kraidsVertSequenceAddrs_end-.kraidsVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
+    sep #$30
+    rtl
+
+.tourianHorizSequenceLengths: db $04
+.tourianHorizSequencePalette: db $04
+.tourianHorizSequenceAddrs:
+    dw $2306
+    dw $22d6
+..end
+.tourian:
+..horizSequences
+    ;  First set VMAIN and vram write location:
+    lda #$80    ;  For horizontal sequences
+    sta $2115
+
+..loop:
+    lda.l .tourianHorizSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .tourianHorizSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .tourianHorizSequenceLengths
+    rep #$20 : and.w #$00ff  ;  
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .tourianHorizSequencePalette
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.tourianHorizSequenceAddrs_end-.tourianHorizSequenceAddrs)
+    beq ..done
+    jmp ..loop
+
+..done:
+    sep #$30
+    rtl
+
+.ridleysVertSequenceLengths: db $0a
+.ridleysVertSequencePalette: db $00
+.ridleysVertSequenceAddrs:
+    dw $2246
+    dw $2247
+    dw $2258
+    dw $2259
+..end
+.ridleyslair:
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .ridleysVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .ridleysVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .ridleysVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .ridleysVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.ridleysVertSequenceAddrs_end-.ridleysVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
     sep #$30
     rtl
 
