@@ -97,6 +97,8 @@ spc_init_dpcm:
     jsr spc_upload_byte
     lda #$80
     jsr spc_upload_byte
+    lda #$28
+    jsr spc_upload_byte
 
     ;  $4010-$401f:  frequency cutoff values (see ../nes-spc/spc.asm:268)
     ldy #$4010  ;  Start an upload at $4010 aram
@@ -112,6 +114,8 @@ spc_init_dpcm:
     jsr spc_upload_byte
     lda #$0d
     jsr spc_upload_byte
+    lda #$0f
+    jsr spc_upload_byte
 
     ;  $4020-$405f: SRCN lookup entries (see ../nes-spc/spc.asm:271)
     ldy #$4020  ;  Start an upload at $4020 aram
@@ -123,6 +127,8 @@ spc_init_dpcm:
     %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt)
     %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2)
     %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2+brr_boss1end-brr_boss1)
+    ;  The filter0 block ~22% into boss2.brr sample for dodongo roar
+    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+$7d7)
 
     ldy #$4060  ;  Start an upload at $4060 aram
     jsr spc_begin_upload

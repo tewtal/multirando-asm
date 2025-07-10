@@ -159,13 +159,26 @@ m1 up+A palette glitch:
     in either a free register or a temp memory location.  Then palette info will be added to each tilemap entry loaded.
 
 
-palette ram on elevator to norfair:                     palette ram on up+A to norfair:
-[identical]
-
 https://github.com/nmikstas/metroid-disassembly/blob/4270d57f9468daebdeea485686e31e26218a780c/Source_Files/Bank07.asm#L306
 nes m1 $c195 writes to ppuio during ClearNameTable, and that causes the palette index to change, tile by tile, from 0 to 3.
 Check what this code does in quad.
 
+
+z1 give self good gear:
+paste the following in memory viewer at $0650:
+22 FF 00 00 00 00 01 03 FF 02 01 02 01 01 02 00
+01 00 02 01 01 01 01 FF FF 01
+
+
+z1 total door sprite hack uses tile 25 and palette 4 instead of tile 24 and palette 0, which is what the rest of the black
+bar at the bottom of the hud uses.  Should be pretty easy to find/replace in that code.
+    Tilemap addresses of the two blocks: $20ef and $20f0.
+
+z1 flicker/palette bug looks to be the location of the vram window jumping around.
+    Jumps/flickers at start of S->N transitions
+    Jumps/flickers at end   of N->S transitions
+    Pause menu transition is smooth and must be handled separately
+    E->W and W->E transitions are also smooth and I don't see any flicker in the window movement (at least in tilemap viewer)
 
 
 __Creating and distributing patches__
