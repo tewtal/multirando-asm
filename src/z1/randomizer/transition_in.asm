@@ -51,7 +51,8 @@ transition_to_z1:
 
     sep #$30
     jsl UploadItemPalettes
-    
+    jsl nes_initSpecialPaletteEntry
+
     %ai16()
 
     lda #$845C : sta $000810

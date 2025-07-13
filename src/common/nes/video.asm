@@ -15,3 +15,22 @@ initOAMBuffer:
   BNE -
   plp
 rtl
+
+
+;  Create a black palette entry outside of $x0 that doesn't conflict
+;  with other palette indexes used by nes games.
+;  Currently used in z1 for a custom priority background tile.
+initSpecialPaletteEntry:
+  !specialPaletteIndex = #$71
+
+  php
+
+  %a8()
+  lda !specialPaletteIndex
+  sta $002121
+
+  lda #$00      ;
+  sta $002122   ;
+  sta $002122   ;  Pure black
+  plp
+rtl

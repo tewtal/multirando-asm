@@ -173,12 +173,32 @@ paste the following in memory viewer at $0650:
 z1 total door sprite hack uses tile 25 and palette 4 instead of tile 24 and palette 0, which is what the rest of the black
 bar at the bottom of the hud uses.  Should be pretty easy to find/replace in that code.
     Tilemap addresses of the two blocks: $20ef and $20f0.
+    - On transition_in to z1, add a sub that stuffs a black palette into palette index $71 (which is unused by the game).
+    Then modify the door sprite hack to use palette index 7 for tile 25.
+        palette cgram offset $0e2 and $0e3 for palette entry $71.
+        
 
 z1 flicker/palette bug looks to be the location of the vram window jumping around.
     Jumps/flickers at start of S->N transitions
     Jumps/flickers at end   of N->S transitions
     Pause menu transition is smooth and must be handled separately
     E->W and W->E transitions are also smooth and I don't see any flicker in the window movement (at least in tilemap viewer)
+
+    - SnesProcessPPUString is called with type==0004 (DMA Data) which sends over $0180 length of palette data.
+        It uses DMA to copy the palette bytes to vram from $4800 to $4b00 ($300 / 2 = $180).  This populates the
+        correct palette data for roughly half of the bottom screen in vram (the one not currently being shown).
+        * Find out why a second call is not issued to SnesProcessPPUString to populate palette data for the rest of
+        the bottom screen.  ** Plot twist!:  It IS being issued AND processed, but the bottom half of VRAM is
+        not being updated by the DMA execute call.  Diagnose.
+
+        * Other glitchy graphics are corrupted OAM sprite data written (successfully) via DMA for one(?) frame.
+        Trick here will be to see why the incorrect sprite data is being written to main memory @ $7e2000 to be copied.
+        **  Other interesting fact is that BOTH the missing palette data AND the corrupt OAM data both occur together or not at all.
+        This is looking more and more like a single bug.
+        ***  During corrupt frames, the dma transfers for oam and bg attributes are occuring beyond the end of vblank and into
+        scanlines in the next frame, and thus do not successfully write to vram (or something else for oam, partial write? idk).
+        **** Find a breakpoint at common.asm/NMIStart and common.asm/NMIEnd, and piece together a complete picture of
+        why SnesProcessPPUString ends up running outside of the NMI/vblank window.
 
 
 __Creating and distributing patches__

@@ -61,7 +61,26 @@ UpdateVScrollHDMA:
 ++
     rep #$20
     lda CurVScroll : and #$00ff : sta ScrollYDMA
-    
+;     lda CurVScroll : and #$00ff
+;     bne ++
+;     ;  Adds a repurposed VScrollSplitTest check to not immediately store curvscroll==0 to scrollydma, but delay for 1 frame
+;     ;  to allow the remaining ppu data to be processed before switching this method to "not scrolling" operation.
+;     ;  TODO: nope, this hack has too many edge cases and won't work.  think of another solution for the N->S fix.
+;     lda ScrollYDMA
+;     beq ++  ;  ScrollYDMA was already set to 0 earlier
+;     lda VScrollSplitTest
+;     bne ++  ;  If we've already set the settle frame, go clear it and continue normal operation
+;     lda #$0001
+;     sta VScrollSplitTest    ;  Otherwise set the settle frame
+;     bra +++
+
+; ++
+;     lda #$0000
+;     sta VScrollSplitTest    ;  reset frame settle tester
+;     sta ScrollYDMA
+
+; +++
+
     lda PPUCNT0ZP
     and #$0003
     beq +
@@ -79,14 +98,20 @@ UpdateVScrollHDMA:
     sta VScrollTable_sbval
 
 +
-
     sep #$30
     
-    lda VScrollSplit
+    lda VScrollSplit        ;  When upward scroll starts, scrollydma==cf and vscrollsplit==bf,
+                            ;  this subtraction bf-cf underflows to f0... may want to see if this causes further artifacts.
     sec : sbc ScrollYDMA
 
     cmp #$7f
     bcs .secondHalf
+    bne ++
+    inc     ;  Avoid a zero in [A] getting written to the first hdma line counter byte which disables hdma for the rest of frame
+    sta VScrollTable_len1
+    dec
+++
+
     sta VScrollTable_len1
     sta VScrollTable_len2
     stz VScrollTable_len3
@@ -343,7 +368,7 @@ SnesApplyBGPriority:
     rep #$30
     ldx #$20EF
     stx $2116
-    lda #$3025
+    lda #$3c25  ; special palette index $7 and priority bit 1 for all black, loaded in transition_in.asm/initSpecialPaletteEntry
     sta $2118
     sta $2118
 
