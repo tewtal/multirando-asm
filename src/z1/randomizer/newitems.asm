@@ -171,6 +171,7 @@ Anim_WriteSpecificItemSprites_extended:
     sec
     rtl
 
+;  ATS - Currently unused
 GetDynamicItemIndex:
     phx
     ldx #!MAX_DYNAMIC_SLOTS

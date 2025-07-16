@@ -59,27 +59,13 @@ UpdateVScrollHDMA:
     lda #$ff
     sta VScrollSplit
 ++
+
+    ;  Save the previous ScrollYDMA to ScrollYDMAPrev
+    lda ScrollYDMA
+    sta ScrollYDMAPrev
+
     rep #$20
     lda CurVScroll : and #$00ff : sta ScrollYDMA
-;     lda CurVScroll : and #$00ff
-;     bne ++
-;     ;  Adds a repurposed VScrollSplitTest check to not immediately store curvscroll==0 to scrollydma, but delay for 1 frame
-;     ;  to allow the remaining ppu data to be processed before switching this method to "not scrolling" operation.
-;     ;  TODO: nope, this hack has too many edge cases and won't work.  think of another solution for the N->S fix.
-;     lda ScrollYDMA
-;     beq ++  ;  ScrollYDMA was already set to 0 earlier
-;     lda VScrollSplitTest
-;     bne ++  ;  If we've already set the settle frame, go clear it and continue normal operation
-;     lda #$0001
-;     sta VScrollSplitTest    ;  Otherwise set the settle frame
-;     bra +++
-
-; ++
-;     lda #$0000
-;     sta VScrollSplitTest    ;  reset frame settle tester
-;     sta ScrollYDMA
-
-; +++
 
     lda PPUCNT0ZP
     and #$0003
@@ -100,18 +86,26 @@ UpdateVScrollHDMA:
 +
     sep #$30
     
-    lda VScrollSplit        ;  When upward scroll starts, scrollydma==cf and vscrollsplit==bf,
-                            ;  this subtraction bf-cf underflows to f0... may want to see if this causes further artifacts.
+    lda VScrollSplit
     sec : sbc ScrollYDMA
 
     cmp #$7f
     bcs .secondHalf
-    bne ++
-    inc     ;  Avoid a zero in [A] getting written to the first hdma line counter byte which disables hdma for the rest of frame
+    cmp #$00        ;  Avoid a zero in [A] getting written to the second hdma line
+    bne .nonzero    ;  counter byte [VScrollTable_len1] which disables hdma for the rest of frame
+                    ;  and displays the wrong screen leading to tile-attribute flicker
+    lda #$80
     sta VScrollTable_len1
-    dec
-++
+    stz VScrollTable_len2
+    stz VScrollTable_len3
+    rep #$20
+    lda ScrollYDMA
+    clc : adc #$0010 : and #$01ff
+    sta VScrollTable_val1
+    sep #$20
+    bra .end
 
+.nonzero            ;  The standard case
     sta VScrollTable_len1
     sta VScrollTable_len2
     stz VScrollTable_len3
@@ -130,6 +124,18 @@ UpdateVScrollHDMA:
     sta VScrollTable_len3
     rep #$20
     lda ScrollYDMA
+
+    ;  If ScrollYDMA is $0f, wait one more time before returning to nonscrolling operation since both
+    ;  tilesets should be identical and the one being updated has an extra frame to
+    ;  process attribute data (fixes N->S scroll flicker)
+    cmp #$000f
+    bne .normalFrame
+    lda ScrollYDMAPrev
+    cmp #$0080          ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
+    bcs .normalFrame
+    lda ScrollYDMA
+
+.normalFrame
     sta VScrollTable_val1
     sta VScrollTable_val2
     clc : adc #$0010 : and #$01ff
@@ -191,7 +197,7 @@ SnesUpdateVerticalGameScroll:
     jsl UpdateVScrollHDMA
     rtl
 
-; Convert the NES OAM buffer at $300-3FF to SNES format and DMA to the PPU
+; Convert the NES OAM buffer at $200-2FF to SNES format and DMA to the PPU
 ; We'll have to convert every 8x16 sprite into two 8x8 sprites since the SNES doesn't support 8x16
 SnesOamPrepare:
     PHP : PHB : PEA $7E7E : PLB : PLB

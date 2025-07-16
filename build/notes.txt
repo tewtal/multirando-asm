@@ -176,7 +176,7 @@ bar at the bottom of the hud uses.  Should be pretty easy to find/replace in tha
     - On transition_in to z1, add a sub that stuffs a black palette into palette index $71 (which is unused by the game).
     Then modify the door sprite hack to use palette index 7 for tile 25.
         palette cgram offset $0e2 and $0e3 for palette entry $71.
-        
+
 
 z1 flicker/palette bug looks to be the location of the vram window jumping around.
     Jumps/flickers at start of S->N transitions
@@ -199,6 +199,94 @@ z1 flicker/palette bug looks to be the location of the vram window jumping aroun
         scanlines in the next frame, and thus do not successfully write to vram (or something else for oam, partial write? idk).
         **** Find a breakpoint at common.asm/NMIStart and common.asm/NMIEnd, and piece together a complete picture of
         why SnesProcessPPUString ends up running outside of the NMI/vblank window.
+
+    - Order of operations for snes z1 room transition:
+        - prev frame during scanlines:  SnesOamPrepare [$0300 - $034f]
+        - NMI (vblank):
+            jsl SnesOamDMA
+            jsl SnesProcessPPUString
+            jsl nes_overlay_handle
+            jsl SnesApplyBGPriority
+        - z1 code hooks ((!BASE_BANK+$6)<<16)+$A08C --> SnesTransferTileBuf
+            --> SnesPPUPrepare
+            --> Chain of methods which handles the ppu data at $300 -> $34f (ending with PrepareAttributes and PrepareAttributesDMA, if applicable)
+            - This means this process chain is running whenever it's triggered from z1 rom code,
+            which for the attribute data happens to be a scanline or two before the end of NMI and thus
+            bleeds into the next frame and the attribute data is delayed from transfer to the snes ppu by a frame (best guess).
+            But, how come this doesn't run immediately at the top of the next frame?  it's still too delayed to explain.
+            Sometimes the NES code sub CopyPlayAreaAttrsHalfToDynTransferBuf (which is supposed to all be in NMI???) is writing
+            to $300 memory mid-frame, but then SnesPPUPrepare doesn't get its hands on that new data until
+            near the end of the following NMI (and part even bleeds over to the next frame).  The late run
+            here is compounded by the fact that previously prepared attribute data has to be read/DMAed before
+            the new batch can be prepared........
+            Check maybe hooking PreparePPUProcess in z1 right after the attribute $300 ram write.
+                - hook RTS at end of CopyPlayAreaAttrsHalfToDynTransferBuf in bank 05
+        *  Two of the three bugs causing this are now fixed in UpdateVScrollHDMA.
+           the remaining bug is due to SnesProcessFrame running during NMI (which doesn't happen in m1!!), consuming over
+           half of vblank and causing some dma writes to fail.  This causes both glitched sprite flicker
+           as well as broken tile attributes.  Try to hook z1's "wait for NMI" just like has already been done for m1.
+
+z1 hold item half sprite / no sprite bug:
+    - Start by investigating / breaking on these hooks:
+        org $81AC5B
+            jsl TakeItem_SetItemValueFF_extended  (not interesting)
+        org $81B19C
+        jsl Anim_WriteSpecificItemSprites_extended
+            - After returning to z1 game code, Anim_WriteSpritePair loads the left and right sprites from $0343 and $0344
+            - prg 626817 is DrawLinkLiftingItem.
+            - first glance it seems like we're not hooking enough of the Anim_ routines because the item sprite
+            indexes are probably not being written to the right spots in ram.  Also we aren't writing the "wide sprite" byte
+            so it's running the incorrect "narrow item" code.
+    - Let's hook into / rewrite DrawLinkLiftingItem in bank 07.
+        need to determine:
+            - object index
+            - item slot
+            - item id: found in $0505 (-$30) during DrawLinkLiftingItem.
+            - when dynamic item sprite gets unloaded from oam table (this happens earlier)
+                - is triggered by processing nes oam data at $0300.  but what actually
+                purges this dynamic sprite?
+                - "dynamic" item 6e doesn't get purged even after finishing the collection and leaving the cave
+                    ; Dynamic items
+                    DynamicItemIndexes = $0A60
+
+                    ; VRAM related
+                    DynamicItemSlots = $0A68
+                    DynamicItemAttrs = $0A70
+
+                    ; Index to the current next slot to be loaded
+                    DynamicItemIndex = $0A80
+
+                    ; Returns the index into DynamicItemSlots for the item id provided
+                    DynamicItemSlot = $0A82
+        need to write 04 and 05 (left and right sprite "attributes")
+        write 00 to 0c (anim frame 0)
+        write 48  to $0343 (left sprite offset)
+        write 4C  to $0344 (right sprite offset)
+        then jsr to our Anim_WriteSpecificItemSprites_extended
+        half of z3 heart sprite:  78 89 30 2D 78 91 32 2D
+                                  78 89 30 2D 78 91 32 2D  in oam line 0d0
+
+        - nes oam buffer @ 0300:
+            - with heart container:
+            3F 00 FF B6 08 24 24 24 24 24 24 24 24 20 D6 08
+            F2 F2 F2 F2 F2 24 24 24 20 6C 03 21 02 01 20 AC
+            03 21 0A 24 20 CC 03 02 05 04 FF 00
+            - after heart container:
+            3F 00 FF B6 08 24 24 24 24 24 24 24 24 20 D6 08
+            F2 F2 F2 F2 F2 24 24 24 20 6C 03 21 02 01 20 AC
+            03 21 0A 24 20 CC 03 02 05 04 FF 00
+
+        DrawObjectWithAnim seems like starting point for determining how
+        to draw onscreen objects
+        HideObjectSprites: hides all sprites above index $18??  could be very relevant
+        to what's happening  [no, that's like all the sprites.  something else is responsible
+        for queueing the sprites required for the next frame..]
+
+            blank sprites loaded as 7C 89 4E 21 7C 91 4F 21
+            in oam.  Also found in memory at 7e2148
+            previous was heart container tile.  Break on tile index write at 7e214a?
+            SnesOamPrepare IS processing the dynamic external sprites.
+
 
 
 __Creating and distributing patches__
