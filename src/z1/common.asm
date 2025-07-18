@@ -30,6 +30,9 @@ LongJumpToRoutine_common:
 NMIStart:
     pha : phx : phy : phb : php
     phk : plb
+
+    jsl ResetBg1hofs
+
     sep #$30
     lda $4210
     jsl SnesOamDMA
@@ -43,7 +46,7 @@ NMIStart:
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd:
-    jsl SnesUpdateAudio    
+    jsl SnesUpdateAudio
     jsl SnesProcessFrame
     plp : plb : ply : plx : pla
     jmp $E576
@@ -279,6 +282,26 @@ InitMode_EnterRoom_UW_Hook:
     inc.w NeedsBGPriorityUpdate
     jsr $7013
     rts
+
+CopyPlayAreaAttrsHalfToDynTransferBuf_extended:
+    !DynTileBuf = $0302
+    !PlayAreaAttrs = $0530
+
+    STX !DynTileBuf
+    STA !DynTileBuf+1
+    LDX #$18
+    STX !DynTileBuf+2
+    LDA #$FF
+    STA !DynTileBuf+3, X
+-
+    LDA !PlayAreaAttrs, Y
+    STA !DynTileBuf+2, X
+    DEY
+    DEX
+    BNE -
+
+    jsl PreparePPUProcess
+RTS
 
 print "apu-routines = ", pc
 ; APU Update routines

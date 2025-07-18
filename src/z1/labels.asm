@@ -620,6 +620,7 @@ ScrollYDMA = $0A40
 ScrollXDMA = $0A42
 VScrollAddrTmp = $0A44
 VScrollSplit = $0A46
+ScrollXDMAPrev = $0A84
 ScrollYDMAPrev = $0A48
 
 ButtonsPressedSnes = $0A4A

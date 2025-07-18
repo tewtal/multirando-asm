@@ -127,15 +127,16 @@ UpdateVScrollHDMA:
 
     ;  If ScrollYDMA is $0f, wait one more time before returning to nonscrolling operation since both
     ;  tilesets should be identical and the one being updated has an extra frame to
-    ;  process attribute data (fixes N->S scroll flicker)
+    ;  process attribute data.  Fixes N->S scroll tileset attribute flicker
     cmp #$000f
     bne .normalFrame
     lda ScrollYDMAPrev
     cmp #$0080          ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
-    bcs .normalFrame
+    bcs .delayedFrame
     lda ScrollYDMA
 
 .normalFrame
+.delayedFrame
     sta VScrollTable_val1
     sta VScrollTable_val2
     clc : adc #$0010 : and #$01ff
@@ -146,6 +147,11 @@ UpdateVScrollHDMA:
 
 UpdateHScrollHDMA:
     rep #$20
+
+    ; Save the previous ScrollXDMA to ScrollXDMAPrev
+    lda ScrollXDMA
+    sta ScrollXDMAPrev
+
     lda CurHScroll : and #$00ff : sta ScrollXDMA
     
     lda PPUCNT0ZP
@@ -156,6 +162,19 @@ UpdateHScrollHDMA:
     xba
     ora ScrollXDMA
     sta ScrollXDMA
+
+    ;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
+    ;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
+    ;  Fixes horizontal scroll tileset attribute flicker
+    cmp #$0000
+    bne .normalFrame
+    lda ScrollXDMAPrev
+    cmp #$0100
+    beq .delayedFrame
+    lda ScrollXDMA
+
+.normalFrame
+.delayedFrame
     sta HScrollTable_val
 
     sep #$20
@@ -201,6 +220,17 @@ SnesUpdateVerticalGameScroll:
 ; We'll have to convert every 8x16 sprite into two 8x8 sprites since the SNES doesn't support 8x16
 SnesOamPrepare:
     PHP : PHB : PEA $7E7E : PLB : PLB
+
+    ;  Wait until we're outside of vblank to run this honkin' thing.
+    ;  NES lag frames can cause this to take up vblank time and delay
+    ;  queued oam and tile data until the very end, causing some or all
+    ;  of the vram dmas to fail leaving sprites and tiles in a mess.
+    ;  e.g., door transition from lvl 2 entry room to the north
+.awaitVblankOver:
+    lda $004212       ; check HVBJOY
+    and #$80        ; In vblank?
+    bne .awaitVblankOver ; Wait until vblank's over
+
     REP #$10
     LDA #$00 : XBA
     LDX #$0000
@@ -283,6 +313,16 @@ SnesOamPrepare:
     PLB
     PLP
     RTL
+
+;  Start NMI by clearing BG1HOFS to allow special case code
+;  to fix tileset attribute flicker on horizontal scrolling.
+;  See snes.asm/UpdateHScrollHDMA for details.
+ResetBg1hofs:
+    rep #$20
+    lda.w #$0000
+    sta.w $210d
+    sta.w $210d
+    rtl
 
 SnesOamDMA:
     PHP    
