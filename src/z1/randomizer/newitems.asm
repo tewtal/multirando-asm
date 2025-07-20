@@ -138,9 +138,9 @@ LoadRoomItemIdUW_extended:
 ; [0344]: RightSpriteOffset
 print "Anim_WriteSpecificItemSprites_extended = ", pc
 Anim_WriteSpecificItemSprites_extended:
+    stx $08     ;  ATS - store object index in [X] regardless of which branch we take
     cpy.b #$30
     bcs .extended
-    stx $08                     
     lda #$01                    
     sta $07
     lda #$08                    

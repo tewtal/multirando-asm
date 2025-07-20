@@ -287,6 +287,46 @@ z1 hold item half sprite / no sprite bug:
             previous was heart container tile.  Break on tile index write at 7e214a?
             SnesOamPrepare IS processing the dynamic external sprites.
 
+        - Loaded sprites in the OAMNES struct starting at $0200 have tile indexes in the second position.
+        E.g., a z1 heart container uses tile index $68 and $69.  But only $68 appears in the struct
+        presumably because the sprite right after it is $69 and there's probably some attribute bit
+        that it's a wide sprite so the full word should be loaded.
+        The mirrored versions are stored further down (probably for easy bit math) and are also stored
+        in the $68, $69 order.
+            - Tracing backwards from OAMNES writes:
+                - Anim_WriteMirroredSpritePair called when the sprite's tile index is in memory $02.
+                - Anim_WriteSpecificItemSprites fallen into (with hooked code interspersed)
+                - Anim_WriteStaticItemSpritesWithAttributes called
+                - Anim_SetSpriteDescriptorAttributes called
+                - DrawItemBySlot (hooked loads all around)
+                * AnimateItemObject   this is called with [a]==ff for our item.
+                    When switched to 6e, the code seems to mostly work (NO, this is just the shop floor item which is supposed to disappear)
+                    LDA $0422,X has the shop warez.  when the ff here is switched to 6e, 
+                    the heart STAYS ON THE SCREEN while link is holding it up although
+                    the y coordinate is wrong and it stays on the flo.
+                    I guess @Take is supposed to write $ff to the middle item slot when it's picked up.
+                    that leaves us without a clue where the lift-over-head item is coming from (it's coming from $0505)
+
+                - DrawLinkLiftingItem
+                **** Anim_WriteSpritePairNotFlashing  - this is supposed to write the item from DrawLinkLiftingItem,
+                    but trace through it carefully and see where $6e disappears from the registers/stack.
+                    - It doesn't.  item $6e remains "loaded" in $0505 and correctly populates $00 - $0a with
+                    its sprite halves information until the end of the lift animation.
+                    The problem is the dynamic sprites cease to be OAMed on the frame when the object is collected.
+                    STILL DON'T KNOW WHAT SETS/PREVENTS THIS
+
+            mem $00 line entering room with e-tank:
+                [pos: 80 90] [tileindexes: 30 32] [attrs: 05 05] 57 [2-sided: 01] FF 06 [x-sep: 08] 01 00 00 00 00
+            mem $00 line entering uw cave with z3 heart container:
+                [pos: 78 98] [tileindexes: 34 36] [attrs: 06 06] 10 [2-sided: 01] 01 06 [x-sep: 08] 0D 00 00 6D 00
+
+                **  See when a native z1 heart container gets added to oam data during lifting.
+
+
+            - z1/randomizer/newitems.asm:  The item attributes word seems to be symmetrical because
+            the bytes are just game attribute bytes which are always the same for both halves of the item.
+            - [$0505] DOES hold the correct item id ($1a for z1 heart container, e.g.)
+            - Check the LoadItemId hooks in z1/randomizer/hooks.asm to see if those are more useful
 
 
 __Creating and distributing patches__

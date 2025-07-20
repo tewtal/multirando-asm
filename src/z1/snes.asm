@@ -131,9 +131,13 @@ UpdateVScrollHDMA:
     cmp #$000f
     bne .normalFrame
     lda ScrollYDMAPrev
-    cmp #$0080          ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
-    bcs .delayedFrame
-    lda ScrollYDMA
+    cmp #$0080      ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
+    bcc .notSpecialCase
+    cmp #$00d1      ;  Only use the previous value if we're not doing a pause menu scroll
+    bcc .delayedFrame
+
+.notSpecialCase:
+    lda ScrollYDMA  ;  Restore ScrollYDMA
 
 .normalFrame
 .delayedFrame
@@ -163,18 +167,8 @@ UpdateHScrollHDMA:
     ora ScrollXDMA
     sta ScrollXDMA
 
-    ;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
-    ;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
-    ;  Fixes horizontal scroll tileset attribute flicker
-    cmp #$0000
-    bne .normalFrame
-    lda ScrollXDMAPrev
-    cmp #$0100
-    beq .delayedFrame
-    lda ScrollXDMA
+    jsr SpecialFixHScrollHDMA
 
-.normalFrame
-.delayedFrame
     sta HScrollTable_val
 
     sep #$20
@@ -187,8 +181,28 @@ UpdateHScrollHDMA:
     lda #$00
 ++
     sta HScrollTable_sblen
-
     rtl
+
+
+;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
+;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
+;  Fixes some (but not all) horizontal scroll tileset attribute flicker.
+;  [A]: ScrollXDMA
+;  Returns in [A]: HScrollTable_val
+SpecialFixHScrollHDMA:
+    cmp #$0000
+    bne .end
+
+    lda ScrollXDMAPrev
+    cmp #$0100
+    bne .end
+
+.horizontalLayout:
+    lda ScrollXDMA
+
+.end:
+rts
+
 
 ; The game does special magic when scrolling vertically, so we'll have to calculate the correct Y scroll position here
 ; and run the vertical HDMA scrolling update routine
