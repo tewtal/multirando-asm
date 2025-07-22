@@ -124,6 +124,20 @@ inventory.asm locations:
         DONE:  Check on changes to WriteItemToInventory by collecting a z1 item in kak in an actual seed;
         then manipulate mem and register values to simulate z1 heart container overflow in the breakpoint
     
+m1 floating sprites glitch:
+    - sprite index 64->127 (64 total) have all bytes set to $00.
+    - These exist in the bottom half of the wram table that gets
+    copied to OAM on every... frame?  during nmi I guess.
+    - Stored from $7e2100 -> $7e21ff
+    - fixed when positions are all set to $ff so are offscreen
+    - Set memory write breakpoint during:
+        - debug build m1 start (no glitch)
+            - writes f0 f0 00 00 to entire OAM
+        - game transition (writes 00's)
+        - check a quad seed to see if non-m1 item sprites are affected
+    DONE:  Refactor as subroutine
+    DONE:  Apply to z1 transition as well (find or start a fully NES-common library code file?)
+
 
 m1 up+A palette glitch:
     $67 and $68 control the currently loaded/loading tile palettes.  $00 $00 in these ram locations would
@@ -157,6 +171,23 @@ m1 up+A palette glitch:
     Let's check what the actual game code does here.  NES doesn't add palette data per tile since it's handled per room.
     So I guess let's just read the Palette number for room from wram $68, shift it into position, and keep it
     in either a free register or a temp memory location.  Then palette info will be added to each tilemap entry loaded.
+
+    - regression investigation:
+        7a0 values at top of kraid's elevator WITH PATCH:
+            00 00 00 20 5C 5D 00 01 4B 4C 00 01 06 06 00 01
+            06 06 4B 4C 00 01 55 56 55 56 4B 4C 4B 4C 55 56
+            55 56 55 56
+            regs after UploadStartTilemap sub:  a: 0004, x: 0004, y: 0000
+                                                s: c4 c0 56 90 87
+                                                f: czmi
+        7a0 values at top of kraid's elevator WITHOUT PATCH (the same):
+            00 00 00 20 5C 5D 00 01 4B 4C 00 01 06 06 00 01
+            06 06 4B 4C 00 01 55 56 55 56 4B 4C 4B 4C 55 56
+            55 56 55 56
+            regs after UploadStartTilemap sub:  a: 0258, x: 0000, y: 00c0
+                                                s: c4 c0 56 90 87
+                                                f: zmi
+
 
 
 https://github.com/nmikstas/metroid-disassembly/blob/4270d57f9468daebdeea485686e31e26218a780c/Source_Files/Bank07.asm#L306
@@ -327,6 +358,14 @@ z1 hold item half sprite / no sprite bug:
             the bytes are just game attribute bytes which are always the same for both halves of the item.
             - [$0505] DOES hold the correct item id ($1a for z1 heart container, e.g.)
             - Check the LoadItemId hooks in z1/randomizer/hooks.asm to see if those are more useful
+
+Tile graphics and palette data:
+
+- For the nes games:
+    - data/newitems_nes.bin
+    - resources/nes_new_item_palettes.pal
+
+
 
 
 __Creating and distributing patches__

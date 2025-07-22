@@ -1068,6 +1068,8 @@ UploadStartTilemap:
     beq .gotourian
     cmp #$14
     beq .goridleyslair
+
+    ldx #$0000
     sep #$30
     rtl
 
@@ -1147,6 +1149,7 @@ UploadStartTilemap:
     jmp ..vloop
 
 ..done:
+    ldx #$0000
     sep #$30
     rtl
 
@@ -1186,6 +1189,7 @@ UploadStartTilemap:
     jmp ..vloop
 
 ..done:
+    ldx #$0000
     sep #$30
     rtl
 
@@ -1223,6 +1227,7 @@ UploadStartTilemap:
     jmp ..loop
 
 ..done:
+    ldx #$0000
     sep #$30
     rtl
 
@@ -1263,6 +1268,7 @@ UploadStartTilemap:
     jmp ..vloop
 
 ..done:
+    ldx #$0000
     sep #$30
     rtl
 
