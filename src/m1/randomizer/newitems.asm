@@ -444,7 +444,7 @@ ItemData:
     dw $9000, pal_icerod   ; 08 Icerod  
     dw $9480, pal_1        ; 09 Hammer
     dw $8880, pal_0        ; 0A Hookshot
-    dw $8A00, pal_e1        ; 0B Bow           ;;;  DEBUGGING ATTRS <---               
+    dw $8A00, pal_0        ; 0B Bow
     dw $A100, pal_3        ; 0C Blue Boomerang
     dw $8E80, pal_0        ; 0D Powder
     dw $9E00, pal_0        ; 0E Dummy - Bee (bottle contentt)
