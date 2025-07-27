@@ -1,7 +1,7 @@
 UploadItemPalettes:
     lda #$80 : sta $2100
     
-    lda #$C0 : sta $2121
+    lda #$90 : sta $2121
     ldx #$00
 -
     lda.l nes_new_item_palettes, x
@@ -9,7 +9,7 @@ UploadItemPalettes:
     lda.l nes_new_item_palettes+1, x
     sta $2122
     inx : inx
-    cpx #$80
+    cpx #$e0
     bne -
 
     lda #$8f : sta $2100
@@ -102,8 +102,9 @@ StorePowerUpYCoord_extended:
 
 StoreSpriteAttributes_extended:
     pha
+    eor $05
     sta $0202, x                    ; Write sprite attributes
-    
+
     ; Check if this is a sprite that has loaded data from
     ; our extended table
     lda.b $ce
@@ -113,6 +114,7 @@ StoreSpriteAttributes_extended:
     ; In that case, set extended sprite flag
     ; This makes it use OAM2 and sprite palettes 5-8
     lda $0202, x
+    and #$4f    ;  Restrict to horizontal flip, palette, and name select bits
     ora #$04
     sta $0202, x
 
@@ -397,6 +399,12 @@ macro itemdata(name, topleft, topright, bottomleft, bottomright)
     db $0D|(<topleft><<4), $03, $03, $04, $fd, <topright>, $05, $fd, <bottomleft>, $06, $fd, <bottomright>, $07, $ff, $ff, $ff
 endmacro
 
+macro flippeditemdata(name, topleft, topright, bottomleft, bottomright)
+    <name>:
+    db $0D|(<topleft><<4), $03, $03, $01, $fd, <topright>, $00, $fd, <bottomleft>, $03, $fd, <bottomright>, $02, $ff, $ff, $ff
+    db $0D|(<topleft><<4), $03, $03, $05, $fd, <topright>, $04, $fd, <bottomleft>, $07, $fd, <bottomright>, $06, $ff, $ff, $ff
+endmacro
+
 FrameDataTable_extended:
     %itemdata(pal_0, 0, 0, 0, 0)
     %itemdata(pal_1, 1, 1, 1, 1)
@@ -407,6 +415,14 @@ FrameDataTable_extended:
     %itemdata(pal_wave, 0, 2, 0, 0)
     %itemdata(pal_firerod, 2, 0, 0, 0)
     %itemdata(pal_icerod, 0, 3, 0, 0)
+
+    ;  Add even MORE extended palettes by utilizing the horizontal mirror attribute bit.
+    ;  xHxx xxxx.  Since none of our custom items will need mirroring, we reprocess this
+    ;  in SnesOamPrepare to select from snes OAM palettes #1->#3.
+    %flippeditemdata(pal_e1, 5, $51, $51, $51)
+    %flippeditemdata(pal_e2, 6, $52, $52, $52)
+    %flippeditemdata(pal_e3, 7, $53, $53, $53)
+
 
 ; New item data (for external items) - We use item id:s 0x30 and up
 ; So when working with this data, just remove 0x30 from the index
@@ -428,7 +444,7 @@ ItemData:
     dw $9000, pal_icerod   ; 08 Icerod  
     dw $9480, pal_1        ; 09 Hammer
     dw $8880, pal_0        ; 0A Hookshot
-    dw $8A00, pal_0        ; 0B Bow                       
+    dw $8A00, pal_e1        ; 0B Bow           ;;;  DEBUGGING ATTRS <---               
     dw $A100, pal_3        ; 0C Blue Boomerang
     dw $8E80, pal_0        ; 0D Powder
     dw $9E00, pal_0        ; 0E Dummy - Bee (bottle contentt)
@@ -441,9 +457,9 @@ ItemData:
     dw $9680, pal_3        ; 14 Flute                       
     dw $9180, pal_2        ; 15 Somaria
     dw $9A00, pal_0        ; 16 Bottle
-    dw $A200, pal_2        ; 17 Piece of Heart
+    dw $A200, pal_e1        ; 17 Piece of Heart
     dw $9300, pal_3        ; 18 Byrna
-    dw $9380, pal_2        ; 19 Cape
+    dw $9380, pal_e1        ; 19 Cape
     dw $9500, pal_0        ; 1A Mirror
     dw $9580, pal_0        ; 1B Glove
     dw $9700, pal_0        ; 1C Mitt
@@ -457,7 +473,7 @@ ItemData:
     dw $9F00, pal_1        ; 23 Red Tunic
     dw $AB80, pal_0        ; 24 Dummy - key
     dw $AD00, pal_0        ; 25 Dummy - compass
-    dw $A280, pal_2        ; 26 Heart Container - no anim
+    dw $A280, pal_e1        ; 26 Heart Container - no anim
     dw $8C00, pal_3        ; 27 Bomb 1
     dw $A680, pal_3        ; 28 3 Bombs                     
     dw $8E00, pal_1        ; 29 Mushroom
@@ -474,7 +490,7 @@ ItemData:
     dw $AD80, pal_0        ; 33 Dummy - map
     dw $A880, pal_1        ; 34 1 Rupee
     dw $AA00, pal_3        ; 35 5 Rupees
-    dw $AA80, pal_2        ; 36 20 Rupees
+    dw $AA80, pal_e1        ; 36 20 Rupees
     dw $8000, pal_0        ; 37 Dummy - Pendant of Courage
     dw $8000, pal_0        ; 38 Dummy - Pendant of Wisdom
     dw $8000, pal_0        ; 39 Dummy - Pendant of Power
@@ -482,8 +498,8 @@ ItemData:
     dw $8000, pal_0        ; 3B Bow and silver Arrows
     dw $9E00, pal_0        ; 3C Bee
     dw $9100, pal_0        ; 3D Fairy
-    dw $A280, pal_2        ; 3E Heart Container - Boss
-    dw $A280, pal_2        ; 3F Heart Container - Sanc
+    dw $A280, pal_e1        ; 3E Heart Container - Boss
+    dw $A280, pal_e1        ; 3F Heart Container - Sanc
 
     dw $AC80, pal_1        ; 40 100 Rupees
     dw $AC00, pal_1        ; 41 50 Rupees
@@ -492,7 +508,7 @@ ItemData:
     dw $A600, pal_0        ; 44 10 Arrows
     dw $8000, pal_0        ; 45 Dummy - small magic
     dw $8A80, pal_1        ; 46 300 Rupees
-    dw $AA80, pal_2        ; 47 20 Rupees
+    dw $AA80, pal_e1        ; 47 20 Rupees
     dw $9E80, pal_0        ; 48 Good Bee
     dw $A780, pal_0        ; 49 Fighter Sword
     dw $8000, pal_0        ; 4A Dummy - activated flute

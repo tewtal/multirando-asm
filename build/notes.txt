@@ -365,7 +365,49 @@ Tile graphics and palette data:
     - data/newitems_nes.bin
     - resources/nes_new_item_palettes.pal
 
+    - required snes palette colors for pinkish items:
+        - red boomerang:  $0018 (red), $7fff (white)
+        - hookshot     :  $0018 (red), $7fff (white)
+        - somaria      :  $0018 (red), $7fff (white)
+        - magic cape   :  $0018 (red), $7fff (white)
+        - fire rod     :  $0018 (red), $7fff (white)
+        - ice rod      :  $69c9 (blue), $7fff (white)
+        - heart piece  :  $08d9 (red), $19df (highlight orange(!))
+        - boots        :  $00b8 (red), $433d (highlight yellow) (not accurate for boots "item.")
+        - moon pearl(!):  $0018 (red), $7fff (white)
+        - red rupee:   :  $14b6 (main red), $39dc (pale red), $14a5 (near-black border)
+        - blue rupee:  :  $55aa (main blue), $76b2 (pale blue), $14a5 (near-black border)
+        - green rupee: :  $1a49 (main green), $3b53 (pale green), $14a5 (near-black border)
 
+        - unique colors in necessary groupings: [$0018, $7fff], [$69c9, $7fff], [$08d9, $19df], [$00b8, $433d],
+                                                [$14b6, $39dc, $14a5], [$55aa, $76b2, $14a5], [$1a49, $3b53, $14a5]
+                                                2 groups of 7 would work...
+        
+        - check if we can just use palette 4->7 which are unused in the nes games??  then we have all the space we'd ever need
+            - Seems like the nes palettes are being loaded at indexes 4->7, leaving 0->3 maybe available (or is it reserved for other stuff?)
+            - Find out how and why the nes palette data gets loaded.  my invalid attributes $0808 probably caused the wrong tiles to be loaded
+            from way later in vram
+            - sprites use the bottom half of the cgram palette table:  from $0100 -> $01ff.
+                - z1 only uses the first four entries in each of palettes 0, 1, 2, and 3, leaving lots of space.
+                Palettes 4-> are fully utilized by the existing SM-ish palette data for item sprites.
+                - m1: exactly the same setup as z1.
+                - 48 - 4*4 = 32 custom color slots available for sprites (a few more if we count unused/redundant colors from the SM-ish palettes)
+
+        - In z1, using palette attributes 0->3 causes wrong tile data to be loaded.  Instead of vram $1300, it gets the tile data from $0300.
+        The correct palette IS chosen in all cases, but what is the code doing that differentiates attribute bytes of 4->7 with 0->3??
+        It's in prepareoamdma.
+
+        * For m1, there's an eor $05 in Bank07.asm code that seems to contain $20 (on the first tile only?), but this is meaningless
+        for extended items and represents a priority bit which should not be set.
+        So perhaps extend the hook back a couple bytes to get rid of it; implement it for the standard items in StoreSpriteAttributes_extended,
+        and find a way to store extended palette info in the attribute to be processed by oampreparedma.
+        $6b is "ObjectCntrl" in the game code and gets written to the "sprite control byte" aka the attribute byte.
+        $6b must theoretically be earlier loading the "pal_0" (e.g.) itemdata stuff via some hook.  So if we can define
+        palettes with the upper nibbles and switch to those it might just work.
+
+        - See if we can hook the conversion of framedatapointer and related tile info ($cc->$cf) and currently loaded item ($0748, $074c)
+        where it generates ppu strings from that data.  Allocate custom storage or find some free bits that can be referenced
+        to load from more than 4 palettes.
 
 
 __Creating and distributing patches__

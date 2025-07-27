@@ -2,6 +2,18 @@ new_item_graphics:
     incbin "../../data/newitems_nes.bin"
 
 new_item_palettes:
+;  Extend custom colors to upper 12 colors of sprite palettes #1 -> 3 to cover red, blue, and green z3 items
+    ;  Sprite palette e1:
+	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $dc, $39, $b6, $14, $96, $10
+    db $ff, $7f, $df, $19, $d9, $00, $79, $15, $ff, $7f, $a5, $14, $ff, $7f, $00, $00
+    ;  Sprite palette e2:
+	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $b2, $76, $aa, $55, $c9, $69
+    db $ff, $7f, $ff, $7f, $a5, $14, $a5, $14, $ff, $7f, $a5, $14, $ff, $7f, $00, $00
+    ;  Sprite palette e3:
+	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $53, $3b, $49, $1a, $49, $1a
+    db $ff, $7f, $ff, $7f, $a5, $14, $a5, $14, $ff, $7f, $a5, $14, $ff, $7f, $a5, $14
+
+;  Original SM-ish palette colors
     db $00, $00, $DF, $02, $D7, $01, $AC, $00, $F5, $5D, $0E, $3D, $AA, $28, $23, $14
     db $B1, $0B, $FB, $48, $FF, $7F, $00, $00, $FF, $7F, $E5, $44, $FF, $7F, $00, $00
     db $63, $44, $B1, $0B, $A9, $1E, $45, $01, $BB, $5E, $B3, $3D, $2E, $29, $86, $14

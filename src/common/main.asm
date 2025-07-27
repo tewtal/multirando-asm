@@ -13,4 +13,5 @@ warnpc $9FFFFF
 ; Align data to $8000 to match pointers
 org $FB8000
 incsrc "nes/data.asm"
+print "nes/data.asm end: ", pc
 warnpc $FC0000

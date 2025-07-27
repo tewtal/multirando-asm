@@ -45,7 +45,7 @@ org $939D79 : lda [$00], y              ; Rinka
 %hook($EE2E, "jsl StorePowerUpYCoord_extended : nop")
 %hook($DE74, "jsl GetFramePtrTable_extended : nop #6")
 %hook($DDC4, "jsl GetEnemyFramePtrTable_extended : nop #13")
-%hook($DF04, "jsl StoreSpriteAttributes_extended : nop")
+%hook($DF02, "jsl StoreSpriteAttributes_extended : nop #3")
 %hook($DBB0, "jsl PickupItem_extended : bcs $2d")
 %hook($DB73, "jsl UpdatePaletteEffect_extended : nop #5")
 %hook($DCC7, "lda [$CC], y")

@@ -19,7 +19,7 @@ SaveItems:
 UploadItemPalettes:
     lda #$80 : sta $2100
     
-    lda #$C0 : sta $2121
+    lda #$90 : sta $2121
     ldx #$00
 -
     lda.l nes_new_item_palettes, x
@@ -27,7 +27,7 @@ UploadItemPalettes:
     lda.l nes_new_item_palettes+1, x
     sta $2122
     inx : inx
-    cpx #$80
+    cpx #$e0
     bne -
 
     lda #$8f : sta $2100
@@ -359,7 +359,7 @@ ItemData:
     dw $9F00, $0505     ; 23 - Red Tunic
     dw $AB80, $0404     ; 24 - Dummy - key
     dw $AD00, $0404     ; 25 - Dummy - compass
-    dw $A280, $0606     ; 26 - Heart Container - no anim
+    dw $A280, $1414     ; 26 - Heart Container - no anim
     dw $8C00, $0707     ; 27 - Bomb 1
     dw $A680, $0707     ; 28 - 3 Bombs                    
     dw $8E00, $0505     ; 29 - Mushroom
@@ -384,8 +384,8 @@ ItemData:
     dw $8000, $0404     ; 3B - Bow and silver Arrows
     dw $9E00, $0404     ; 3C - Bee
     dw $9100, $0404     ; 3D - Fairy
-    dw $A280, $0606     ; 3E - Heart Container - Boss
-    dw $A280, $0606     ; 3F - Heart Container - Sanc
+    dw $A280, $1414     ; 3E - Heart Container - Boss
+    dw $A280, $1414     ; 3F - Heart Container - Sanc
     
     dw $AC80, $0505     ; 40 - 100 Rupees
     dw $AC00, $0505     ; 41 - 50 Rupees

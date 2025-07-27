@@ -253,7 +253,10 @@ SnesOamPrepare:
     ; Y coordinate
     LDA.w Z1OAMNES.Y, X
     CMP #$F8
-    BEQ .Clear
+    bne ..next
+    jmp .Clear
+
+..next
     SEC : SBC #!VSpriteOffset
 
     BIT.w Z1OAMNES.Attr, X
@@ -296,8 +299,19 @@ SnesOamPrepare:
     AND.b #$04
     BEQ .noExtended
 
+    LDA.w Z1OAMNES.Attr, X
+    and.b #$f0  ;  Check if we've specified a different palette in the upper nibble
+    beq .extPalette
+
+    lsr #3      ;  Move palette in the upper nibble into position
+    ora.b #$01  ;  Add the OAM2 selector bit
+    bra .continue
+
+.extPalette
     LDA.w Z1OAM.Attr, Y
     ORA.b #$09
+
+.continue
     STA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr+$4, Y
 

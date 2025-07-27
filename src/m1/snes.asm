@@ -124,11 +124,24 @@ SnesOamPrepare:
     STA.w OAM.Attr, Y
 
     LDA.w OAMNES.Attr, X
-    AND.b #$04
+    AND.b #$04  ;  Extended item check: bit 3
     BEQ .noExtended
 
+    LDA.w OAMNES.Attr, X
+    and.b #$40  ;  Ultra extended palette check: bit 6
+    beq .extPalette
+
+.ultraExtPalette
     LDA.w OAM.Attr, Y
-    ORA.b #$09
+    and.b #$0f
+    ora.b #$01  ;  Add the OAM2 selector bit only
+    bra .continue
+
+.extPalette
+    LDA.w OAM.Attr, Y
+    ORA.b #$09  ;  Add OAM2 select and palettes #4->#7
+
+.continue
     STA.w OAM.Attr, Y
 
 .noExtended
