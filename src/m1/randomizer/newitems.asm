@@ -488,8 +488,8 @@ ItemData:
     dw $A800, pal_3        ; 31 10 Bombs
     dw $AB00, pal_0        ; 32 Dummy - big key
     dw $AD80, pal_0        ; 33 Dummy - map
-    dw $A880, pal_1        ; 34 1 Rupee
-    dw $AA00, pal_3        ; 35 5 Rupees
+    dw $A880, pal_e3        ; 34 1 Rupee
+    dw $AA00, pal_e2        ; 35 5 Rupees
     dw $AA80, pal_e1        ; 36 20 Rupees
     dw $8000, pal_0        ; 37 Dummy - Pendant of Courage
     dw $8000, pal_0        ; 38 Dummy - Pendant of Wisdom

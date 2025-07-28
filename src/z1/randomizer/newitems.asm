@@ -343,9 +343,9 @@ ItemData:
     dw $9680, $0707     ; 14 - Flute                      
     dw $9180, $0606     ; 15 - Somaria
     dw $9A00, $0404     ; 16 - Bottle
-    dw $A200, $0606     ; 17 - Piece of Heart
+    dw $A200, $1414     ; 17 - Piece of Heart
     dw $9300, $0707     ; 18 - Byrna
-    dw $9380, $0606     ; 19 - Cape
+    dw $9380, $1414     ; 19 - Cape
     dw $9500, $0404     ; 1A - Mirror
     dw $9580, $0404     ; 1B - Glove
     dw $9700, $0404     ; 1C - Mitt
@@ -374,9 +374,9 @@ ItemData:
     dw $A800, $0707     ; 31 - 10 Bombs
     dw $AB00, $0404     ; 32 - Dummy - big key
     dw $AD80, $0404     ; 33 - Dummy - map
-    dw $A880, $0505     ; 34 - 1 Rupee
-    dw $AA00, $0707     ; 35 - 5 Rupees
-    dw $AA80, $0606     ; 36 - 20 Rupees
+    dw $A880, $3434     ; 34 - 1 Rupee
+    dw $AA00, $2424     ; 35 - 5 Rupees
+    dw $AA80, $1414     ; 36 - 20 Rupees
     dw $8000, $0404     ; 37 - Dummy - Pendant of Courage
     dw $8000, $0404     ; 38 - Dummy - Pendant of Wisdom
     dw $8000, $0404     ; 39 - Dummy - Pendant of Power
@@ -394,7 +394,7 @@ ItemData:
     dw $A600, $0404     ; 44 - 10 Arrows
     dw $8000, $0404     ; 45 - Dummy - small magic
     dw $8A80, $0505     ; 46 - 300 Rupees
-    dw $AA80, $0606     ; 47 - 20 Rupees
+    dw $AA80, $1414     ; 47 - 20 Rupees
     dw $9E80, $0404     ; 48 - Good Bee
     dw $A780, $0404     ; 49 - Fighter Sword
     dw $8000, $0404     ; 4A - Dummy - activated flute

@@ -304,7 +304,7 @@ SnesOamPrepare:
     beq .extPalette
 
     lsr #3      ;  Move palette in the upper nibble into position
-    ora.b #$01  ;  Add the OAM2 selector bit
+    ora.b #$21  ;  Add the OAM2 selector bit and priority=2 bit
     bra .continue
 
 .extPalette
