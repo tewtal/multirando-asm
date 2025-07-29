@@ -198,7 +198,8 @@ Check what this code does in quad.
 z1 give self good gear:
 paste the following in memory viewer at $0650:
 22 FF 00 00 00 00 01 03 FF 02 01 02 01 01 02 00
-01 00 02 01 01 01 01 FF FF 01
+01 00 02 01 01 01 01 FF FF 01 00 00 00 00 00 FF
+FF FF
 
 
 z1 total door sprite hack uses tile 25 and palette 4 instead of tile 24 and palette 0, which is what the rest of the black
