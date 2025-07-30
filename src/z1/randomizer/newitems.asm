@@ -326,12 +326,12 @@ ItemData:
     dw $9F80, $0707     ; 04 - Shield
     dw $A000, $0404     ; 05 - Red Shield
     dw $A080, $0404     ; 06 - Mirror Shield
-    dw $8900, $0606     ; 07 - Firerod
-    dw $9000, $0707     ; 08 - Icerod  
+    dw $8900, $1414     ; 07 - Firerod
+    dw $9000, $2424     ; 08 - Icerod
     dw $9480, $0505     ; 09 - Hammer
     dw $8880, $0404     ; 0A - Hookshot
-    dw $8A00, $0404     ; 0B - Bow                       
-    dw $A100, $0707     ; 0C - Blue Boomerang
+    dw $8A00, $0404     ; 0B - Bow
+    dw $A100, $2424     ; 0C - Blue Boomerang
     dw $8E80, $0404     ; 0D - Powder
     dw $9E00, $0404     ; 0E - Dummy - Bee (bottle content)
     dw $9080, $0404     ; 0F - Bombos
@@ -341,7 +341,7 @@ ItemData:
     dw $9400, $0505     ; 12 - Lamp
     dw $9600, $0404     ; 13 - Shovel
     dw $9680, $0707     ; 14 - Flute                      
-    dw $9180, $0606     ; 15 - Somaria
+    dw $9180, $1414     ; 15 - Somaria
     dw $9A00, $0404     ; 16 - Bottle
     dw $A200, $1414     ; 17 - Piece of Heart
     dw $9300, $0707     ; 18 - Byrna
@@ -363,7 +363,7 @@ ItemData:
     dw $8C00, $0707     ; 27 - Bomb 1
     dw $A680, $0707     ; 28 - 3 Bombs                    
     dw $8E00, $0505     ; 29 - Mushroom
-    dw $AE80, $0606     ; 2A - Red Boomerang
+    dw $AE80, $1414     ; 2A - Red Boomerang
     dw $9A80, $0505     ; 2B - Red Potion
     dw $9C00, $0505     ; 2C - Green Potion
     dw $9C00, $0707     ; 2D - Blue Potion
@@ -398,7 +398,7 @@ ItemData:
     dw $9E80, $0404     ; 48 - Good Bee
     dw $A780, $0404     ; 49 - Fighter Sword
     dw $8000, $0404     ; 4A - Dummy - activated flute
-    dw $9780, $0606     ; 4B - Boots                      
+    dw $9780, $1414     ; 4B - Boots                      
     dw $8000, $0404     ; 4C - Dummy - 50+bombs
     dw $8000, $0404     ; 4D - Dummy - 70+arrows
     dw $A180, $0505     ; 4E - Half Magic
@@ -573,7 +573,7 @@ ItemData:
     dw $BE80, $0404     ; E7 - Dungeon Map          (Z1)
     dw $BA80, $0505     ; E8 - 1 Rupee              (Z1)
     dw $BA00, $0505     ; E9 - Small Key            (Z1)
-    dw $C000, $0505     ; EA - Heart Container      (Z1)
+    dw $C000, $3434     ; EA - Heart Container      (Z1)
     dw $0000, $0404     ; EB - Triforce Fragment    (Z1)    ; TODO: Add this when shuffling rewards
     dw $BF80, $0404     ; EC - Magical Shield       (Z1)
     dw $BB80, $0404     ; ED - Boomerang            (Z1)

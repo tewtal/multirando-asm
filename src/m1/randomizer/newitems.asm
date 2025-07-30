@@ -413,8 +413,6 @@ FrameDataTable_extended:
     %itemdata(pal_ice, 0, 3, 0, 0)
     %itemdata(pal_plasma, 0, 1, 0, 0)
     %itemdata(pal_wave, 0, 2, 0, 0)
-    %itemdata(pal_firerod, 2, 0, 0, 0)
-    %itemdata(pal_icerod, 0, 3, 0, 0)
 
     ;  Add even MORE extended palettes by utilizing the horizontal mirror attribute bit.
     ;  xHxx xxxx.  Since none of our custom items will need mirroring, we reprocess this
@@ -440,12 +438,12 @@ ItemData:
     dw $9F80, pal_3        ; 04 Shield
     dw $A000, pal_0        ; 05 Red Shield
     dw $A080, pal_0        ; 06 Mirror Shield
-    dw $8900, pal_firerod  ; 07 Firerod
-    dw $9000, pal_icerod   ; 08 Icerod  
+    dw $8900, pal_e1       ; 07 Firerod
+    dw $9000, pal_e2       ; 08 Icerod
     dw $9480, pal_1        ; 09 Hammer
     dw $8880, pal_0        ; 0A Hookshot
     dw $8A00, pal_0        ; 0B Bow
-    dw $A100, pal_3        ; 0C Blue Boomerang
+    dw $A100, pal_e2        ; 0C Blue Boomerang
     dw $8E80, pal_0        ; 0D Powder
     dw $9E00, pal_0        ; 0E Dummy - Bee (bottle contentt)
     dw $9080, pal_0        ; 0F Bombos
@@ -455,7 +453,7 @@ ItemData:
     dw $9400, pal_1        ; 12 Lamp
     dw $9600, pal_0        ; 13 Shovel
     dw $9680, pal_3        ; 14 Flute                       
-    dw $9180, pal_2        ; 15 Somaria
+    dw $9180, pal_e1        ; 15 Somaria
     dw $9A00, pal_0        ; 16 Bottle
     dw $A200, pal_e1        ; 17 Piece of Heart
     dw $9300, pal_3        ; 18 Byrna
@@ -477,7 +475,7 @@ ItemData:
     dw $8C00, pal_3        ; 27 Bomb 1
     dw $A680, pal_3        ; 28 3 Bombs                     
     dw $8E00, pal_1        ; 29 Mushroom
-    dw $AE80, pal_2        ; 2A Red Boomerang
+    dw $AE80, pal_e1        ; 2A Red Boomerang
     dw $9A80, pal_1        ; 2B Red Potion
     dw $9C00, pal_1        ; 2C Green Potion
     dw $9C00, pal_3        ; 2D Blue Potion
@@ -498,8 +496,8 @@ ItemData:
     dw $8000, pal_0        ; 3B Bow and silver Arrows
     dw $9E00, pal_0        ; 3C Bee
     dw $9100, pal_0        ; 3D Fairy
-    dw $A280, pal_e1        ; 3E Heart Container - Boss
-    dw $A280, pal_e1        ; 3F Heart Container - Sanc
+    dw $A280, pal_e1       ; 3E Heart Container - Boss
+    dw $A280, pal_e1       ; 3F Heart Container - Sanc
 
     dw $AC80, pal_1        ; 40 100 Rupees
     dw $AC00, pal_1        ; 41 50 Rupees
@@ -508,11 +506,11 @@ ItemData:
     dw $A600, pal_0        ; 44 10 Arrows
     dw $8000, pal_0        ; 45 Dummy - small magic
     dw $8A80, pal_1        ; 46 300 Rupees
-    dw $AA80, pal_e1        ; 47 20 Rupees
+    dw $AA80, pal_e1       ; 47 20 Rupees
     dw $9E80, pal_0        ; 48 Good Bee
     dw $A780, pal_0        ; 49 Fighter Sword
     dw $8000, pal_0        ; 4A Dummy - activated flute
-    dw $9780, pal_2        ; 4B Boots                       
+    dw $9780, pal_e1       ; 4B Boots                       
     dw $8000, pal_0        ; 4C Dummy - 50+bombs
     dw $8000, pal_0        ; 4D Dummy - 70+arrows
     dw $A180, pal_1        ; 4E Half Magic
@@ -682,7 +680,7 @@ ItemData:
     dw $BE80, pal_0        ; E7 - Dungeon Map          (Z1)
     dw $BA80, pal_1        ; E8 - 1 Rupee              (Z1)
     dw $BA00, pal_1        ; E9 - Small Key            (Z1)
-    dw $C000, pal_1        ; EA - Heart Container      (Z1)
+    dw $C000, pal_e3        ; EA - Heart Container      (Z1)
     dw $0000, pal_0        ; EB - Triforce Fragment    (Z1)
     dw $BF80, pal_0        ; EC - Magical Shield       (Z1)
     dw $BB80, pal_0        ; ED - Boomerang            (Z1)
