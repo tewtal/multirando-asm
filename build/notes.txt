@@ -410,6 +410,28 @@ Tile graphics and palette data:
         where it generates ppu strings from that data.  Allocate custom storage or find some free bits that can be referenced
         to load from more than 4 palettes.
 
+    - Animating the z3 rupee sprites
+        - 14 frames for f1 (no shimmer)
+        - 4  frames for f2 (top shimmer)
+        - 6  frames for f3 (bottom shimmer)
+        - 16 frames f1
+        - 6 frames f2
+        - 8 frames f3
+        - then pattern repeats
+
+- z3 nes items shield level palette bug:
+    - rom 515ca6 is utilities.asm/LoadItemPalette subroutine
+    - This code loaded item palette 3 for loot id item DF, which is actually a z1 five rupee.  that turns it redish with the red shield level.
+    - Looks like the latter half of OAM palette #3 is used for dynamic item pickups (maybe always), and so it loads
+    the palette data into the palette #3 on the same frame that OAM is updated with the sprite.
+    - %SpriteProps($DF, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)
+    - PalettesVanilla_blue_dark_ice                              = $9BD2BC    is the palette location utilized by loot id $df (5 rupee),
+    but what actually got read by the above subroutine is the upper half of that palette colors 8->f.
+    - LDA.l SpriteProperties_palette_addr,X  is correctly grabbing $d2ca from $a2bfbe which is the correct %SpriteProps entry in the itemdatatables.asm
+    - breakpoint PRG 515CA6 execute
+    - Uncle pink rupee still unfortunately gets the same palette data at shield levels 2 and 0.
+    
+
 
 __Creating and distributing patches__
 

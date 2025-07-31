@@ -5,13 +5,13 @@ new_item_palettes:
 ;  Extend custom colors to upper 12 colors of sprite palettes #1 -> 3 to cover red, blue, and green z3 items
     ;  Sprite palette e1:
 	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $dc, $39, $b6, $14, $96, $10
-    db $ff, $7f, $df, $19, $d9, $00, $a5, $14, $79, $15, $a5, $14, $f7, $66, $00, $00
+    db $ff, $7f, $df, $19, $d9, $00, $a5, $14, $79, $15, $4e, $08, $f7, $66, $00, $00
     ;  Sprite palette e2:
 	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $b2, $76, $aa, $55, $c9, $69
     db $ff, $7f, $ff, $7f, $a5, $14, $a5, $14, $ff, $7f, $a5, $14, $f7, $66, $00, $00
     ;  Sprite palette e3:
 	db $ff, $7f, $ff, $7f, $ff, $7f, $ff, $7f, $00, $00, $53, $3b, $49, $1a, $49, $1a
-    db $ff, $7f, $59, $1e, $b0, $10, $a5, $14, $ff, $7f, $a5, $14, $f7, $66, $a5, $14
+    db $ff, $7f, $59, $1e, $b0, $10, $a5, $14, $5f, $4f, $a5, $14, $f7, $66, $a5, $14
 
 ;  Original SM-ish palette colors
     db $00, $00, $DF, $02, $D7, $01, $AC, $00, $F5, $5D, $0E, $3D, $AA, $28, $23, $14

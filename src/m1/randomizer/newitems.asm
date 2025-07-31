@@ -185,6 +185,9 @@ CustomItemHandler:
     iny #2
 
     ; Load item id and get the pointer to the graphics data
+
+    ; TODO: update for rupee animation
+
     lda.w $0748, x
     and.w #$00ff
     
@@ -436,7 +439,7 @@ ItemData:
     dw $9B80, pal_1        ; 02 Tempered Sword
     dw $9D00, pal_0        ; 02 Gold Sword
     dw $9F80, pal_3        ; 04 Shield
-    dw $A000, pal_0        ; 05 Red Shield
+    dw $A000, pal_e3        ; 05 Red Shield
     dw $A080, pal_0        ; 06 Mirror Shield
     dw $8900, pal_e1       ; 07 Firerod
     dw $9000, pal_e2       ; 08 Icerod
@@ -463,7 +466,7 @@ ItemData:
     dw $9700, pal_0        ; 1C Mitt
     dw $9880, pal_1        ; 1D Book
     dw $9900, pal_3        ; 1E Flippers
-    dw $9980, pal_2        ; 1F Pearl
+    dw $9980, pal_e1        ; 1F Pearl
 
     dw $8000, pal_0        ; 20 Dummy 
     dw $9800, pal_0        ; 21 Net

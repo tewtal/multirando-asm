@@ -236,6 +236,9 @@ PrepDynamicItem:
     sta.w DynamicItemAttrs, y
 
     ; Load offset into item graphics data
+
+    ; TODO: update for rupee animation
+
     lda.l ItemData, x : pha
 
     ; Prep SNES PPU Transfer string
@@ -324,7 +327,7 @@ ItemData:
     dw $9B80, $0505     ; 02 - Tempered Sword
     dw $9D00, $0404     ; 02 - Gold Sword
     dw $9F80, $0707     ; 04 - Shield
-    dw $A000, $0404     ; 05 - Red Shield
+    dw $A000, $3434     ; 05 - Red Shield
     dw $A080, $0404     ; 06 - Mirror Shield
     dw $8900, $1414     ; 07 - Firerod
     dw $9000, $2424     ; 08 - Icerod
@@ -351,7 +354,7 @@ ItemData:
     dw $9700, $0404     ; 1C - Mitt
     dw $9880, $0505     ; 1D - Book
     dw $9900, $0707     ; 1E - Flippers
-    dw $9980, $0606     ; 1F - Pearl
+    dw $9980, $1414     ; 1F - Pearl
     
     dw $8000, $0404     ; 20 - Dummy 
     dw $9800, $0404     ; 21 - Net
