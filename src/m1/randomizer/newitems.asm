@@ -178,20 +178,20 @@ CustomItemHandler:
 
 .slot_2
     sta [$d0], y
+    pha     ;  Store vram slot for calling argument to nes_StoreAnimatedItems
     iny #4
 
     lda.w #$0080
     sta [$d0], y
     iny #2
 
-    ; Load item id and get the pointer to the graphics data
-
-    ; TODO: update for rupee animation
-
     lda.w $0748, x
     and.w #$00ff
     
     jsl mb_CheckProgressiveItemLong
+
+    tax : pla   ; Prep subroutine arguments in [X] and [A]
+    jsl nes_StoreAnimatedItems
     
     asl #2 : tax
     lda.l ItemData, x

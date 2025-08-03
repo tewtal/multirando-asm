@@ -419,6 +419,11 @@ Tile graphics and palette data:
         - 8 frames f3
         - then pattern repeats
 
+        - Check how I messed up the code with the new common/nes/items.asm calls
+        - Test and ensure m1 rupees are working (do they even reload every frame?)
+        - If time, clean up the code and see if we can be more elegant in detecting animateable items
+
+
 - z3 nes items shield level palette bug:
     - rom 515ca6 is utilities.asm/LoadItemPalette subroutine
     - This code loaded item palette 3 for loot id item DF, which is actually a z1 five rupee.  that turns it redish with the red shield level.
@@ -430,12 +435,14 @@ Tile graphics and palette data:
     - LDA.l SpriteProperties_palette_addr,X  is correctly grabbing $d2ca from $a2bfbe which is the correct %SpriteProps entry in the itemdatatables.asm
     - breakpoint PRG 515CA6 execute
     - Uncle pink rupee still unfortunately gets the same palette data at shield levels 2 and 0.
-    
+
 
 
 __Creating and distributing patches__
 
-    ** Note: bps (bps-delta) patching produces erroneous results for what I need: applying target byte changes (and changes ONLY)
+    ** Try merging changes with beta-0.1.11b tag and create a beta.ips and test to see if it's worth maintaining patches for both builds
+
+    Note: bps (bps-delta) patching produces erroneous results for what I need: applying target byte changes (and changes ONLY)
     to a crc-mismatched but length-equal seed (alpha or beta).  All other patch types tested (epb, rup, aps, ups, ppf, and ips) seem suitable.
     Let's use ebp since it works and is supported by the client library.
 

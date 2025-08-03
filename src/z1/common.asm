@@ -38,6 +38,10 @@ NMIStart:
     jsl SnesOamDMA
     jsl SnesProcessPPUString
     jsl nes_overlay_handle
+
+    lda.b z1FrameCounter
+    jsl nes_UpdateItemAnimations
+
     jsl SnesApplyBGPriority
 
     lda $ff

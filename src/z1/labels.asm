@@ -654,3 +654,6 @@ QuickSwapDir = $0A99
 QuickSwapType = $0A9A
 QuickSwapFound = $0A9B
 QuickSwapIndex = $0A9C
+
+; Item animations
+;struct Animations $0aa0  ;  Already defined in common/nes/items.asm; but don't put anything else here

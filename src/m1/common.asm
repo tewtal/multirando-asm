@@ -33,6 +33,9 @@ NMIStart:
     lda $4210
     jsl UpdateScrollHDMA
     jsl nes_overlay_handle
+
+    lda.b m1_FrameCounter
+    jsl nes_UpdateItemAnimations
     jmp $C0DF
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code

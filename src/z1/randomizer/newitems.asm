@@ -229,16 +229,15 @@ PrepDynamicItem:
     ; Get the ROM address containing the item data to be uploaded
     sec : sbc #$0030 
     jsl mb_CheckProgressiveItemLong
+    sta.w TransferTmp  ;  Preserve item id in [A]
+
     asl #2 : tax
-    
+
     ; Store Attribute data
     lda.l ItemData+$2, x 
     sta.w DynamicItemAttrs, y
 
     ; Load offset into item graphics data
-
-    ; TODO: update for rupee animation
-
     lda.l ItemData, x : pha
 
     ; Prep SNES PPU Transfer string
@@ -257,6 +256,11 @@ PrepDynamicItem:
 
     lda.w DynamicItemIndex : asl : tax
     lda.l DynamicItemVramOffsets, x
+
+    pha
+    ldx.w TransferTmp  ; Prep subroutine arguments in [X] and [A]
+    jsl nes_StoreAnimatedItems
+    pla
 
     sta [$F0], y
     iny #4
