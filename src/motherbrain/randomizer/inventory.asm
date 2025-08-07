@@ -755,7 +755,7 @@ CheckItemGame:
     rtl
 
 
-AlttpProgressiveItems:  ; rom: 007fed36
+AlttpProgressiveItems:
     db $5E, $59, $04, $49, $01, $02, $03, $00     ; Progressive sword
     db $5F, $5A, $03, $04, $05, $06, $00, $00     ; Progressive shield
     db $60, $5B, $02, $22, $23, $00, $00, $00     ; Progressive armor
@@ -1060,7 +1060,7 @@ ItemData:
     dw $0002, $0008, $0000, $0001        ; E0 - Magical Rod          (Z1)
     dw $0002, $000A, $0000, $0001        ; E1 - Book of Magic        (Z1)
     dw $0002, $000B, $0032, $0001        ; E2 - Blue Ring            (Z1)  ;  new type $0032
-    dw $0002, $000B, $0032, $0002        ; E3 - Red Ring             (Z1)  ;  new type $0032  ;  rom: 007ff495
+    dw $0002, $000B, $0032, $0002        ; E3 - Red Ring             (Z1)  ;  new type $0032
     dw $0002, $000E, $0000, $0001        ; E4 - Power Bracelet       (Z1)
     dw $0002, $000F, $0000, $0001        ; E5 - Letter               (Z1)
     dw $0002, $0010, $0000, $0000        ; E6 - Compass              (Z1)  ; Bitmask per level (don't place this)

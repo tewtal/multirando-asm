@@ -287,26 +287,6 @@ InitMode_EnterRoom_UW_Hook:
     jsr $7013
     rts
 
-CopyPlayAreaAttrsHalfToDynTransferBuf_extended:
-    !DynTileBuf = $0302
-    !PlayAreaAttrs = $0530
-
-    STX !DynTileBuf
-    STA !DynTileBuf+1
-    LDX #$18
-    STX !DynTileBuf+2
-    LDA #$FF
-    STA !DynTileBuf+3, X
--
-    LDA !PlayAreaAttrs, Y
-    STA !DynTileBuf+2, X
-    DEY
-    DEX
-    BNE -
-
-    jsl PreparePPUProcess
-RTS
-
 print "apu-routines = ", pc
 ; APU Update routines
 LoadSFXRegisters:

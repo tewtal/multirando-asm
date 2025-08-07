@@ -6,9 +6,7 @@
 !B7 = ((!BASE_BANK+$7)<<16)
 
 ;  Fast npc text
-;;org !B1+$481d
 org !B1+$881d
-;arch 6502
 db $02
 
 
