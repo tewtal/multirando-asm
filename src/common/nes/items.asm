@@ -6,6 +6,14 @@ struct Animations $0aa0
     .vramslot: skip 2
 endstruct
 
+;  Clear the Animations struct
+ClearAnimatedItems:
+    php
+    rep #$20
+    stz.w Animations.itemid
+    stz.w Animations.vramslot
+    plp
+rtl
 
 ; [A] = vram slot for item
 ; [X] = item ID
