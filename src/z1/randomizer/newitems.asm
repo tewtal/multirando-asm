@@ -11,6 +11,8 @@ SaveItems:
     lda #$0002
     jsl mb_CopyItemBuffer          ; Copy Z1 items from WRAM-buffer into item buffer
     
+    jsl nes_ClearAnimatedItems     ; Avoid interference with ppu writes by disabling any active animations
+
     plp
     lda.b #$00
     sta.b $11

@@ -10,7 +10,7 @@ SaveItems:
     lda #$0003
     jsl mb_CopyItemBuffer          ; Copy the M1 items to item buffer so that on a reset no M1 items are lost
 
-    jsl nes_ClearAnimatedItems
+    jsl nes_ClearAnimatedItems     ; Avoid interference with ppu writes by disabling any active animations
 
     plp
 
