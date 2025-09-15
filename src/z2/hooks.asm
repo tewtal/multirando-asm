@@ -67,8 +67,15 @@ org ((!BASE_BANK+$5)<<16)+$A767 : lda.w $4210
 org ((!BASE_BANK+$5)<<16)+$AB73 : bit.w $4210
 
 ; Hook MMC1 Bank switch Routines
+%z2hook($BFB1, "jsr MMCWriteReg1 : rts")
+%z2hook($FFB1, "jsr MMCWriteReg1 : rts")
+
+%z2hook($BFCC, "jsr MMCWriteReg3 : rts")
 %z2hook($FFCC, "jsr MMCWriteReg3 : rts")
+
+%z2hook($BF9D, "sta z2_CurMMC1Control : jsl EmulateMMC1 : rts")
 %z2hook($FF9D, "sta z2_CurMMC1Control : jsl EmulateMMC1 : rts")
 
 %z2hook($C0D9, "jsr SnesTransferTileBuf")
 org ((!BASE_BANK+$5)<<16)+$A650 : jsr SnesTransferTileBuf
+

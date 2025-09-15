@@ -40,16 +40,20 @@ incbin "../../resources/zelda2.nes":($1C010)-($20010)
 
 ; CHR-ROM
 org $A88000
-incbin "../../resources/zelda2.nes":($20010)-($28010)
+chr_rom_0:
+incbin "../data/z2chr_0.bin"
 
 org $A98000
-incbin "../../resources/zelda2.nes":($28010)-($30010)
+chr_rom_1:
+incbin "../data/z2chr_1.bin"
 
 org $AA8000
-incbin "../../resources/zelda2.nes":($30010)-($38010)
+chr_rom_2:
+incbin "../data/z2chr_2.bin"
 
 org $AB8000
-incbin "../../resources/zelda2.nes":($38010)-($40010)
+chr_rom_3:
+incbin "../data/z2chr_3.bin"
 
 
 org $80ffc0

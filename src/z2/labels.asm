@@ -24,6 +24,12 @@ z2_AttrTransferOffset = $A04
 z2_CurSplitVScroll = $A06
 z2_VScrolling = $A08
 
+z2_ChrBank0Current = $A10
+z2_ChrBank0Request = $A14
+
+z2_ChrBankSource = $A20
+z2_ChrBankTarget = $A24
+
 
 z2_APUBase = $0900
 z2_APUExtraControl = $0916

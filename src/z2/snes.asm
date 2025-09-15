@@ -294,6 +294,7 @@ EmulateMMC1:
     LDA #$21
     STA $002107
 .End
+    LDA #$00
     RTL
 
 ; Use autojoypad-read instead of manual controller reads to read all controllers fast
@@ -1136,6 +1137,85 @@ ProcessPPUString:
     lda z2_PPUCNT0ZP : jsr WritePPUCTRL
     lda z2_PPUCNT1ZP : jsr WritePPUCTRL1
     rtl
+
+; Takes a CHR request, and DMA:s the correct CHR-data to the SNES PPU as needed
+SnesProcessCHRRequest:
+    phx
+    lda z2_ChrBank0Request
+    cmp z2_ChrBank0Current
+    beq .end
+    jsl SnesTransferCHR
+    sta z2_ChrBank0Current
+
+.end
+    plx
+    rtl
+
+SnesTransferCHR:
+    phx : phy : pha : php
+    rep #$30
+
+    ; Figure out the source address (bank requested in A)
+    and.w #$00ff
+    pha
+    lsr #3 : asl #2 : tay   ; Y = Source bank / 8 (to look up the ROM address)
+    lda.w ChrRomTable, y : sta z2_ChrBankSource
+    lda.w ChrRomTable+1, y : sta z2_ChrBankSource+1
+    pla
+    and #$0007  ; Add 0x1000 * A to the source address
+    xba : asl #4
+    clc : adc z2_ChrBankSource
+    sta z2_ChrBankSource
+
++
+
+    ; Write the source address to DMA channel 0
+    lda z2_ChrBankSource
+    sta $4302
+    lda z2_ChrBankSource+1
+    sta $4303
+
+    lda #.zero
+    sta $4312
+    lda #(.zero>>8)
+    sta $4313
+
+    ; Write target address to PPU VMADDR
+    stz $2116
+
+    ; Set PPU VMAIN
+    sep #$20
+    lda #$80
+    sta $2115
+
+    ; Set DMA channel 0 flags
+    lda #$01
+    sta $4300
+
+    lda #$09
+    sta $4310
+
+    lda #$18
+    sta $4301
+    sta $4311
+
+    stz $4306
+    stz $4316
+
+    ldx #$0200
+.loop
+    lda #$10
+    sta $4305
+    sta $4315
+    lda #$03
+    sta $420b
+    dex
+    bne .loop
+
+    plp : pla : ply : plx
+    rtl
+.zero
+    dw $0000
 
 print "soundemu = ", pc
 SoundEmulateLengthCounters:

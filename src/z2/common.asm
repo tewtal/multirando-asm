@@ -35,6 +35,7 @@ NMIStart:
     lda $4210
     jsl SnesOamDMA
     jsl SnesProcessPPUString
+    jsl SnesProcessCHRRequest
     ;jsl nes_overlay_handle
     ;jsl SnesApplyBGPriority
 
@@ -97,6 +98,11 @@ MMCWriteReg3:
     PLA
     RTS
 
+; Emulate MMC1 CHR Bank 0 switch, bank number in A
+MMCWriteReg1:
+    sta.w z2_ChrBank0Request
+    rts
+
 ; PPU Update routines    
 WritePPUCTRL:
     ;sta PPUCNT0ZP
@@ -146,3 +152,9 @@ SnesTransferTileBuf:
     phb : pla : sta $02
     jsl SnesPPUPrepare
     rts
+
+ChrRomTable:
+    dl chr_rom_0 : db $00
+    dl chr_rom_1 : db $00
+    dl chr_rom_2 : db $00
+    dl chr_rom_3 : db $00

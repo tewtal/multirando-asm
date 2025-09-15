@@ -18,7 +18,8 @@ SnesBoot:
 
     SEP #$30
     LDA #$21 : STA $2107
-    LDA #$01 : STA $210B
+    LDA #$E1 : STA $210B
+    LDA #$EE : STA $210C
     LDA #$00 : STA $2101
     LDA #$11 : STA $212C
     ;JSL SetupScrollHDMA
@@ -41,7 +42,8 @@ SnesBoot:
 ;     jsl UploadItemPalettes
 ; endif
 ;     jsl nes_overlay_init
-    
+    LDA #$FF
+    STA z2_ChrBank0Current
     JML (!BASE_BANK<<16)+$FF70 ; Startup
 
 SnesInit:
@@ -222,7 +224,7 @@ _Loop09:
   LDA #$20
   STA $2107
 
-  LDA #$01
+  LDA #$E1
   STA $210B
 
   LDA #$01
