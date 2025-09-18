@@ -403,7 +403,7 @@ overlay_item_names:
     dw "     Desert Palace Map    "
     dw "    Eastern Palace Map    "
     dw "   Maridia Boss Keycard   "
-    dw "     HYRULE CASTLE Map    " ; 7F
+    dw "     Hyrule Castle Map    " ; 7F
 
     dw "   Brinstar L 1 Keycard   " ; 80
     dw "   Brinstar L 2 Keycard   "
