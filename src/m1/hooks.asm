@@ -53,7 +53,7 @@ endmacro
 %hook($C03E, "nop")
 
 ; Hook ProcessPPUString so that it can upload data converted to SNES format
-%hook($C30C, "jsl ProcessPPUString : jmp $C29A")
+%hook($C30C, "jsl ProcessPPUString : jmp $C29A")    ;  return-jumps to prg $69429A
 
 ; Hook GFXCopyLoop that uploads tile data
 %hook($C7D5, "jsl GFXCopyLoop : rts")

@@ -23,6 +23,8 @@ org $979000
 incsrc "labels.asm"
 incsrc "init.asm"
 incsrc "snes.asm"
+print "m1 SNES port functions end = ", pc
+warnpc $979fff
 
 ; Include randomizer additions
 org $988000

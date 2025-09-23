@@ -59,9 +59,14 @@ UpdateVScrollHDMA:
     lda #$ff
     sta VScrollSplit
 ++
+
+    ;  Save the previous ScrollYDMA to ScrollYDMAPrev
+    lda ScrollYDMA
+    sta ScrollYDMAPrev
+
     rep #$20
     lda CurVScroll : and #$00ff : sta ScrollYDMA
-    
+
     lda PPUCNT0ZP
     and #$0003
     beq +
@@ -79,7 +84,6 @@ UpdateVScrollHDMA:
     sta VScrollTable_sbval
 
 +
-
     sep #$30
     
     lda VScrollSplit
@@ -87,6 +91,21 @@ UpdateVScrollHDMA:
 
     cmp #$7f
     bcs .secondHalf
+    cmp #$00        ;  Avoid a zero in [A] getting written to the second hdma line
+    bne .nonzero    ;  counter byte [VScrollTable_len1] which disables hdma for the rest of frame
+                    ;  and displays the wrong screen leading to tile-attribute flicker
+    lda #$80
+    sta VScrollTable_len1
+    stz VScrollTable_len2
+    stz VScrollTable_len3
+    rep #$20
+    lda ScrollYDMA
+    clc : adc #$0010 : and #$01ff
+    sta VScrollTable_val1
+    sep #$20
+    bra .end
+
+.nonzero            ;  The standard case
     sta VScrollTable_len1
     sta VScrollTable_len2
     stz VScrollTable_len3
@@ -105,6 +124,23 @@ UpdateVScrollHDMA:
     sta VScrollTable_len3
     rep #$20
     lda ScrollYDMA
+
+    ;  If ScrollYDMA is $0f, wait one more time before returning to nonscrolling operation since both
+    ;  tilesets should be identical and the one being updated has an extra frame to
+    ;  process attribute data.  Fixes N->S scroll tileset attribute flicker
+    cmp #$000f
+    bne .normalFrame
+    lda ScrollYDMAPrev
+    cmp #$0080      ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
+    bcc .notSpecialCase
+    cmp #$00d1      ;  Only use the previous value if we're not doing a pause menu scroll
+    bcc .delayedFrame
+
+.notSpecialCase:
+    lda ScrollYDMA  ;  Restore ScrollYDMA
+
+.normalFrame
+.delayedFrame
     sta VScrollTable_val1
     sta VScrollTable_val2
     clc : adc #$0010 : and #$01ff
@@ -115,6 +151,11 @@ UpdateVScrollHDMA:
 
 UpdateHScrollHDMA:
     rep #$20
+
+    ; Save the previous ScrollXDMA to ScrollXDMAPrev
+    lda ScrollXDMA
+    sta ScrollXDMAPrev
+
     lda CurHScroll : and #$00ff : sta ScrollXDMA
     
     lda PPUCNT0ZP
@@ -125,6 +166,9 @@ UpdateHScrollHDMA:
     xba
     ora ScrollXDMA
     sta ScrollXDMA
+
+    jsr SpecialFixHScrollHDMA
+
     sta HScrollTable_val
 
     sep #$20
@@ -137,8 +181,28 @@ UpdateHScrollHDMA:
     lda #$00
 ++
     sta HScrollTable_sblen
-
     rtl
+
+
+;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
+;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
+;  Fixes some (but not all) horizontal scroll tileset attribute flicker.
+;  [A]: ScrollXDMA
+;  Returns in [A]: HScrollTable_val
+SpecialFixHScrollHDMA:
+    cmp #$0000
+    bne .end
+
+    lda ScrollXDMAPrev
+    cmp #$0100
+    bne .end
+
+.horizontalLayout:
+    lda ScrollXDMA
+
+.end:
+rts
+
 
 ; The game does special magic when scrolling vertically, so we'll have to calculate the correct Y scroll position here
 ; and run the vertical HDMA scrolling update routine
@@ -166,10 +230,21 @@ SnesUpdateVerticalGameScroll:
     jsl UpdateVScrollHDMA
     rtl
 
-; Convert the NES OAM buffer at $300-3FF to SNES format and DMA to the PPU
+; Convert the NES OAM buffer at $200-2FF to SNES format and DMA to the PPU
 ; We'll have to convert every 8x16 sprite into two 8x8 sprites since the SNES doesn't support 8x16
 SnesOamPrepare:
     PHP : PHB : PEA $7E7E : PLB : PLB
+
+    ;  Wait until we're outside of vblank to run this honkin' thing.
+    ;  NES lag frames can cause this to take up vblank time and delay
+    ;  queued oam and tile data until the very end, causing some or all
+    ;  of the vram dmas to fail leaving sprites and tiles in a mess.
+    ;  e.g., door transition from lvl 2 entry room to the north
+.awaitVblankOver:
+    lda $004212       ; check HVBJOY
+    and #$80        ; In vblank?
+    bne .awaitVblankOver ; Wait until vblank's over
+
     REP #$10
     LDA #$00 : XBA
     LDX #$0000
@@ -178,7 +253,10 @@ SnesOamPrepare:
     ; Y coordinate
     LDA.w Z1OAMNES.Y, X
     CMP #$F8
-    BEQ .Clear
+    bne ..next
+    jmp .Clear
+
+..next
     SEC : SBC #!VSpriteOffset
 
     BIT.w Z1OAMNES.Attr, X
@@ -221,8 +299,19 @@ SnesOamPrepare:
     AND.b #$04
     BEQ .noExtended
 
+    LDA.w Z1OAMNES.Attr, X
+    and.b #$f0  ;  Check if we've specified a different palette in the upper nibble
+    beq .extPalette
+
+    lsr #3      ;  Move palette in the upper nibble into position
+    ora.b #$21  ;  Add the OAM2 selector bit and priority=2 bit
+    bra .continue
+
+.extPalette
     LDA.w Z1OAM.Attr, Y
     ORA.b #$09
+
+.continue
     STA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr+$4, Y
 
@@ -252,6 +341,16 @@ SnesOamPrepare:
     PLB
     PLP
     RTL
+
+;  Start NMI by clearing BG1HOFS to allow special case code
+;  to fix tileset attribute flicker on horizontal scrolling.
+;  See snes.asm/UpdateHScrollHDMA for details.
+ResetBg1hofs:
+    rep #$20
+    lda.w #$0000
+    sta.w $210d
+    sta.w $210d
+    rtl
 
 SnesOamDMA:
     PHP    
@@ -343,7 +442,7 @@ SnesApplyBGPriority:
     rep #$30
     ldx #$20EF
     stx $2116
-    lda #$3025
+    lda #$3c25  ; special palette index $7 and priority bit 1 for all black, loaded in transition_in.asm/initSpecialPaletteEntry
     sta $2118
     sta $2118
 

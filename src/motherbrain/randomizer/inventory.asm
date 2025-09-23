@@ -343,6 +343,9 @@ WriteItemToInventory:
 +   cmp #$0031
     bne +
         jmp .z1HeartContainer
++   cmp #$0032
+    bne +
+        jmp .z1Rings
 +   cmp #$0040
     bne +
         jmp .m1Ammo
@@ -541,6 +544,25 @@ WriteItemToInventory:
     sta.w !SRAM_ITEM_BUFFER+$2, y       ; Write the ammo to the SRAM buffer
     jmp .end
 
+.z1Rings
+    lda.w ItemData+6, x                 ; Get the item value
+    %a8()
+    cmp.w !SRAM_ITEM_BUFFER, y          ; Compare to the current value
+    bcc ..preventDowngrade               ; If the new value is less than the current value, don't update
+    sta.w !SRAM_ITEM_BUFFER, y          ; Write the item to the SRAM buffer
+
+    ;  Update sram with the appropriate tunic value
+    tax                                 ;  Move ring value to x
+    lda.l !Z1_TunicTable, x             ;  Index into color table
+    sta.l !Z1_TunicColor                ;  Write to sram $6804
+
+    bra ..z1RingsEnd
+..preventDowngrade
+    lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value so we can return it
+..z1RingsEnd
+    %a16()
+    jmp .end
+
 .z1Rupees
     %a16()
     lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value
@@ -560,8 +582,13 @@ WriteItemToInventory:
     %a8()
     lda.w !SRAM_ITEM_BUFFER, y          ; Get the current value
     lsr #4                              ; Divide by 16
+
+    cmp #$0f                          ; Check for max heart containers
+    bcs ..preventOverflow               ; Prevent adding above max
+
     clc
     adc.w ItemData+6, x                 ; Add to the current heart containers
+..preventOverflow
     sta.w !INVENTORY_TEMP_1             ; Store the new value
     asl #4
     ora.w !INVENTORY_TEMP_1             ; OR the new value to refill hearts
@@ -776,9 +803,9 @@ ItemBufferOffsets:
 ;
 ;   Z1 Item Types
 ;   ------------------------
-;   30 - Z1 Rings
-;   31 - Z1 Rupees
-;   32 - Z1 Heart Container
+;   30 - Z1 Rupees
+;   31 - Z1 Heart Container
+;   32 - Z1 Rings
 
 ;   M1 Item Types
 ;   ------------------------
@@ -1032,8 +1059,8 @@ ItemData:
 
     dw $0002, $0008, $0000, $0001        ; E0 - Magical Rod          (Z1)
     dw $0002, $000A, $0000, $0001        ; E1 - Book of Magic        (Z1)
-    dw $0002, $000B, $0000, $0001        ; E2 - Blue Ring            (Z1)
-    dw $0002, $000B, $0000, $0002        ; E3 - Red Ring             (Z1)
+    dw $0002, $000B, $0032, $0001        ; E2 - Blue Ring            (Z1)  ;  new type $0032
+    dw $0002, $000B, $0032, $0002        ; E3 - Red Ring             (Z1)  ;  new type $0032
     dw $0002, $000E, $0000, $0001        ; E4 - Power Bracelet       (Z1)
     dw $0002, $000F, $0000, $0001        ; E5 - Letter               (Z1)
     dw $0002, $0010, $0000, $0000        ; E6 - Compass              (Z1)  ; Bitmask per level (don't place this)

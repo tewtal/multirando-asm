@@ -30,11 +30,18 @@ LongJumpToRoutine_common:
 NMIStart:
     pha : phx : phy : phb : php
     phk : plb
+
+    jsl ResetBg1hofs
+
     sep #$30
     lda $4210
     jsl SnesOamDMA
     jsl SnesProcessPPUString
     jsl nes_overlay_handle
+
+    lda.b z1FrameCounter
+    jsl nes_UpdateItemAnimations
+
     jsl SnesApplyBGPriority
 
     lda $ff
@@ -43,7 +50,7 @@ NMIStart:
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd:
-    jsl SnesUpdateAudio    
+    jsl SnesUpdateAudio
     jsl SnesProcessFrame
     plp : plb : ply : plx : pla
     jmp $E576

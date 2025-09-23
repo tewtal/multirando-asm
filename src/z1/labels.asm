@@ -620,7 +620,8 @@ ScrollYDMA = $0A40
 ScrollXDMA = $0A42
 VScrollAddrTmp = $0A44
 VScrollSplit = $0A46
-VScrollSplitTest = $0A48
+ScrollXDMAPrev = $0A84
+ScrollYDMAPrev = $0A48
 
 ButtonsPressedSnes = $0A4A
 ButtonsDownSnes = $0A4C
@@ -653,3 +654,6 @@ QuickSwapDir = $0A99
 QuickSwapType = $0A9A
 QuickSwapFound = $0A9B
 QuickSwapIndex = $0A9C
+
+; Item animations
+;struct Animations $0aa0  ;  Already defined in common/nes/items.asm; but don't put anything else here
