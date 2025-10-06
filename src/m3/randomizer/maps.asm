@@ -61,8 +61,9 @@ DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 ; stations are all activated by default, this should cause
 ; the entire map to be revealed from the start of the game.
 org $829727
-fillbyte $ff : fill $FF ; Crateria
-fillbyte $ff : fill $FF ; Norfair
-fillbyte $ff : fill $FF ; Wrecked Ship
-fillbyte $ff : fill $FF ; Maridia
-fillbyte $ff : fill $FF ; Tourian
+fillbyte $ff : fill $100 ; Crateria
+fillbyte $ff : fill $100 ; Brinstar
+fillbyte $ff : fill $100 ; Norfair
+fillbyte $ff : fill $100 ; Wrecked Ship
+fillbyte $ff : fill $100 ; Maridia
+fillbyte $ff : fill $100 ; Tourian

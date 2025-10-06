@@ -2,19 +2,21 @@
 ; SM Keycard system (used for Keysanity)
 ;
 
+!frame_tile = $A8BE  ; Tile to use for the frame around the keycards
+
 ; Hook initial drawing of pause screen to draw keycards status on BG3
 ; and make sure it draws only on the map screen and not equipment screen
 org $828D47
-    jsl keycard_update_layer3
+    jsl keycard_draw_maptext
 
-org $8291AD
-    jsl keycard_hide_maptext
+; org $8291AD
+;     jsl keycard_hide_maptext
 
-org $8291D9
-    jsl keycard_show_maptext
+; org $8291D9
+;     jsl keycard_show_maptext
 
-org $82933A
-    jsl keycard_restore_vars
+; org $82933A
+;     jsl keycard_restore_vars
 
 ; Redirect the grey door preinstruction list so we can customize it
 org $84be43
@@ -103,72 +105,36 @@ warnpc $84870b
 
 ; Use free space in bank 8e for any code that doesn't have to be in the PLM bank
 org $8ef000
-keycard_update_layer3:
-    ldx #$0EFE
-    lda #$184E
--
-    sta $7E4000,x
-    dex #2
-    bpl -
 
-    lda config_keycards
-    beq keycard_maptext_skip
-    jsr keycard_draw_maptext
-keycard_maptext_skip:
-
-    ldx $0330  
-    lda #$0F00
-    sta $D0,x  
-    lda #$4000
-    sta $D2,x  
-    lda #$007E
-    sta $D4,x  
-    lda #$5880
-    sta $D5,x  
-    txa
-    clc
-    adc #$0007
-    sta $0330
-
-    lda $5b
-    sta $87     ; Backup $5b
-    lda #$005A
-    sta $5b
-
-    rtl
-
-keycard_restore_vars:
-    lda $87
-    sta $5b
-    jsl $80834B
-    rtl
-
-keycard_hide_maptext:
-    lda #$005C
-    sta $5b
-    jsl $82bb30
-    rtl
-
-keycard_show_maptext:
-    lda #$005A
-    sta $5b
-    jsl $82bb30
-    rtl
-
+; Draw keycards on layer 2 tilemap
 keycard_draw_maptext:
     phx : phy : phb
     phk : plb
 
-    ldx #$4372
+    lda.l config_keycards
+    bne .keycards
+    jmp .exit
+
+.keycards
+    ; Use a few bytes of RAM from $7FFE00 to create our tilemap
+    ldx #$fe00
     ldy #$0000
+    lda #!frame_tile
+-
+    sta $7F0000, x
+    inx #2
+    cpx #$fe36
+    bne -
+
+    ldx #$fe00
     lda #$0080
     sta $14
 
 .loop_three
     ; Draw a region
     lda .regions, y
-    sta $7E0000, x
-    inx #4
+    sta $7F0000, x
+    inx #2
     
     ; Draw the three keys for the region
     phy
@@ -178,8 +144,12 @@ keycard_draw_maptext:
     jsl $808233
     bcc +
     lda .cards, y
-    sta $7E0000, x
+    sta $7F0000, x
+    bra ++
 +
+    lda #!frame_tile
+    sta $7F0000, x
+++
     inx #2
     iny #2
     inc $14
@@ -187,7 +157,7 @@ keycard_draw_maptext:
     bne -
     ply
 
-    txa : clc : adc #$0036 : tax
+    inx #2
     iny #2
     cpy #$0008
     bne .loop_three
@@ -195,8 +165,8 @@ keycard_draw_maptext:
 .loop_two
     ; Draw a region
     lda .regions, y
-    sta $7E0000, x
-    inx #4
+    sta $7F0000, x
+    inx #2
     
     ; Draw the two keys for the region
     phy
@@ -206,32 +176,60 @@ keycard_draw_maptext:
     jsl $808233
     bcc +
     lda .cards, y
-    sta $7E0000, x
+    sta $7F0000, x
+    bra ++
 +
-    inx #4
+    lda #!frame_tile
+    sta $7F0000, x
+++
+    inx #2
     iny #4
     inc $14
     cpy #$0008
     bne -
     ply
 
-    txa : clc : adc #$0034 : tax
+    inx #2
     iny #2
     cpy #$000c
     bne .loop_two
 
+    ; DMA to VRAM A604
+    sep #$30
+    lda #$02
+    sta $2116
+    lda #$53
+    sta $2117
+    lda #$80
+    sta $2115
+    jsl $8091A9
+    db $01, $01, $18
+    dl $7FFE00
+    dw $0036
+    lda #$02
+    sta $420b
+    rep #$30
+
+.exit
     plb : ply : plx
-    rts
+    jsl $80A211
+    rtl
 
 
 .regions
-table ../../data/tables/box.tbl,rtl
-    dw "CBNMWL"
+; table ../../data/tables/box.tbl,rtl
+;     dw "CBNMWL"
+    dw $2432
+    dw $2431
+    dw $243D
+    dw $243C
+    dw $2446
+    dw $243B
 .cards
-    dw $2C00
-    dw $2801
-table ../../data/tables/box_yellow.tbl,rtl
-    dw "B"
-cleartable
+    dw $2805
+    dw $2806
+; table ../../data/tables/box_yellow.tbl,rtl
+    dw $2831
+; cleartable
 
 warnpc $8effff

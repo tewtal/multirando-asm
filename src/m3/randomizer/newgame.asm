@@ -9,7 +9,7 @@ org $828067
 org $80d000
 introskip_doorflags:
     ; Do some checks to see that we're actually starting a new game
-    
+    JSL ConstructMapFromGameStart
     lda #$0000
     rtl
 
