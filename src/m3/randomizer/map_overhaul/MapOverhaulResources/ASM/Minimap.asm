@@ -99,7 +99,7 @@ ApplyTileGFXtoRAM:
 	PHB
 	STZ $12 : LDA $12 : LDY.w #!RAM_Minimap_GFX		;prepare loop ;[Y] maptile GFX transfer target
 
-- : TAX : LDA $7EC63C,x : PHA : AND #$00FF : STA $14				;$14 = maptile index
+- : TAX : LDA $7EC63C,x : PHA : AND #$01FF : STA $14				;$14 = maptile index
 	PLA : AND #$FC00 : ORA.l HUD_MapTileOffset,x : STA $7EC63C,x	;save HUD tile with palette and mirror
 	LDA $14 : ASL #4 : ADC.w #!Freespace_MinimapTiles : TAX		;set source for transfer
 	LDA #$000F : MVN.w (!Freespace_MinimapTiles>>8&$FF00)+$7E	;transfer maptile GFX to RAM

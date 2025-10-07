@@ -66,9 +66,9 @@ transition_to_sm:
     lda !IRAM_TRANSITION_DESTINATION_ID
     sta $078d                   ; Store the selected door index
 
-    jsr update_save_station     ; Update save station to portal room and autosave
-
     jsl sm_setup_door
+
+    jsr update_save_station     ; Update save station to portal room and autosave
 
     %ai16()
 
@@ -110,7 +110,9 @@ update_save_station:
     lda.l $830000,x : tax : tay
 
     ; Get area index
-    lda.l $8F0001,x : and #$00ff : asl : tax
+    lda.l $8F0001,x : and #$00ff
+    sta $079f
+    asl : tax
 
     ; Get load station pointer index
     lda.l $80C4B5,x : tax : tya

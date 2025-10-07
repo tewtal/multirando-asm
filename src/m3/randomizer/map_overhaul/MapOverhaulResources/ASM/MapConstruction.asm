@@ -40,7 +40,7 @@ MainMapConstruction:
 	LDA #$0FFD : MVN $7E7E			;clear up entire map with empty maptiles
 	PHK : PLB
 
-	JSR MapDecoration
+;	JSR MapDecoration
 	JSL LoadSourceMapData			;[$00] = long pointer to current area map data
 ;map station loaded maptiles pointer
 	LDA $1F5B : ASL A : TAX : LDA #$0082 : STA $0A
@@ -86,6 +86,7 @@ MainMapConstruction:
 	LDX $10 : BRA -
 
 .empty : INY : INY : CPY.w #!ItemIDCheckLimit>>3 : BCC --	;loop
+	JSR MapDecoration
 	STZ !SamusMapPositionMirror											;zero minimap mirror upon map construction
 	STZ !PauseScreenX_PositionMirror : STZ !PauseScreenY_PositionMirror	;zero pause screen position mirror
 	PLB : RTS

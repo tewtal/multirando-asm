@@ -276,5 +276,6 @@ INCSRC MapOverhaulResources/ASM/MapConstruction.asm
 INCSRC MapOverhaulResources/ASM/Minimap.asm
 
 ;Bin file
-ORG !Freespace_MinimapTiles : INCBIN MapTiles.bin	;maptile storage for HUD map
+ORG $B68000 : incbin ../../../data/sm-maptiles.bin
+ORG !Freespace_MinimapTiles : incbin ../../../data/sm-minimaptiles.bin
 }
