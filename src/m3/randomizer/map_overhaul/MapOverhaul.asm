@@ -120,7 +120,7 @@
 	!MaptileGlow_TimerAmount = $08
 
 ;How many palettes should have maptile glow? (default: $06)
-	!MaptileGlow_PaletteAmount = $06
+	!MaptileGlow_PaletteAmount = $00
 }
 
 {;-------------------------------------- MINIMAP ---------------------------------------------------
