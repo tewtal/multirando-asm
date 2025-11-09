@@ -162,3 +162,12 @@ org $829035
 ; Go to submode 1 of menu 
 org $82A596
     dw $a5df
+
+; =============================================
+; Expanded dungeons support
+; =============================================
+
+; Hook CopyBlock to use expanded version
+org $86806C
+    jsr CopyBlock_Common
+

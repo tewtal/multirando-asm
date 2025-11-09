@@ -269,4 +269,19 @@ Anim_ItemFrameTiles_extended:
     db $00, $00, $00, $00, $00, $00, $00, $4F ; 38-3f
 
 
+; Bank pointers for the level block data for each dungeon
+; Place at a known location for easy patching
+org $8A8600
+LevelBlockBanksQ1:
+    db $86 ; Overworld
+    db $86 ; Dungeon 1
+    db $86 ; Dungeon 2
+    db $86 ; Dungeon 3
+    db $86 ; Dungeon 4
+    db $86 ; Dungeon 5
+    db $86 ; Dungeon 6
+    db $86 ; Dungeon 7
+    db $86 ; Dungeon 8
+    db $86 ; Dungeon 9
+
 

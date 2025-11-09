@@ -33,3 +33,11 @@ InitMode8_SaveItems:
     jsl SaveItems
     jsr $E625
     rts
+
+; =============================================
+; Expanded dungeons support
+; =============================================
+
+CopyBlock_Common:
+    jsl CopyBlock_LevelData
+    rts
