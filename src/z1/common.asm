@@ -624,6 +624,12 @@ WriteAPUControl:
     xba
     rts
 
+WriteApuFrameCounter:
+    sta ApuFrameCounter
+    lda #$20
+    tsb.w APUExtraControl
+rts
+
 WriteAPUDMCCounter:
     stx.w DmcCounter_4011
 rts

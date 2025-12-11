@@ -457,6 +457,7 @@ PpuScroll_2005 = $2005
 PpuAddr_2006 = $2006
 PpuData_2007 = $2007
 
+;  TODO: Move to labels in audio dir
 Sq0Duty_4000 = $900
 Sq0Sweep_4001 = $901
 Sq0Timer_4002 = $902
@@ -479,6 +480,7 @@ SpriteDma_4014 = $914
 ApuStatus_4015 = $915
 Ctrl1_4016 = $4016
 Ctrl2_FrameCtr_4017 = $4017
+ApuFrameCounter = $917
 
 
 SaveRamBegin = $7E6001
@@ -550,6 +552,7 @@ VScrolling = $A08
 !VScrollOffset = $0F
 !VSpriteOffset = $0F
 
+;  TODO: Move to labels in audio dir
 APUBase = $0900
 APUExtraControl = $0916
 APUSq0Length = $0920

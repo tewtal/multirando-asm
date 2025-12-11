@@ -80,6 +80,7 @@ org ((!BASE_BANK+5)<<16)+$8824 : jsr InitMode_EnterRoom_UW_Hook
 org ((!BASE_BANK+$6)<<16)+$A08C : jsr SnesTransferTileBuf
 
 ; Sound engine hooks
+; TODO: Move to hooks in audio dir
 
 !B0 = ((!BASE_BANK)<<16)
 !B7 = ((!BASE_BANK+$7)<<16)
@@ -93,6 +94,9 @@ org !B0+$9BA6 : jsr WriteAPUControl
 org !B0+$9D4B : jsr WriteAPUControl
 ; org !B0+$9D5C : sta $0915
 org !B7+$E467 : jsr WriteAPUControl
+
+; Frame counter writes ($4017)
+org !B0+$9837 : jsr WriteApuFrameCounter
 
 ; Hook writes to Square Wave Channel 1
 org !B0+$9900 : jsr WriteAPUSq0Ctrl0_X

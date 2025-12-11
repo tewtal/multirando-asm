@@ -52,7 +52,7 @@ no4016     = $56 ; $4016
 ; 0x04 = Reset triangle
 ; 0x08 = Reset noise
 ; 0x10 = Initiate dmc playback
-; 0x20 = Mono
+; 0x20 = [repurposed as $4017 write active]
 ; 0x40 = Square 0 sweep
 ; 0x80 = Square 1 sweep
 
@@ -304,7 +304,9 @@ cpucheck:
         bne cpucheck
 
         cmp a,#$F5              ; wait for port 0 to be $F5 (Reset)
+        bne +
         call to_reset
++
         cmp a,#$D7              ; wait for port 0 to be $D7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
         beq apurecv  ;  New cpu data waiting to send
         bra WaitTick
@@ -359,7 +361,7 @@ TickHandler:
 
     ;  "Active" nes apu variables indicate the registers have been
     ;  written to as of the last cpu update and need to be processed
-    Active4015 = $62
+    ; Active4015 = $62
     Active4017 = $63
 
     cmp Active4017, #$01
@@ -383,7 +385,7 @@ TickHandler:
     ;  Update current frame counter cycle number
     inc FrameCounterCycle
     mov a, FrameCounterCycle
-    sbc a, FrameCounterStepMode
+    setc : sbc a, FrameCounterStepMode
     cmp a, #$04
     !blt +
     mov FrameCounterCycle, #$00 ;  Start new cycle
@@ -406,7 +408,7 @@ TickHandler:
 ;               beq .endHanlder
 
     mov a, FrameCounterStepMode
-    adc a, FrameCounterCycle
+    clrc : adc a, FrameCounterCycle
     cmp a, #$04     ;  Only way to have 4 here is 3+1 (can never have 4+0)
     beq .endHandler
 

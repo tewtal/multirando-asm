@@ -18,9 +18,21 @@ xfer:                       ;  -- this happens *relatively* quickly once we trig
     inc x
     mov a, x
     mov $F5, a
-    cmp x,#$17
+    cmp x,#$18
     bne xfer
+
+    call PrepActiveVars
 
     ; --- Finished transfer.  Prep cpu for next send.
     mov $F4,#$7D            ; move $7D to port 0 (SPC ready)
     bra WaitTick
+
+
+PrepActiveVars:
+    mov a, no4016
+    and a, #$20
+    beq .done
+    mov Active4017, #$01
+
+.done:
+ret

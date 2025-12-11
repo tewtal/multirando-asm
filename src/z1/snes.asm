@@ -1448,7 +1448,7 @@ SnesUpdateAudio:
 -   CPX $2141
     BNE -
 
-    CPX #$17
+    CPX #$18
     BNE --
 
     ; LDA #$0F
