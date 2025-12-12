@@ -346,11 +346,12 @@ TickHandler:
 
     ;  Zero page memory allocations
     ;  $60->$6f: General apu, frame counter, general length counter (if needed)
-    ;  $70->$7f: Square channel internal state (both sq0 and sq1)
-    ;  $80->$8f: Triangle channel internal state
-    ;  $90->$9f: Noise channel internal state
-    ;  $a0->$af: DMC channel internal state
-    ;  $b0->$bf: Reserved for future expansion audio support
+    ;  $70->$7f: Square 0 internal state
+    ;  $80->$8f: Square 1 internal state
+    ;  $90->$9f: Triangle channel internal state
+    ;  $a0->$af: Noise channel internal state
+    ;  $b0->$bf: DMC channel internal state
+    ;  $c0->$cf: Reserved for future expansion audio support
 
     !blt = "BCC"
     !bge = "BCS"
@@ -361,8 +362,44 @@ TickHandler:
 
     ;  "Active" nes apu variables indicate the registers have been
     ;  written to as of the last cpu update and need to be processed
-    ; Active4015 = $62
-    Active4017 = $63
+
+    ;  Register "active" bit storage:
+    ;  4444444444444444444444444444
+    ;  0000000000000000000000000000
+    ;  0000000000000000000011111111
+    ;  01234567  89abcdef  01234567
+    ;  $63       $64       $65
+    ;  --------  --------  --------
+    ActivePulseByte = $63
+    ActiveTriNoiseByte = $64
+    Active401xByte = $65
+
+    !4000active = #%1000_0000
+    !4001active = #%0100_0000
+    !4002active = #%0010_0000
+    !4003active = #%0001_0000
+    !4004active = #%0000_1000
+    !4005active = #%0000_0100
+    !4006active = #%0000_0010
+    !4007active = #%0000_0001
+    !4008active = #%1000_0000
+    !4009active = #%0100_0000
+    !400aactive = #%0010_0000
+    !400bactive = #%0001_0000
+    !400cactive = #%0000_1000
+    !400dactive = #%0000_0100
+    !400eactive = #%0000_0010
+    !400factive = #%0000_0001
+    !4010active = #%1000_0000
+    !4011active = #%0100_0000
+    !4012active = #%0010_0000
+    !4013active = #%0001_0000
+    !4015active = #%0000_0100
+    !4017active = #%0000_0001
+
+
+    Active4015 = $63
+    Active4017 = $64
 
     cmp Active4017, #$01
     bne .updateFrameCounter
@@ -414,7 +451,7 @@ TickHandler:
 
     ;  Process all envelopes and linear counter
     mov a, !Square0Flag
-    call Pulse_TickEnvelope
+    call Pulse_Envelope_Tick
 
 
 .endHandler:
