@@ -307,7 +307,7 @@ cpucheck:
         bne +
         call to_reset
 +
-        cmp a,#$D7              ; wait for port 0 to be $D7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
+        cmp a,#$d7              ; wait for port 0 to be $d7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
         beq apurecv  ;  New cpu data waiting to send
         bra WaitTick
 
