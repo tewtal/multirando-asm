@@ -1,24 +1,24 @@
-
-; Sound engine hooks
-; TODO: Move to hooks in audio dir
+;  Sound engine hooks
 
 !B0 = ((!BASE_BANK)<<16)
 !B7 = ((!BASE_BANK+$7)<<16)
 
-; Patch APU status calls
+;  APU Status writes ($4015)
 org !B0+$982B : jsr WriteAPUControl
-; org !B0+$9830 : sta $0915
+org !B0+$9830 : jsr WriteAPUControl
 org !B0+$9928 : jsr WriteAPUControl
 org !B0+$9BA6 : jsr WriteAPUControl
-; org !B0+$9BE1 : sta $0915
 org !B0+$9D4B : jsr WriteAPUControl
-; org !B0+$9D5C : sta $0915
-org !B7+$E467 : jsr WriteAPUControl
+org !B0+$9D50 : jsr WriteAPUControl
+org !B7+$E465 : jsr WriteAPUControl
+org !B7+$ec46 : jsr WriteAPUControl
+org !B0+$9be5 : jsr WriteAPUControl
+org !B0+$9bea : jsr WriteAPUControl
 
-; Frame counter writes ($4017)
+;  Frame counter writes ($4017)
 org !B0+$9837 : jsr WriteApuFrameCounter
 
-; Hook writes to Square Wave Channel 1
+;  Square Wave Channel 1 writes ($4000 -> $4003)
 org !B0+$9900 : jsr WriteAPUSq0Ctrl0_X
 org !B0+$9911 : jsr WriteAPUSq0Ctrl0
 org !B0+$9C06 : jsr WriteAPUSq0Ctrl0_X
@@ -35,8 +35,7 @@ org !B0+$9E11 : jsr WriteAPUSq0Ctrl2_X
 org !B0+$9905 : jsr WriteAPUSq0Ctrl3_X
 org !B0+$9C1D : jsr WriteAPUSq0Ctrl3
 
-
-; Hook writes to Square Wave Channel 2
+;  Square Wave Channel 2 writes ($4004 -> $4007)
 org !B0+$9B14 : jsr WriteAPUSq1Ctrl0_X
 org !B0+$9B3C : jsr WriteAPUSq1Ctrl0
 org !B0+$9B57 : jsr WriteAPUSq1Ctrl0
@@ -55,7 +54,7 @@ org !B0+$9DAB : jsr WriteAPUSq1Ctrl2_X
 org !B0+$9B19 : jsr WriteAPUSq1Ctrl3_X
 org !B0+$9C3B : jsr WriteAPUSq1Ctrl3
 
-; Hook writes to Triangle Channel
+;  Triangle Channel writes ($4008 -> $400b)
 org !B0+$9E5D : jsr WriteAPUTriCtrl0
 org !B0+$9E92 : jsr WriteAPUTriCtrl0
 
@@ -64,7 +63,7 @@ org !B0+$9E84 : jsr WriteAPUTriCtrl2_X
 
 org !B0+$9C50 : jsr WriteAPUTriCtrl3
 
-; Hook writes to Noise Channel
+;  Noise Channel writes ($400c -> $400f)
 org !B0+$997B : jsr WriteAPUNoiseCtrl0
 org !B0+$9989 : jsr WriteAPUNoiseCtrl0
 org !B0+$9A2A : jsr WriteAPUNoiseCtrl0
@@ -79,9 +78,9 @@ org !B0+$9980 : jsr WriteAPUNoiseCtrl3
 org !B0+$9A34 : jsr WriteAPUNoiseCtrl3
 org !B0+$9ED0 : jsr WriteAPUNoiseCtrl3
 
-;  Hook writes to DMC
-org !B0+$9bb7 : jsr WriteAPUDMCCounter
+;  DMC writes ($4010 -> $4013)
 org !B0+$9bcf : jsr WriteAPUDMCFreq
+org !B0+$9bb7 : jsr WriteAPUDMCCounter
+org !B7+$e460 : jsr WriteAPUDMCCounter
 org !B0+$9bd5 : jsr WriteAPUDMCAddr
 org !B0+$9bdb : jsr WriteAPUDMCLength
-org !B0+$9bea : jsr WriteAPUDMCPlay

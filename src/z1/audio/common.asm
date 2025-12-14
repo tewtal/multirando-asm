@@ -260,24 +260,41 @@ WriteAPUSq0Ctrl3_I_Y:
 ;     jsr WriteAPUNoiseCtrl3    
     rts
 
-
-
-;  TODO: implement all channels below
-
+!apuReg = #$04 ;$4004
 
 WriteAPUSq1Ctrl0:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$04
     rts
 
 WriteAPUSq1Ctrl0_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; stx.w APUBase+$04
     rts
 
 WriteAPUSq1Ctrl0_Y:
+    pha
+    tya
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; sty.w APUBase+$04
     rts
 
+!apuReg = #$05 ;$4005
+
 WriteAPUSq1Ctrl1:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; xba
     ; lda #$80
     ; tsb.w APUBase+$16
@@ -286,6 +303,12 @@ WriteAPUSq1Ctrl1:
     rts
 
 WriteAPUSq1Ctrl1_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; xba
     ; lda #$80
     ; tsb.w APUBase+$16
@@ -294,6 +317,12 @@ WriteAPUSq1Ctrl1_X:
     rts   
 
 WriteAPUSq1Ctrl1_Y:
+    pha
+    tya
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; xba
     ; lda #$80
     ; tsb.w APUBase+$16
@@ -301,15 +330,31 @@ WriteAPUSq1Ctrl1_Y:
     ; sty.w APUBase+$05
     rts   
 
+!apuReg = #$06 ;$4006
+
 WriteAPUSq1Ctrl2:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$06
     rts
 
 WriteAPUSq1Ctrl2_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; stx.w APUBase+$06
     rts
 
+!apuReg = #$07 ;$4007
+
 WriteAPUSq1Ctrl3:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; phx
     ; sta.w APUBase+$07
     ; tax
@@ -324,6 +369,12 @@ WriteAPUSq1Ctrl3:
     rts
 
 WriteAPUSq1Ctrl3_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; pha
     ; stx.w APUBase+$07
     ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
@@ -334,23 +385,49 @@ WriteAPUSq1Ctrl3_X:
     ; pla
     rts
 
+!apuReg = #$08 ;$4008
+
 WriteAPUTriCtrl0:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$08
     rts
 
+!apuReg = #$09 ;$4009
+
 WriteAPUTriCtrl1:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$09
     rts
 
+!apuReg = #$0a ;$400a
+
 WriteAPUTriCtrl2:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$0A
     rts
 
 WriteAPUTriCtrl2_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; stx.w APUBase+$0A
     rts
 
+!apuReg = #$0b ;$400b
+
 WriteAPUTriCtrl3:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; phx
     ; sta.w APUBase+$0B
     ; tax
@@ -363,23 +440,49 @@ WriteAPUTriCtrl3:
     ; plx
     rts
 
+!apuReg = #$0c ;$400c
+
 WriteAPUNoiseCtrl0:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$0C
     rts
 
+!apuReg = #$0d ;$400d
+
 WriteAPUNoiseCtrl1:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$0D
     rts
 
+!apuReg = #$0e ;$400e
+
 WriteAPUNoiseCtrl2:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta.w APUBase+$0E
     rts
 
 WriteAPUNoiseCtrl2_X:
+    pha
+    txa
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    pla
     ; stx.w APUBase+$0E
     rts
 
+!apuReg = #$0f ;$400f
+
 WriteAPUNoiseCtrl3:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; phx
     ; sta.w APUBase+$0F
     ; tax
@@ -392,7 +495,12 @@ WriteAPUNoiseCtrl3:
     ; plx
     rts
 
+!apuReg = #$15 ;$4015
+
 WriteAPUControl:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
 ;     sta.w APUIOTemp
 ;     xba
 ;     lda.w APUIOTemp
@@ -441,27 +549,48 @@ WriteApuFrameCounter:
     ; tsb.w APUExtraControl
 rts
 
-WriteAPUDMCCounter:
-    ; stx.w DmcCounter_4011
-rts
+!apuReg = #$10 ;$4010
 
 WriteAPUDMCFreq:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta DmcFreq_4010
 rts
 
+!apuReg = #$11 ;$4011
+
+WriteAPUDMCCounter:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    ; stx.w DmcCounter_4011
+rts
+
+!apuReg = #$12 ;$4012
+
 WriteAPUDMCAddr:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta DmcAddress_4012
 rts
 
+!apuReg = #$13 ;$4013
+
 WriteAPUDMCLength:
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
     ; sta DmcLength_4013
 rts
 
-WriteAPUDMCPlay:
-    ; sta ApuStatus_4015
-    ; and #%00010000
-    ; sta APUExtraControl
-rts
+;[deprecated]
+; WriteAPUDMCPlay:
+;     ; sta ApuStatus_4015
+;     ; and #%00010000
+;     ; sta APUExtraControl
+; rts
 
 
 ; Sound__EmulateLengthCounter_length_d3_mixed:
