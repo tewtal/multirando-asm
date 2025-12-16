@@ -1,13 +1,14 @@
 print "apu-routines = ", pc
 
-!ApuWritesIndex = $0900
-!ApuWrites      = $0901
-!ApuIo0        = $2140
-!ApuIo1        = $2141
-!ApuIo2        = $2142
-!SpcReadyValue = #$7d
-!CpuReadyValue = #$d7
-!CpuDoneValue  = #$ff
+!ApuWritesIndex  = $090f
+!ApuNumberWrites = $0910
+!ApuValueWrites  = $0940
+!ApuIo0          = $2140
+!ApuIo1          = $2141
+!ApuIo2          = $2142
+!SpcReadyValue   = #$7d
+!CpuReadyValue   = #$d7
+!CpuDoneValue    = #$30
 
 ; APU Update routines
 SnesUpdateAudio:
@@ -46,20 +47,19 @@ SnesUpdateAudio:
 
 ;  spc now ready to receive data
 ;; Transfers a variable length queue of audio register writes
-;; to the spc-700 receiving loop in ../nes-spc/apu-recv.asm:11
+;; to the spc-700 receiving loop in ../nes-spc/apu-recv.asm:16
     ldx #$00
 --
     cpx !ApuWritesIndex     ;  Exit condition
     beq .finishedTransfer
 
-    lda !ApuWrites,x
+    lda !ApuNumberWrites,x
     sta !ApuIo0     ;  Send the apu index
-    inx
 
-    lda !ApuWrites,x
+    lda !ApuValueWrites,x
     sta !ApuIo1     ;  Send the apu value
-    dex : stx !ApuIo2     ;  Send the current write index
-    inx : inx       ;  Next write index
+    stx !ApuIo2     ;  Send the current write index
+    inx             ;  Next write index
 
     ;  spc ack wait loop
 -   cpx !ApuIo2
@@ -85,10 +85,9 @@ SnesUpdateAudio:
 EnqueueApuWrite:
     phx     ;  Preserve [X]
     ldx !ApuWritesIndex
-    sta !ApuWrites,x     ;  Write reg. number
-    inx
+    sta !ApuNumberWrites,x     ;  Write reg. number
     xba
-    sta !ApuWrites,x     ;  Write reg. value
+    sta !ApuValueWrites,x     ;  Write reg. value
     inx
     stx !ApuWritesIndex       ;  Update index
     plx

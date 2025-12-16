@@ -32,29 +32,29 @@ pulse3b: incsrc "../samples/pl3-3.asm"
 ;  $70->$7f: Square 0 internal state
 ;  $80->$8f: Square 1 internal state
 
-sq0Envelope = $70
-sq0TimerTicks = $71
-sq0Duty = $72
-sq0SweepEnabled = $73
-sq0SweepPeriod = $74
-sq0SweepNegate = $75
-sq0SweepShift = $76
-sq0ReloadSweep = $77
-sq0SweepDivider = $78
-sq0SweepDividerPeriod = $79
-sq0RealPeriod = $7a
+sq0Envelope = $90
+sq0TimerTicks = $91
+sq0Duty = $92
+sq0SweepEnabled = $93
+sq0SweepPeriod = $94
+sq0SweepNegate = $95
+sq0SweepShift = $96
+sq0ReloadSweep = $97
+sq0SweepDivider = $98
+sq0SweepDividerPeriod = $99
+sq0RealPeriod = $9a
 
-sq1Envelope = $80
-sq1TimerTicks = $81
-sq1Duty = $82
-sq1SweepEnabled = $83
-sq1SweepPeriod = $84
-sq1SweepNegate = $85
-sq1SweepShift = $86
-sq1ReloadSweep = $87
-sq1SweepDivider = $88
-sq1SweepDividerPeriod = $89
-sq1RealPeriod = $8a
+sq1Envelope = $a0
+sq1TimerTicks = $a1
+sq1Duty = $a2
+sq1SweepEnabled = $a3
+sq1SweepPeriod = $a4
+sq1SweepNegate = $a5
+sq1SweepShift = $a6
+sq1ReloadSweep = $a7
+sq1SweepDivider = $a8
+sq1SweepDividerPeriod = $a9
+sq1RealPeriod = $aa
 
 ;  Methods
 Pulse:

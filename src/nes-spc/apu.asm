@@ -22,41 +22,41 @@ startpos start
 ;       NES Registers
 ;----------------------------------------
 
-sq4000     = $40 ; $4000 - Pulse/square 0 channel
-sq4001     = $41 ; $4001
-sq4002     = $42 ; $4002
-sq4003     = $43 ; $4003
-sq4004     = $44 ; $4004 - Pulse/square 1 channel
-sq4005     = $45 ; $4005
-sq4006     = $46 ; $4006
-sq4007     = $47 ; $4007
-tr4008     = $48 ; $4008 - Triangle channel
-tr4009     = $49 ; $4009
-tr400A     = $4A ; $400A
-tr400B     = $4b ; $400B
-no400C     = $4C ; $400C - Noise channel
-no400D     = $4D ; $400D
-no400E     = $4E ; $400E
-no400F     = $4F ; $400F
-pcm_freq   = $50 ; $4010 - DMC channel
-pcm_raw    = $51 ; $4011
-pcm_addr   = $52 ; $4012
-pcm_length = $53 ; $4013
+; sq4000     = $40 ; $4000 - Pulse/square 0 channel
+; sq4001     = $41 ; $4001
+; sq4002     = $42 ; $4002
+; sq4003     = $43 ; $4003
+; sq4004     = $44 ; $4004 - Pulse/square 1 channel
+; sq4005     = $45 ; $4005
+; sq4006     = $46 ; $4006
+; sq4007     = $47 ; $4007
+; tr4008     = $48 ; $4008 - Triangle channel
+; tr4009     = $49 ; $4009
+; tr400A     = $4A ; $400A
+; tr400B     = $4b ; $400B
+; no400C     = $4C ; $400C - Noise channel
+; no400D     = $4D ; $400D
+; no400E     = $4E ; $400E
+; no400F     = $4F ; $400F
+; pcm_freq   = $50 ; $4010 - DMC channel
+; pcm_raw    = $51 ; $4011
+; pcm_addr   = $52 ; $4012
+; pcm_length = $53 ; $4013
 
-sound_ctrl = $55 ; $4015
+; sound_ctrl = $55 ; $4015
 
-no4016     = $56 ; $4016
-; Bit flags for no4016:
-; 0x01 = Reset square 0
-; 0x02 = Reset square 1
-; 0x04 = Reset triangle
-; 0x08 = Reset noise
-; 0x10 = Initiate dmc playback
-; 0x20 = [repurposed as $4017 write active]
-; 0x40 = Square 0 sweep
-; 0x80 = Square 1 sweep
+; no4016     = $56 ; $4016
+; ; Bit flags for no4016:
+; ; 0x01 = Reset square 0
+; ; 0x02 = Reset square 1
+; ; 0x04 = Reset triangle
+; ; 0x08 = Reset noise
+; ; 0x10 = Initiate dmc playback
+; ; 0x20 = [repurposed as $4017 write active]
+; ; 0x40 = Square 0 sweep
+; ; 0x80 = Square 1 sweep
 
-apu4017    = $57 ; $4017
+; apu4017    = $57 ; $4017
 
 ;=====================
 ;     SPC Memory
@@ -325,180 +325,88 @@ incsrc "./apu-recv.asm"
 incsrc "./channels/pulse.asm"
 
 
-;-----------------------------------------------
-; User-defined routine (runs every 240 Hz)
-;-----------------------------------------------
+;------------------------------------
+; Frame tick routine (runs at 240 Hz)
+;------------------------------------
 TickHandler:
-
     ;  General structure:
     ;  1.  Housekeeping:
     ;       DONE:  increment frame counter cycle number (0->3 or 4)
-    ;       - use current $4017 mode value and fccn index above to select a lookup table value:
+    ;       DONE:  use current $4017 mode value and fccn index above to select a lookup table value:
     ;           - l - l    OR    - l - - l 
     ;           e e e e          e e e - e
     ;       - call subroutines (in large beq case statement?) for all 4 channels:
     ;           tickenvelope, ticklinearcounter, ticklengthcounter, ticksweep
 
-    ;  Metadata needed: 1-3 bytes to track all (or just some?) apu register writes from $4000 to $4017
-    ;   - definitely at least 4015, 4003, 4007, 400b, 400f, 4017
-    ;   - unknown if tracking write action is needed for the others or if current value will suffice
-
-
     ;  Zero page memory allocations
-    ;  $60->$6f: General apu, frame counter, general length counter (if needed)
-    ;  $70->$7f: Square 0 internal state
-    ;  $80->$8f: Square 1 internal state
-    ;  $90->$9f: Triangle channel internal state
-    ;  $a0->$af: Noise channel internal state
-    ;  $b0->$bf: DMC channel internal state
-    ;  $c0->$cf: Reserved for future expansion audio support
+    ;  $00->$1e: Reserved for immediate heap access for subroutines (if needed)
+    ;  $1f:      Register writes queue length
+    ;  $20->$4f: Register writes "reg. number" queue
+    ;  $50->$7f: Register writes "value" queue
+    ;  $80->$8f: General apu, frame counter, general length counter (if needed)
+    ;  $90->$9f: Square 0 internal state
+    ;  $a0->$af: Square 1 internal state
+    ;  $b0->$bf: Triangle channel internal state
+    ;  $c0->$cf: Noise channel internal state
+    ;  $d0->$df: DMC channel internal state
+    ;  $e0->$ef: Reserved for future expansion audio support
 
     !blt = "BCC"
     !bge = "BCS"
 
-    TimerLatchIndex = $60       ;  Cyclic latch_table lookup providing constant 240Hz ticks
-    FrameCounterCycle = $61     ;  Track the 240Hz subdivision being processed, from $00 -> $03 (or $04 for 5-step mode)
-    FrameCounterStepMode = $62  ;  4-step or 5-step nes apu mode
+    TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240Hz ticks
 
-    ;  "Active" nes apu variables indicate the registers have been
-    ;  written to as of the last cpu update and need to be processed
+    ;  Process all queued register writes in the order they were recieved
+ProcessLoop:
+    ;  TODO: Case statement determining which processes should be run on the current frame tick
+    bra .updateFrameCounter
 
-    ;  Register "active" bit storage:
-    ;  4444444444444444444444444444
-    ;  0000000000000000000000000000
-    ;  0000000000000000000011111111
-    ;  01234567  89abcdef  01234567
-    ;  $63       $64       $65
-    ;  --------  --------  --------
-    ActivePulseByte = $63
-    ActiveTriNoiseByte = $64
-    Active401xByte = $65
-
-    !4000active = #%1000_0000
-    !4001active = #%0100_0000
-    !4002active = #%0010_0000
-    !4003active = #%0001_0000
-    !4004active = #%0000_1000
-    !4005active = #%0000_0100
-    !4006active = #%0000_0010
-    !4007active = #%0000_0001
-    !4008active = #%1000_0000
-    !4009active = #%0100_0000
-    !400aactive = #%0010_0000
-    !400bactive = #%0001_0000
-    !400cactive = #%0000_1000
-    !400dactive = #%0000_0100
-    !400eactive = #%0000_0010
-    !400factive = #%0000_0001
-    !4010active = #%1000_0000
-    !4011active = #%0100_0000
-    !4012active = #%0010_0000
-    !4013active = #%0001_0000
-    !4015active = #%0000_0100
-    !4017active = #%0000_0001
+    incsrc "./apu-frame-counter.asm"
 
 
-    Active4015 = $63
-    Active4017 = $64
-
-    cmp Active4017, #$01
-    bne .updateFrameCounter
-
-.resetFrameCounter:
-    ;  Reset frame step mode and counter
-    ;  [ACCURACY TODO]: Impelement a _writeDelayCounter (https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU/ApuFrameCounter.h)
-    mov Active4017, #$00    ;  Mark as processed
-    mov FrameCounterCycle, #$00
-    mov a, apu4017
-    and a, #$80
-    beq .setStepMode0
-    mov FrameCounterStepMode, #$01
-    bra +
-.setStepMode0
-    mov FrameCounterStepMode, #$00
-    bra +
-
-.updateFrameCounter:
-    ;  Update current frame counter cycle number
-    inc FrameCounterCycle
-    mov a, FrameCounterCycle
-    setc : sbc a, FrameCounterStepMode
-    cmp a, #$04
-    !blt +
-    mov FrameCounterCycle, #$00 ;  Start new cycle
-+
-
-;  Case statement determining which processes should be run on the current frame tick
-
+;  Task lists for the current frame count:
 ;  fc == 0 ?  envelopes
 ;  fc == 1 ?  length counters; sweeps; envelopes
 ;  fc == 2 ?  envelopes
 ;  fc == 3 ?  mode == 0 ? length counters; sweeps; envelopes : (none)
 ;  fc == 4 ?  length counters; sweeps; envelopes
 
-;  envelopes == !(mode == 1 && fc == 3)
-;            == mode != 1 || fc != 3
-;            write as:
-;               mov FrameCounterStepMode
-;               adc a, FrameCounterCycle
-;               cmp a, #$04     ;  Only way to have 4 here is 3+1 (can never have 4+0)
-;               beq .endHanlder
+;  "Process envelopes" = !(mode == 1 && fc == 3)
+;   reduces nicely to mode + fc != 4
 
     mov a, FrameCounterStepMode
     clrc : adc a, FrameCounterCycle
     cmp a, #$04     ;  Only way to have 4 here is 3+1 (can never have 4+0)
     beq .endHandler
 
-    ;  Process all envelopes and linear counter
+.processEnvelopes:
+    ;  Process all envelopes and triangle linear counter
     mov a, !Square0Flag
     call Pulse_Envelope_Tick
+    ;  TODO: all the rest
+
+
+;  "Process length counters & sweeps" = fc==1 || fc==4 || (fc==3 && mode==0) 
+;   already in simplest form
+
+    mov a, FrameCounterCycle
+    cmp a, #$01
+    beq .processLCs
+    cmp a, #$04
+    beq .processLCs
+    cmp a, #$03
+    bne .endHandler
+    cmp FrameCounterStepMode, #$00
+    bne .endHandler
+
+.processLCs:
+    ;  Process all length counters and sweeps
+    ;  TODO: all
 
 
 .endHandler:
-ret  ;  superfluous..
+ret
 
-
-
-
-
-; next_xfer:
-;         mov $F4,#$7D            ; move $7D to port 0 (SPC ready)
-; wait:
-;         ; call check_timer3
-;         ; call check_timers
-;         ; call check_timers2
-
-; wait2:
-;         mov a,$F4
-;         cmp	a,$F4
-;         bne	wait2
-
-;         cmp a,#$F5              ; wait for port 0 to be $F5 (Reset)
-;         beq to_reset
-;         cmp a,#$D7              ; wait for port 0 to be $D7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
-;         bne wait
-;         mov $F4,a               ; reply to CPU with $D7 (begin transfer)
-;         mov $F5, #$ff
-
-;         ; 63.613 cycles per scanline
-;         ; Transfer via HDMA must take no more than 66 cycles per byte
-;         ; Cycles used during transfer: 25 = 3+2 + 3+5+4 + 2+2+4
-
-;         mov x,#0
-; xfer:                       ;  -- this happens *relatively* quickly once we trigger the cpu to start the transfer
-;         cmp x,$F4               ; wait for port 0 to have current byte #
-;         bne xfer
-
-;         mov a,$F5               ; load data on port 1
-;         mov $40+x,a             ; store data at $40 - $55
-
-;         inc x
-;         mov a, x
-;         mov $F5, a
-;         cmp x,#$17
-;         bne xfer
-
-;         jmp square0
 
 to_reset:
     pop a : pop a  ;  Remove call stack entry [check]
