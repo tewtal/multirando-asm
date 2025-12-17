@@ -49,6 +49,10 @@ WaitIndex:
 
 Done:
     ; --- Finished transfer.  Prep cpu for next send.
-    mov $f4, #$7d            ; move $7D to port 0 (SPC ready)
+    mov $f4, #$7d           ; move $7D to port 0 (SPC ready)
+
+    mov QueueLength, x      ; store the new writes queue length for processing
+    call ProcessWrites
+
     bra WaitTick
 ;  End apurecv

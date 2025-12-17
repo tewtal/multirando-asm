@@ -148,6 +148,8 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 !KON          = #$4c
 !KOFF         = #$5c
 
+!blt = "BCC"
+!bge = "BCS"
 
 ;  To enable dmc audio, preload a lookup table in aram at address $4000 as follows:
 ;  $4000-$400f:  (Up to) 16 one-byte dmc address bytes that appear in NES register $4012 (pcm_addr)
@@ -167,6 +169,7 @@ dmc_attenuation_cutoff: db $20
 ;                (little endian, as it appears in aram: 14 40 14 40 31 56 31 56 B0 58 B0 58 C2 7C C2 7C 28 9E 28 9E)
 ;========================================
 
+TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240Hz ticks
 
 start:
 .start:
@@ -325,6 +328,27 @@ incsrc "./apu-recv.asm"
 incsrc "./channels/pulse.asm"
 
 
+;------------------------------------------------------------------------
+;  Process all queued apu register writes in the order they were recieved
+;------------------------------------------------------------------------
+ProcessWrites:
+    ;  x=0; while x<queuelength
+    ;   switch NumbersQueue, x
+    ;       case 0:
+    ;       case 1:
+    ;       ...
+    ;       case 17:
+    ;
+    ;
+    ;   x++
+    ;  end while
+;     QueueLength  = $1f
+; NumbersQueue = $20
+; ValuesQueue  = $50
+ret
+
+incsrc "./apu-frame-counter.asm"
+
 ;------------------------------------
 ; Frame tick routine (runs at 240 Hz)
 ;------------------------------------
@@ -351,17 +375,13 @@ TickHandler:
     ;  $d0->$df: DMC channel internal state
     ;  $e0->$ef: Reserved for future expansion audio support
 
-    !blt = "BCC"
-    !bge = "BCS"
 
-    TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240Hz ticks
 
-    ;  Process all queued register writes in the order they were recieved
-ProcessLoop:
+
+
     ;  TODO: Case statement determining which processes should be run on the current frame tick
-    bra .updateFrameCounter
-
-    incsrc "./apu-frame-counter.asm"
+    call FrameCount_tick
+    
 
 
 ;  Task lists for the current frame count:
