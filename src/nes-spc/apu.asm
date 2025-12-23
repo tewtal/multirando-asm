@@ -116,6 +116,9 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 !NoiseFlag    = #%00001000
 !DmcFlag      = #%00010000
 
+!Square0Offset = #$00
+!Square1Offset = #$10
+
 ;  SPC dsp registers
 !Square0VolumeL  = #$00
 !Square0VolumeR  = #$01
@@ -170,6 +173,8 @@ dmc_attenuation_cutoff: db $20
 ;========================================
 
 TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240Hz ticks
+WritesJumpPointer = $81     ;  2-byte address storing the pointer to the write handler
+ShiftResult       = $83     ;  2-byte heap variable used by pulse channels
 
 start:
 .start:
@@ -325,7 +330,40 @@ TimerExpired:
         bra MainLoop
 
 incsrc "./apu-recv.asm"
+incsrc "./apu-status.asm"
 incsrc "./channels/pulse.asm"
+
+;  Safe fill for invalid register values
+NullRoutine: jmp ProcessWrites_handlerReturn
+
+JumpTableLo:
+    ;  Square channel 0
+    db Pulse_Envelope_Init&$FF, Pulse_Sweep_Init&$FF, Pulse_Period_SetLow&$FF, Pulse_LengthCounter_Reload&$FF
+    ;  Square channel 1
+    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    ;  Triangle channel
+    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    ;  Noise channel
+    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    ;  DMC
+    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    ;  Status and Frame counter
+    db NullRoutine&$FF, Status_set&$FF, NullRoutine&$FF, FrameCount_set&$FF
+
+
+JumpTableHi:
+    ;  Square channel 0
+    db Pulse_Envelope_Init>>8, Pulse_Sweep_Init>>8, Pulse_Period_SetLow>>8, Pulse_LengthCounter_Reload>>8
+    ;  Square channel 1
+    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    ;  Triangle channel
+    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    ;  Noise channel
+    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    ;  DMC
+    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    ;  Status and Frame counter
+    db NullRoutine>>8, Status_set>>8, NullRoutine>>8, FrameCount_set>>8
 
 
 ;------------------------------------------------------------------------
@@ -345,6 +383,31 @@ ProcessWrites:
 ;     QueueLength  = $1f
 ; NumbersQueue = $20
 ; ValuesQueue  = $50
+
+    mov y, #$00
+.loop:
+    cmp y, QueueLength
+    beq .done
+
+    ;  Calculate a jump pointer based on this register number
+    ;  [OPT TODO]: Single dw'd jump table and x *= 2
+    mov a, NumbersQueue+y
+    mov x, a
+    mov a, JumpTableLo+x
+    mov WritesJumpPointer, a
+    mov a, JumpTableHi+x
+    mov WritesJumpPointer+1, a
+
+    mov a, ValuesQueue+y    ;  Load param in [A]
+    mov x, #$00
+    ;jmp [WritesJumpPointer+x]  ;  Handler specified in jump table
+    db $1f, WritesJumpPointer, $00
+
+.handlerReturn:
+    inc y
+    bra .loop
+
+.done:
 ret
 
 incsrc "./apu-frame-counter.asm"
@@ -424,6 +487,10 @@ TickHandler:
     ;  TODO: all
 
 
+.setOutput:
+    mov a, sq0EnvelopeCounter
+    mov x,!Square0Flag
+    call playVoiceInX
 .endHandler:
 ret
 

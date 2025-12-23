@@ -19,7 +19,7 @@ FrameCount:
     mov FrameCounterStepMode, #$00
     bra +
 +
-    ret
+    jmp ProcessWrites_handlerReturn
 
 
 .tick:
