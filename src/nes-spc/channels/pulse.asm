@@ -52,7 +52,10 @@ sq0StateFlags = $9f  ;  Channel state boolean flags:
 !SweepEnabled = %10000000
 !sq0SweepEnabledFlag   = "sq0StateFlags.7"
 !sq1SweepEnabledFlag   = "sq1StateFlags.7"
-;  -d-- ---- :  Unused
+;  -d-- ---- :  
+!LengthEnabled = %01000000
+!sq0LengthEnabledFlag   = "sq0StateFlags.6"
+!sq1LengthEnabledFlag   = "sq1StateFlags.6"
 ;  --d- ---- :
 !LengthHalt   = %00100000
 !sq0LengthHaltFlag   = "sq0StateFlags.5"
@@ -241,7 +244,7 @@ ret
     and a, #$07
     mov sq0SweepShift+x, a
 
-    call .._UpdateTargetPeriod
+    call ._UpdateTargetPeriod
 
     ;  Set reloadSweep = true
     mov a, sq0StateFlags+x
@@ -275,7 +278,7 @@ ret
     mov a, sq0TargetPeriodHi+x
     mov sq0RealPeriodHi+x, a    ; realperiod = targetperiod
 
-    call .._UpdateTargetPeriod
+    call ._UpdateTargetPeriod
 
 ...done:
     mov a, sq0SweepPeriod+x
@@ -291,7 +294,7 @@ ret
 ret
 
 
-.._UpdateTargetPeriod:
+._UpdateTargetPeriod:
     ; TODO (no): calc lookup tables
     ;  old spc uses SNESTABL, a *4096* byte lookup table
     ;  we need to either burn cycles and do the 16-bit math,
@@ -306,21 +309,21 @@ ret
     mov a, sq0RealPeriodHi+x
     mov ShiftResultHi, a
 
-...sweepShift:
+..sweepShift:
     mov sq0SweepShift+x, a
-    beq ....done          ; 0-bit shift → no work
+    beq ...done          ; 0-bit shift → no work
 
-....loop:
+...loop:
     lsr ShiftResultHi           ; shift high byte right
     ror ShiftResultLo             ; rotate carry into low byte
     dec a
-    bne ....loop
-....done:
+    bne ...loop
+...done:
 
     mov a, sq0StateFlags+x
     and a, #!SweepNegate
-    beq ....add
-....subtract:
+    beq ...add
+...subtract:
     setc
 
     mov a, sq0RealPeriodLo+x
@@ -337,7 +340,7 @@ ret
     ;  TODO: check above dec for underflow
     bra +
 
-....add:
+...add:
     clrc
 
     mov a, sq0RealPeriodLo+x
@@ -364,12 +367,40 @@ ret
 
 ret
 
-;  Reload the length counter for the pulse channel flag in [A]
-..Reload:
-    nop
-    nop
-    nop
-    nop
+;  Load the length counter with value in [A]
+..Load:
+    ; 	_envelope.LengthCounter.LoadLengthCounter(value >> 3);
+
+    mov y, a
+    mov a, sq0StateFlags+x
+    and a, !LengthEnabled
+    beq ...done             ; if length enabled, then
+    push x
+    mov a, y
+    clrc : ror a : ror a : ror a    ; value >> 3
+    mov x, a                ; retrieve value as index
+    mov a, lengthCounterTable+x
+    pop x
+    mov sq0LengthReloadValue+x, a
+
+    mov a, sq0LengthCounter+x
+    mov sq0LengthPreviousValue+x, a ; previous value = counter
+    
+    ; TODO:?? follow "Set need to run" logic
+
+...done:
+    ; SetPeriod((_realPeriod & 0xFF) | ((value & 0x07) << 8));
+    mov a, y
+    and a, #$07
+    mov sq0RealPeriodHi+x, a
+
+    ; //The envelope is also restarted.
+    ; _envelope.ResetEnvelope();
+    ;  Set reloadSweep = true
+    mov a, sq0StateFlags+x
+    or a, #!EnvelopeStart
+    mov sq0StateFlags+x, a
+
     jmp ProcessWrites_handlerReturn
 
 ;..SetEnabled(?)
@@ -377,11 +408,11 @@ ret
 
 .Period:
 
-;  Set the period for the pulse channel flag in [A]
+;  Set the period low byte in [A]
 ..SetLow:
-    nop
-    nop
-    nop
+    mov sq0RealPeriodLo+x, a
+    call ._UpdateTargetPeriod
+
     jmp ProcessWrites_handlerReturn
 
 ..SetHigh:
