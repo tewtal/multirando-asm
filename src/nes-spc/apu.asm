@@ -338,7 +338,7 @@ NullRoutine: jmp ProcessWrites_handlerReturn
 
 JumpTableLo:
     ;  Square channel 0
-    db Pulse_Envelope_Init&$FF, Pulse_Sweep_Init&$FF, Pulse_Period_SetLow&$FF, Pulse_LengthCounter_Reload&$FF
+    db Pulse_Envelope_Init&$FF, Pulse_Sweep_Init&$FF, Pulse_Period_SetLow&$FF, Pulse_LengthCounter_Load&$FF
     ;  Square channel 1
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  Triangle channel
@@ -353,7 +353,7 @@ JumpTableLo:
 
 JumpTableHi:
     ;  Square channel 0
-    db Pulse_Envelope_Init>>8, Pulse_Sweep_Init>>8, Pulse_Period_SetLow>>8, Pulse_LengthCounter_Reload>>8
+    db Pulse_Envelope_Init>>8, Pulse_Sweep_Init>>8, Pulse_Period_SetLow>>8, Pulse_LengthCounter_Load>>8
     ;  Square channel 1
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  Triangle channel
@@ -408,6 +408,43 @@ ProcessWrites:
     bra .loop
 
 .done:
+    ;  TODO: relocate to a channel routine
+    ;  UpdateOutput() for every ram write:
+    ;  if (_realPeriod < 8 || (!_sweepNegate && _sweepTargetPeriod > 0x7FF))
+    ;  then set channel vol = 0 or set channe KOFF
+    ;  else
+    ;  set duty/srcn (TODO:), volume as:
+    ;  		if(_counter > 0) {
+		; 	if(_constantVolume) {
+		; 		return _volume;
+		; 	} else {
+		; 		return _counter;
+		; 	}
+		; } else {
+		; 	return 0;
+		; }
+    mov a, sq0EnvelopeCounter+x
+    bmi .notGreaterThan0
+    beq .notGreaterThan0
+    mov a, sq0StateFlags+x
+    and a, #!ConstantVolume
+    beq .notConstant
+    mov a, sq0Volume+x
+    bra +
+.notConstant:
+    mov a, sq0LengthCounter+x
+    bra +
+
+.notGreaterThan0:
+    mov a, #$00
++
+    ; SET VOL IN [A]
+        mov $F2,!Square0VolumeL              ; write volume
+        mov $F3, a
+        mov $F2,!Square0VolumeR
+        mov $F3, a
+        mov x,!Square0Flag      ; TODO: remove
+        call playVoiceInX
 ret
 
 incsrc "./apu-frame-counter.asm"
@@ -974,6 +1011,9 @@ noise_freq_table:     ;  Added $20 to all values to keep bit 5 always set
         db #$32       ;%00110101        $E              880Hz   
         db #$2f       ;%00110010        $F              440Hz   
 ;======================================================================
+
+lengthCounterTable:
+        db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 
 ; ; 1 sample
 ; pulse0: incsrc "pl1a-0.asm"
