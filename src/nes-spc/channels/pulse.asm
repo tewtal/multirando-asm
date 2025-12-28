@@ -111,6 +111,7 @@ Pulse:
 ..Init:
     mov x, !Square0Offset
 ...Start:
+    push y
     mov y, a
 
     ;  Set duty
@@ -155,6 +156,7 @@ Pulse:
     and a, #$0f
     mov sq0Volume+x, a
 
+    pop y
     jmp ProcessWrites_handlerReturn
 
 ;  Tick the envelope
@@ -203,6 +205,7 @@ ret
 ..Init:
     mov x, !Square0Offset
 ...Start:
+    push y
     mov y, a
 
     ;  Set sweep enabled
@@ -251,6 +254,7 @@ ret
     or a, #!ReloadSweep
     mov sq0StateFlags+x, a
 
+    pop y
     jmp ProcessWrites_handlerReturn
 
 
@@ -370,7 +374,7 @@ ret
 ;  Load the length counter with value in [A]
 ..Load:
     ; 	_envelope.LengthCounter.LoadLengthCounter(value >> 3);
-
+    push y
     mov y, a
     mov a, sq0StateFlags+x
     and a, !LengthEnabled
@@ -401,6 +405,7 @@ ret
     or a, #!EnvelopeStart
     mov sq0StateFlags+x, a
 
+    pop y
     jmp ProcessWrites_handlerReturn
 
 ;..SetEnabled(?)

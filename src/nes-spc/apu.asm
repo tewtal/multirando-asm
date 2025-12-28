@@ -438,11 +438,21 @@ ProcessWrites:
 .notGreaterThan0:
     mov a, #$00
 +
+
     ; SET VOL IN [A]
         mov $F2,!Square0VolumeL              ; write volume
         mov $F3, a
         mov $F2,!Square0VolumeR
         mov $F3, a
+
+    ; SET PITCH
+        mov a, sq0RealPeriodLo+x
+        mov $f2, !Square0PitchL
+        mov $f3, a
+        mov a, sq0RealPeriodHi+x
+        mov $f2, !Square0PitchH
+        mov $f3, a
+
         mov x,!Square0Flag      ; TODO: remove
         call playVoiceInX
 ret
