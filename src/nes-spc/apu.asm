@@ -440,19 +440,54 @@ ProcessWrites:
 +
 
     ; SET VOL IN [A]
-        mov $F2,!Square0VolumeL              ; write volume
-        mov $F3, a
-        mov $F2,!Square0VolumeR
-        mov $F3, a
+    mov $F2,!Square0VolumeL              ; write volume
+    mov $F3, #$7f; debug a
+    mov $F2,!Square0VolumeR
+    mov $F3, #$7f; debug a
+
+    mov a, sq0RealPeriodLo+x
+    and a, #$08
+    bne lower
+
+higher:
+    ; SET SRCN
+    mov $F2,!Square0SRCN            ; sample # reg
+    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
 
     ; SET PITCH
-        mov a, sq0RealPeriodLo+x
-        mov $f2, !Square0PitchL
-        mov $f3, a
-        mov a, sq0RealPeriodHi+x
-        mov $f2, !Square0PitchH
-        mov $f3, a
+    mov a, sq0RealPeriodLo+x
+    mov PeriodLo, a
+    mov a, sq0RealPeriodHi+x
+    mov PeriodHi, a
 
+    call CalcPitch
+
+    mov $f2, !Square0PitchL
+    mov $f3, #$85;PitchLo
+    mov $f2, !Square0PitchH
+    mov $f3, #$03;PitchHi
+    bra +
+
+lower:
+    ; SET SRCN
+    mov $F2,!Square0SRCN            ; sample # reg
+    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
+
+    ; SET PITCH
+    mov a, sq0RealPeriodLo+x
+    mov PeriodLo, a
+    mov a, sq0RealPeriodHi+x
+    mov PeriodHi, a
+
+    call CalcPitch
+
+    mov $f2, !Square0PitchL
+    mov $f3, PitchLo
+    mov $f2, !Square0PitchH
+    mov $f3, PitchHi
+    bra +
+
++
         mov x,!Square0Flag      ; TODO: remove
         call playVoiceInX
 ret
@@ -540,6 +575,151 @@ TickHandler:
     call playVoiceInX
 .endHandler:
 ret
+
+
+
+;-------------------------------------------------
+; CalcPitch
+; Input : PeriodLo/PeriodHi
+; Output: PitchLo/PitchHi
+; Table : 128 bytes
+;-------------------------------------------------
+CalcPitch:
+    PeriodLo  = $02
+    PeriodHi  = $03
+
+    DLo       = $04
+    DHi       = $05
+
+    PitchLo  = $06
+    PitchHi  = $07
+
+    TmpLo    = $08
+    TmpHi    = $09
+
+    Remainder = $0a
+
+    NextLo   = $0b
+    NextHi   = $0c
+
+    DeltaLo  = $0d
+    DeltaHi  = $0e
+
+    MulR     = $0f
+
+    MulLo    = $10
+    MulHi    = $11
+
+    AccLo    = $12
+    AccHi    = $13
+
+; --- D = P + 1 ----------------------------------  ✓
+    clrc
+    mov   a, PeriodLo
+    inc   a
+    mov   DLo, a
+    mov   a, PeriodHi
+    adc   a, #0
+    mov   DHi, a
+
+; ---- r = D & 31 --------------------------------  ✓
+    mov   a, DLo
+    and   a, #$1F
+    mov   Remainder, a          ; r
+
+; ---- i = (D >> 5) * 2 --------------------------  ✓
+    mov   TmpLo, DLo
+    mov   TmpHi, DHi
+
+    lsr   TmpHi
+    ror   TmpLo
+    lsr   TmpHi
+    ror   TmpLo
+    lsr   TmpHi
+    ror   TmpLo
+    lsr   TmpHi
+    ror   TmpLo
+    lsr   TmpHi
+    ror   TmpLo
+
+    mov   a, TmpLo
+    and   a, #$3F
+    asl   a                     ; word index
+    mov   x, a
+
+; ---- load Pitch_i -------------------------------  ✓
+    mov   a, PitchTable64+x
+    mov   PitchLo, a
+    mov   a, PitchTable64+1+x
+    mov   PitchHi, a
+
+; ---- Pitch_{i+1} -------------------------------
+    inc   x
+    inc   x
+    mov   a, PitchTable64+x
+    mov   NextLo, a
+    mov   a, PitchTable64+1+x
+    mov   NextHi, a
+
+; ---- delta = Pitch_i - Pitch_{i+1} (unsigned) --
+    mov   a, PitchLo
+    setc : sbc   a, NextLo
+    mov   DeltaLo, a
+    mov   a, PitchHi
+    sbc   a, NextHi
+    mov   DeltaHi, a
+
+; ---- multiply delta * r ------------------------
+    mov   MulLo, DeltaLo
+    mov   MulHi, DeltaHi
+    mov   MulR,  Remainder
+
+    mov   AccLo, #0
+    mov   AccHi, #0
+    mov   x, #8
+
+MulLoop:
+    mov   a, MulR
+    and   a, #1
+    beq   NoAdd
+
+    mov   a, AccLo
+    clrc : adc   a, MulLo
+    mov   AccLo, a
+    mov   a, AccHi
+    adc   a, MulHi
+    mov   AccHi, a
+
+NoAdd:
+    asl   MulLo
+    rol   MulHi
+    lsr   MulR
+
+    dec   x
+    bne   MulLoop
+
+; ---- divide by 32 (unsigned, safe) -------------  ✓
+    lsr   AccHi
+    ror   AccLo
+    lsr   AccHi
+    ror   AccLo
+    lsr   AccHi
+    ror   AccLo
+    lsr   AccHi
+    ror   AccLo
+    lsr   AccHi
+    ror   AccLo
+
+; ---- Pitch = Pitch_i - correction --------------
+    mov   a, PitchLo
+    setc : sbc   a, AccLo
+    mov   PitchLo, a
+    mov   a, PitchHi
+    sbc   a, AccHi
+    mov   PitchHi, a
+
+; ---- final pitch in PitchHi:PitchLo ------------
+    ret
 
 
 to_reset:
@@ -1054,6 +1234,32 @@ lengthCounterTable:
 ; pulse1e: incsrc "pl1-1.asm"
 ; pulse2e: incsrc "pl1-2.asm"
 ; pulse3e: incsrc "pl1-3.asm"
+
+PitchTable64:
+    ; dw $6FDC, $165F, $0C6D, $089A, $0694, $0553, $0479, $03DB
+    ; dw $0363, $0305, $02BA, $027C, $0248, $021C, $01F6, $01D5
+    ; dw $01B8, $019F, $0188, $0173, $0161, $0150, $0141, $0133
+    ; dw $0127, $011B, $0110, $0106, $00FD, $00F4, $00EC, $00E5
+    ; dw $00DD, $00D7, $00D1, $00CB, $00C5, $00C0, $00BB, $00B6
+    ; dw $00B1, $00AD, $00A9, $00A5, $00A1, $009E, $009A, $0097
+    ; dw $0094, $0091, $008E, $008B, $0089, $0086, $0083, $0081
+    ; dw $007F, $007D, $007A, $0078, $0076, $0074, $0073, $0071
+    dw $1BF7, $1BF7, $0DFB, $0952
+    dw $06FD, $0597, $04A9, $03FE
+    dw $037E, $031B, $02CB, $028A
+    dw $0254, $0226, $01FF, $01DD
+    dw $01BF, $01A5, $018D, $0178
+    dw $0165, $0154, $0145, $0137
+    dw $012A, $011E, $0113, $0109
+    dw $00FF, $00F6, $00EE, $00E6
+    dw $00DF, $00D8, $00D2, $00CC
+    dw $00C6, $00C1, $00BC, $00B7
+    dw $00B2, $00AE, $00AA, $00A6
+    dw $00A2, $009F, $009B, $0098
+    dw $0095, $0092, $008F, $008C
+    dw $0089, $0087, $0084, $0082
+    dw $007F, $007D, $007B, $0079
+    dw $0077, $0075, $0073, $0071
 
 freqtable: incsrc "snestabl.asm"
 tritable: incsrc "tritabl3.asm"

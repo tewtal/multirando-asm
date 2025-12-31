@@ -4,28 +4,28 @@
 ;  Sample data (TODO: rename / inline and add descriptions)
 
 ; 1 sample
-pulse0: incsrc "../samples/pl1a-0.asm"
-pulse1: incsrc "../samples/pl1a-1.asm"
-pulse2: incsrc "../samples/pl1a-2.asm"
-pulse3: incsrc "../samples/pl1a-3.asm"
+pulse0: incsrc "../samples/pl1a-0.asm"  ;  f = 2kHz
+pulse1: incsrc "../samples/pl1a-1.asm"  ;  f = 2kHz
+pulse2: incsrc "../samples/pl1a-2.asm"  ;  f = 2kHz
+pulse3: incsrc "../samples/pl1a-3.asm"  ;  f = 2kHz
 
 ; 2 samples
-pulse0d: incsrc "../samples/pl1-0.asm"
-pulse1d: incsrc "../samples/pl1-1.asm"
-pulse2d: incsrc "../samples/pl1-2.asm"
-pulse3d: incsrc "../samples/pl1-3.asm"
+pulse0d: incsrc "../samples/pl1-0.asm"  ;  f = 1kHz
+pulse1d: incsrc "../samples/pl1-1.asm"  ;  f = 1kHz
+pulse2d: incsrc "../samples/pl1-2.asm"  ;  f = 1kHz
+pulse3d: incsrc "../samples/pl1-3.asm"  ;  f = 1kHz
 
 ; 4 samples
-pulse0c: incsrc "../samples/pl2-0.asm"
-pulse1c: incsrc "../samples/pl2-1.asm"
-pulse2c: incsrc "../samples/pl2-2.asm"
-pulse3c: incsrc "../samples/pl2-3.asm"
+pulse0c: incsrc "../samples/pl2-0.asm"  ;  f = 500Hz
+pulse1c: incsrc "../samples/pl2-1.asm"  ;  f = 500Hz
+pulse2c: incsrc "../samples/pl2-2.asm"  ;  f = 500Hz
+pulse3c: incsrc "../samples/pl2-3.asm"  ;  f = 500Hz
 
 ; 8 samples
-pulse0b: incsrc "../samples/pl3-0.asm"
-pulse1b: incsrc "../samples/pl3-1.asm"
-pulse2b: incsrc "../samples/pl3-2.asm"
-pulse3b: incsrc "../samples/pl3-3.asm"
+pulse0b: incsrc "../samples/pl3-0.asm"  ;  f = 250Hz
+pulse1b: incsrc "../samples/pl3-1.asm"  ;  f = 250Hz
+pulse2b: incsrc "../samples/pl3-2.asm"  ;  f = 250Hz
+pulse3b: incsrc "../samples/pl3-3.asm"  ;  f = 250Hz
 
 
 ;  Variables
