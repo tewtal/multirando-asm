@@ -96,19 +96,24 @@ EnqueueApuWrite:
 !apuReg = #$00 ;$4000
 
 WriteAPUSq0Ctrl0:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
+    plp
     rts
 
 WriteAPUSq0Ctrl0_I_Y:
+    php
     xba
     tya     ;  [Y] has the apu reg.
     jsr EnqueueApuWrite
     ; sta.w APUBase, y
+    php    
     rts
 
 WriteAPUSq0Ctrl0_Y:
+    php
     pha
     tya
     xba
@@ -116,9 +121,11 @@ WriteAPUSq0Ctrl0_Y:
     jsr EnqueueApuWrite
     ; sty.w APUBase
     pla
+    plp
     rts
 
 WriteAPUSq0Ctrl0_X:
+    php
     pha
     txa
     xba
@@ -126,11 +133,13 @@ WriteAPUSq0Ctrl0_X:
     jsr EnqueueApuWrite
     ; stx.w APUBase
     pla
+    plp
     rts
 
 !apuReg = #$01 ;$4001
 
 WriteAPUSq0Ctrl1:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -139,9 +148,11 @@ WriteAPUSq0Ctrl1:
     ; tsb.w APUBase+$16
     ; xba
     ; sta.w APUBase+$01
+    plp
     rts
 
 WriteAPUSq0Ctrl1_Y:
+    php
     pha
     tya
     xba
@@ -153,10 +164,12 @@ WriteAPUSq0Ctrl1_Y:
     ; xba
     ; sty.w APUBase+$01
     pla
+    plp
     rts    
 
 ;  TODO: deprecate
 WriteAPUSq0Ctrl1_I_Y:
+    php
     xba
     tya     ;  [Y] has the apu reg.
     jsr EnqueueApuWrite
@@ -171,18 +184,22 @@ WriteAPUSq0Ctrl1_I_Y:
 ;     rts
 ; +
 ;     sta $0901, y
+    plp
     rts
 
 !apuReg = #$02 ;$4002
 
 WriteAPUSq0Ctrl2:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$02
+    plp
     rts
 
 WriteAPUSq0Ctrl2_X:
+    php
     pha
     txa
     xba
@@ -190,19 +207,23 @@ WriteAPUSq0Ctrl2_X:
     jsr EnqueueApuWrite
     ; stx.w APUBase+$02
     pla
+    plp
     rts
 
 ;  TODO: deprecate
 WriteAPUSq0Ctrl2_I_Y:
+    php
     xba
     tya     ;  [Y] has the apu reg.
     jsr EnqueueApuWrite
     ; sta.w APUBase+$02, y
+    plp
     rts
 
 !apuReg = #$03 ;$4003
 
 WriteAPUSq0Ctrl3:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -217,9 +238,11 @@ WriteAPUSq0Ctrl3:
     ; tsb.w APUExtraControl
     ; plx
     ; xba
+    plp
     rts
 
 WriteAPUSq0Ctrl3_X:
+    php
     pha
     txa
     xba
@@ -234,10 +257,12 @@ WriteAPUSq0Ctrl3_X:
     ; tsb.w APUExtraControl   
     ; pla
     pla
+    plp
     rts
 
 ;  TODO: deprecate
 WriteAPUSq0Ctrl3_I_Y:
+    php
     xba
     tya     ;  [Y] has the apu reg.
     jsr EnqueueApuWrite
@@ -257,18 +282,22 @@ WriteAPUSq0Ctrl3_I_Y:
 ;     rts
 ; +
 ;     jsr WriteAPUNoiseCtrl3    
+    plp
     rts
 
 !apuReg = #$04 ;$4004
 
 WriteAPUSq1Ctrl0:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$04
+    plp
     rts
 
 WriteAPUSq1Ctrl0_X:
+    php
     pha
     txa
     xba
@@ -276,9 +305,11 @@ WriteAPUSq1Ctrl0_X:
     jsr EnqueueApuWrite
     pla
     ; stx.w APUBase+$04
+    plp
     rts
 
 WriteAPUSq1Ctrl0_Y:
+    php
     pha
     tya
     xba
@@ -286,11 +317,13 @@ WriteAPUSq1Ctrl0_Y:
     jsr EnqueueApuWrite
     pla
     ; sty.w APUBase+$04
+    plp
     rts
 
 !apuReg = #$05 ;$4005
 
 WriteAPUSq1Ctrl1:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -299,9 +332,11 @@ WriteAPUSq1Ctrl1:
     ; tsb.w APUBase+$16
     ; xba
     ; sta.w APUBase+$05
+    plp
     rts
 
 WriteAPUSq1Ctrl1_X:
+    php
     pha
     txa
     xba
@@ -313,9 +348,11 @@ WriteAPUSq1Ctrl1_X:
     ; tsb.w APUBase+$16
     ; xba
     ; stx.w APUBase+$05
+    plp
     rts   
 
 WriteAPUSq1Ctrl1_Y:
+    php
     pha
     tya
     xba
@@ -327,18 +364,22 @@ WriteAPUSq1Ctrl1_Y:
     ; tsb.w APUBase+$16
     ; xba
     ; sty.w APUBase+$05
+    plp
     rts   
 
 !apuReg = #$06 ;$4006
 
 WriteAPUSq1Ctrl2:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$06
+    plp
     rts
 
 WriteAPUSq1Ctrl2_X:
+    php
     pha
     txa
     xba
@@ -346,11 +387,13 @@ WriteAPUSq1Ctrl2_X:
     jsr EnqueueApuWrite
     pla
     ; stx.w APUBase+$06
+    plp
     rts
 
 !apuReg = #$07 ;$4007
 
 WriteAPUSq1Ctrl3:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -365,9 +408,11 @@ WriteAPUSq1Ctrl3:
     ; tsb.w APUExtraControl
     ; plx
     ; xba
+    plp
     rts
 
 WriteAPUSq1Ctrl3_X:
+    php
     pha
     txa
     xba
@@ -382,36 +427,44 @@ WriteAPUSq1Ctrl3_X:
     ; tsb.w APUBase+$15
     ; tsb.w APUExtraControl   
     ; pla
+    plp
     rts
 
 !apuReg = #$08 ;$4008
 
 WriteAPUTriCtrl0:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$08
+    plp
     rts
 
 !apuReg = #$09 ;$4009
 
 WriteAPUTriCtrl1:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$09
+    plp
     rts
 
 !apuReg = #$0a ;$400a
 
 WriteAPUTriCtrl2:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$0A
+    plp
     rts
 
 WriteAPUTriCtrl2_X:
+    php
     pha
     txa
     xba
@@ -419,11 +472,13 @@ WriteAPUTriCtrl2_X:
     jsr EnqueueApuWrite
     pla
     ; stx.w APUBase+$0A
+    plp
     rts
 
 !apuReg = #$0b ;$400b
 
 WriteAPUTriCtrl3:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -437,36 +492,44 @@ WriteAPUTriCtrl3:
     ; sta.w APUTriLength
     ; txa
     ; plx
+    plp
     rts
 
 !apuReg = #$0c ;$400c
 
 WriteAPUNoiseCtrl0:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$0C
+    plp
     rts
 
 !apuReg = #$0d ;$400d
 
 WriteAPUNoiseCtrl1:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$0D
+    plp
     rts
 
 !apuReg = #$0e ;$400e
 
 WriteAPUNoiseCtrl2:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta.w APUBase+$0E
+    plp
     rts
 
 WriteAPUNoiseCtrl2_X:
+    php
     pha
     txa
     xba
@@ -474,11 +537,13 @@ WriteAPUNoiseCtrl2_X:
     jsr EnqueueApuWrite
     pla
     ; stx.w APUBase+$0E
+    plp
     rts
 
 !apuReg = #$0f ;$400f
 
 WriteAPUNoiseCtrl3:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -492,11 +557,13 @@ WriteAPUNoiseCtrl3:
     ; sta.w APUNoiLength
     ; txa
     ; plx
+    plp
     rts
 
 !apuReg = #$15 ;$4015
 
 WriteAPUControl:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
@@ -535,54 +602,65 @@ WriteAPUControl:
 ;             tsb.w APUExtraControl
 ; +
 ;     xba
+    plp
     rts
 
 !apuReg = #$17 ;$4017
 
 WriteApuFrameCounter:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta ApuFrameCounter
     ; lda #$20
     ; tsb.w APUExtraControl
-rts
+    plp
+    rts
 
 !apuReg = #$10 ;$4010
 
 WriteAPUDMCFreq:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta DmcFreq_4010
-rts
+    plp
+    rts
 
 !apuReg = #$11 ;$4011
 
 WriteAPUDMCCounter:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; stx.w DmcCounter_4011
-rts
+    plp
+    rts
 
 !apuReg = #$12 ;$4012
 
 WriteAPUDMCAddr:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta DmcAddress_4012
-rts
+    plp
+    rts
 
 !apuReg = #$13 ;$4013
 
 WriteAPUDMCLength:
+    php
     xba
     lda !apuReg
     jsr EnqueueApuWrite
     ; sta DmcLength_4013
-rts
+    plp
+    rts
 
 ;[deprecated]
 ; WriteAPUDMCPlay:
