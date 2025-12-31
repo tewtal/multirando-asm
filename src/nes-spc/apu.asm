@@ -438,37 +438,17 @@ ProcessWrites:
 .notGreaterThan0:
     mov a, #$00
 +
-
+    push x
+    mov x, a
+    mov a, volumeTable+x
+    pop x
+    
     ; SET VOL IN [A]
     mov $F2,!Square0VolumeL              ; write volume
-    mov $F3, #$7f; debug a
+    mov $F3, a
     mov $F2,!Square0VolumeR
-    mov $F3, #$7f; debug a
+    mov $F3, a
 
-    mov a, sq0RealPeriodLo+x
-    and a, #$08
-    bne lower
-
-higher:
-    ; SET SRCN
-    mov $F2,!Square0SRCN            ; sample # reg
-    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
-
-    ; SET PITCH
-    mov a, sq0RealPeriodLo+x
-    mov PeriodLo, a
-    mov a, sq0RealPeriodHi+x
-    mov PeriodHi, a
-
-    call CalcPitch
-
-    mov $f2, !Square0PitchL
-    mov $f3, #$85;PitchLo
-    mov $f2, !Square0PitchH
-    mov $f3, #$03;PitchHi
-    bra +
-
-lower:
     ; SET SRCN
     mov $F2,!Square0SRCN            ; sample # reg
     mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
@@ -1204,6 +1184,12 @@ noise_freq_table:     ;  Added $20 to all values to keep bit 5 always set
 
 lengthCounterTable:
         db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
+
+
+; Maps $00–$0F to $00–$7F (linear scaling)
+volumeTable:
+    db $00, $08, $11, $19, $22, $2A, $33, $3B
+    db $44, $4C, $55, $5D, $66, $6E, $77, $7F
 
 ; ; 1 sample
 ; pulse0: incsrc "pl1a-0.asm"

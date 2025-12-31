@@ -119,7 +119,7 @@ Pulse:
     rep 6 : lsr a
     mov sq0Duty+x, a
 
-    ;  Set halt
+    ;  Set halt [TODO: remove branch]
 ...setHalt:
     mov a, y
     and  a, #$20
@@ -135,7 +135,7 @@ Pulse:
     mov  sq1StateFlags, a
 +
 
-    ;  Set constant volume
+    ;  Set constant volume [TODO: remove branch]
 ...setConstantVolume:
     mov a, y
     and a, #$10
@@ -170,10 +170,11 @@ Pulse:
     mov sq0EnvelopeDivider+x, a     ;  divider = volume
 
     mov a, sq0EnvelopeCounter+x
-    beq ...counterzero
+    bmi ...counterNotPositive
+    beq ...counterNotPositive
     dec sq0EnvelopeCounter+x        ;  counter--
     bra ...end
-...counterzero:
+...counterNotPositive:
     mov a, sq0StateFlags+x
     and a, #!LengthHalt
     beq ...end                      ;  if halted, then
