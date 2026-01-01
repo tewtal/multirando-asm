@@ -442,7 +442,7 @@ ProcessWrites:
     mov x, a
     mov a, volumeTable+x
     pop x
-    
+
     ; SET VOL IN [A]
     mov $F2,!Square0VolumeL              ; write volume
     mov $F3, a
@@ -547,7 +547,10 @@ TickHandler:
 .processLCs:
     ;  Process all length counters and sweeps
     ;  TODO: all
-
+    mov a, !Square0Offset
+    call Pulse_LengthCounter_Tick
+    mov a, !Square0Offset
+    call Pulse_Sweep_Tick
 
 .setOutput:
     mov a, sq0EnvelopeCounter

@@ -369,7 +369,14 @@ ret
 
 ;  Tick the length counter for the pulse channel flag in [A]
 ..Tick:
-
+    mov a, sq0LengthCounter+x
+    bmi ...end
+    beq ...end
+    mov a, sq0StateFlags+x
+    and a, #!LengthHalt
+    bne ...end                      ;  if counter > 0 && !halt, then
+    dec sq0LengthCounter+x
+...end:
 ret
 
 ;  Load the length counter with value in [A]
