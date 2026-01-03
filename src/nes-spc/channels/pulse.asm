@@ -46,6 +46,7 @@ sq0LengthReloadValue = $9a
 sq0LengthPreviousValue = $9b
 sq0TargetPeriodLo = $9c
 sq0TargetPeriodHi = $9d
+sq0Srcn           = $9e
 
 sq0StateFlags = $9f  ;  Channel state boolean flags:
 ;  d--- ---- :
@@ -93,6 +94,7 @@ sq1LengthReloadValue = $aa
 sq1LengthPreviousValue = $ab
 sq1TargetPeriodLo = $ac
 sq1TargetPeriodHi = $ad
+sq1Srcn           = $ae
 
 sq1StateFlags = $af  ;  Channel state boolean flags (see sq0 above)
 
@@ -133,8 +135,6 @@ Pulse:
     bra ..end
 
 ..notMuted:
-    ;  TODO: set duty/srcn 
-    
     ;  		if(_counter > 0) {
 		; 	if(_constantVolume) {
 		; 		return _volume;
@@ -166,11 +166,7 @@ Pulse:
     mov $F2,!Square0VolumeR
     mov $F3, a
 
-    ; SET SRCN
-    mov $F2,!Square0SRCN            ; sample # reg
-    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
-
-    ; SET PITCH
+    ; Prepare spc pitch
     mov a, sq0RealPeriodLo+x
     mov PeriodLo, a
     mov a, sq0RealPeriodHi+x
@@ -178,13 +174,20 @@ Pulse:
 
     call CalcPitch
 
+    call ._CalcSRCN
+
+    mov a, sq0Duty+x
+    asl a : asl a   ;  Shift duty into bits 0000_dd00
+    or a, sq0Srcn+x    ;  a = 0000_ddff
+
+    ; SET SRCN
+    mov $F2,!Square0SRCN            ; sample # reg
+    mov $F3, a                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
+
     mov $f2, !Square0PitchL
     mov $f3, PitchLo
     mov $f2, !Square0PitchH
     mov $f3, PitchHi
-
-    mov x,!Square0Flag      ; TODO: remove
-    call playVoiceInX
 ..end:
 ret
 
@@ -389,6 +392,35 @@ ret
 +
 ret
 
+;  Returns frequency-appropriate SRCN in [A]
+._CalcSRCN:
+    ; mov a, PitchHi : push a
+    ; mov a, PitchLo : push a
+    mov     a, #$00              ; SRCN = 0
+
+    cmp     PitchHi, #$20
+    bcs     ..done              ; >= $2000 → SRCN 0
+
+    inc     a                  ; SRCN = 1
+    asl     PitchLo
+    rol     PitchHi
+    cmp     PitchHi, #$20
+    bcs     ..done
+
+    inc     a                  ; SRCN = 2
+    asl     PitchLo
+    rol     PitchHi
+    cmp     PitchHi, #$20
+    bcs     ..done
+
+    inc     a                  ; SRCN = 3
+    asl     PitchLo
+    rol     PitchHi
+..done:  ; A = SRCN (0–3)
+    mov sq0Srcn, a             ; store result
+    ; pop a : mov PitchLo, a
+    ; pop a : mov PitchHi, a
+ret
 
 ._UpdateTargetPeriod:
     ; TODO (no): calc lookup tables
