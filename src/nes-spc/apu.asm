@@ -330,8 +330,8 @@ TimerExpired:
         bra MainLoop
 
 incsrc "./apu-recv.asm"
-incsrc "./apu-status.asm"
 incsrc "./channels/pulse.asm"
+incsrc "./apu-status.asm"
 
 ;  Safe fill for invalid register values
 NullRoutine: jmp ProcessWrites_handlerReturn
@@ -384,10 +384,14 @@ ProcessWrites:
 ; NumbersQueue = $20
 ; ValuesQueue  = $50
 
+    ;  Run call precedes all register writes.  
+    ;  Instead of calling it for each queued write, try doing it once at the start.
+    call Run
+
     mov y, #$00
 .loop:
     cmp y, QueueLength
-    beq .done
+    bcs .done
 
     ;  Calculate a jump pointer based on this register number
     ;  [OPT TODO]: Single dw'd jump table and x *= 2
@@ -408,68 +412,18 @@ ProcessWrites:
     bra .loop
 
 .done:
-    ;  TODO: relocate to a channel routine
-    ;  UpdateOutput() for every ram write:
-    ;  if (_realPeriod < 8 || (!_sweepNegate && _sweepTargetPeriod > 0x7FF))
-    ;  then set channel vol = 0 or set channe KOFF
-    ;  else
-    ;  set duty/srcn (TODO:), volume as:
-    ;  		if(_counter > 0) {
-		; 	if(_constantVolume) {
-		; 		return _volume;
-		; 	} else {
-		; 		return _counter;
-		; 	}
-		; } else {
-		; 	return 0;
-		; }
-    mov a, sq0EnvelopeCounter+x
-    bmi .notGreaterThan0
-    beq .notGreaterThan0
-    mov a, sq0StateFlags+x
-    and a, #!ConstantVolume
-    beq .notConstant
-    mov a, sq0Volume+x
-    bra +
-.notConstant:
-    mov a, sq0LengthCounter+x
-    bra +
+ret
 
-.notGreaterThan0:
-    mov a, #$00
-+
-    push x
-    mov x, a
-    mov a, volumeTable+x
-    pop x
 
-    ; SET VOL IN [A]
-    mov $F2,!Square0VolumeL              ; write volume
-    mov $F3, a
-    mov $F2,!Square0VolumeR
-    mov $F3, a
+Run:
+    ;  Run():
+    mov x, !Square0Offset
+    call Pulse_LengthCounter_Reload
+    ;  TODO: rest
 
-    ; SET SRCN
-    mov $F2,!Square0SRCN            ; sample # reg
-    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
-
-    ; SET PITCH
-    mov a, sq0RealPeriodLo+x
-    mov PeriodLo, a
-    mov a, sq0RealPeriodHi+x
-    mov PeriodHi, a
-
-    call CalcPitch
-
-    mov $f2, !Square0PitchL
-    mov $f3, PitchLo
-    mov $f2, !Square0PitchH
-    mov $f3, PitchHi
-    bra +
-
-+
-        mov x,!Square0Flag      ; TODO: remove
-        call playVoiceInX
+    ;  channels->Run():
+    call Pulse_UpdateOutput
+    ;  TODO: rest
 ret
 
 incsrc "./apu-frame-counter.asm"
@@ -553,9 +507,9 @@ TickHandler:
     call Pulse_Sweep_Tick
 
 .setOutput:
-    mov a, sq0EnvelopeCounter
-    mov x,!Square0Flag
-    call playVoiceInX
+    ; mov a, sq0EnvelopeCounter
+    ; mov x,!Square0Flag
+    ; call playVoiceInX
 .endHandler:
 ret
 

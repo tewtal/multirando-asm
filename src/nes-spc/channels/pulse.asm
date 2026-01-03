@@ -102,6 +102,93 @@ Pulse:
 ;.GetOutput(?)
 ;.GetState(?)
 
+;  Sends current pulse channel state to spc control registers
+.UpdateOutput
+    mov x, !Square0Offset
+..Start:
+    ;  if (_realPeriod < 8 || (!_sweepNegate && _sweepTargetPeriod > 0x7FF))
+    mov a, sq0RealPeriodHi+x
+    bne ..sweepCheck
+    mov a, sq0RealPeriodLo+x
+    cmp a, #$09
+    !blt ..muted     ; if real period < 8, muted
+..sweepCheck:
+    mov a, sq0StateFlags+x
+    and a, !SweepNegate
+    bne ..notMuted  ; if sweepNegate, not muted
+    mov a, sq0TargetPeriodHi
+    cmp a, #$08
+    bpl ..muted     ; if target period > 0x7ff, muted
+    bra ..notMuted
+
+..muted:
+    ;  then set channel vol = 0 or set channe KOFF
+    mov a, #$00
+
+    ; Mute VOL IN [A]
+    mov $F2,!Square0VolumeL              ; write volume
+    mov $F3, a
+    mov $F2,!Square0VolumeR
+    mov $F3, a
+    bra ..end
+
+..notMuted:
+    ;  TODO: set duty/srcn 
+    
+    ;  		if(_counter > 0) {
+		; 	if(_constantVolume) {
+		; 		return _volume;
+		; 	} else {
+		; 		return _counter;
+		; 	}
+		; } else {
+		; 	return 0;
+		; }
+    mov a, sq0EnvelopeCounter+x
+    ; bmi ..muted   ; should not be needed
+    beq ..muted
+    mov a, sq0StateFlags+x
+    and a, #!ConstantVolume
+    beq ..notConstant
+    mov a, sq0Volume+x
+    bra +
+..notConstant:
+    mov a, sq0LengthCounter+x
++
+    push x
+    mov x, a
+    mov a, volumeTable+x
+    pop x
+
+    ; SET VOL IN [A]
+    mov $F2,!Square0VolumeL              ; write volume
+    mov $F3, a
+    mov $F2,!Square0VolumeR
+    mov $F3, a
+
+    ; SET SRCN
+    mov $F2,!Square0SRCN            ; sample # reg
+    mov $F3, #$00                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
+
+    ; SET PITCH
+    mov a, sq0RealPeriodLo+x
+    mov PeriodLo, a
+    mov a, sq0RealPeriodHi+x
+    mov PeriodHi, a
+
+    call CalcPitch
+
+    mov $f2, !Square0PitchL
+    mov $f3, PitchLo
+    mov $f2, !Square0PitchH
+    mov $f3, PitchHi
+
+    mov x,!Square0Flag      ; TODO: remove
+    call playVoiceInX
+..end:
+ret
+
+
 .Envelope:
 
 ;  Start a new envelope value in [A]
@@ -161,6 +248,8 @@ Pulse:
 
 ;  Tick the envelope
 ..Tick:
+    mov x, !Square0Offset
+...Start:
     mov a, sq0StateFlags+x
     and a, #!EnvelopeStart
     bne ...stopped                  ;  if not start, then
@@ -170,7 +259,7 @@ Pulse:
     mov sq0EnvelopeDivider+x, a     ;  divider = volume
 
     mov a, sq0EnvelopeCounter+x
-    bmi ...counterNotPositive
+    ; bmi ...counterNotPositive   ;  should not be needed
     beq ...counterNotPositive
     dec sq0EnvelopeCounter+x        ;  counter--
     bra ...end
@@ -261,6 +350,8 @@ ret
 
 ;  Tick the sweep
 ..Tick:
+    mov x, !Square0Offset
+..Start:
     dec sq0SweepDivider+x
     bne ...reloadSweep
     mov a, sq0SweepShift+x
@@ -369,8 +460,10 @@ ret
 
 ;  Tick the length counter for the pulse channel flag in [A]
 ..Tick:
+    mov x, !Square0Offset
+...Start:
     mov a, sq0LengthCounter+x
-    bmi ...end
+    ; bmi ...end  ; should not be needed
     beq ...end
     mov a, sq0StateFlags+x
     and a, #!LengthHalt
@@ -381,6 +474,8 @@ ret
 
 ;  Load the length counter with value in [A]
 ..Load:
+    mov x, !Square0Offset
+...Start:
     ; 	_envelope.LengthCounter.LoadLengthCounter(value >> 3);
     push y
     mov y, a
@@ -416,6 +511,29 @@ ret
     pop y
     jmp ProcessWrites_handlerReturn
 
+;  Reload length counter
+..Reload:
+    mov x, !Square0Offset
+...Start:
+    mov a, sq0LengthReloadValue+x
+    beq ...end          ; if reload value != 0, then
+
+    mov a, sq0LengthCounter+x
+    cmp a, sq0LengthPreviousValue+x
+    bne ...resetReloadValue     ; if length counter == previous value, then
+
+    mov a, sq0LengthReloadValue+x
+    mov sq0LengthCounter+x, a   ; length counter = reload value
+...resetReloadValue:
+    mov a, #$00
+    mov sq0LengthReloadValue+x, a   ; reload value = 0
+...end:
+    ;  TODO: 
+    ; _halt = _newHaltValue;
+ret
+
+
+
 ;..SetEnabled(?)
 ;..GetStatus(?)
 
@@ -423,11 +541,15 @@ ret
 
 ;  Set the period low byte in [A]
 ..SetLow:
+    mov x, !Square0Offset
+...Start:
     mov sq0RealPeriodLo+x, a
     call ._UpdateTargetPeriod
 
     jmp ProcessWrites_handlerReturn
 
+;  TODO: unused?
 ..SetHigh:
-
+    mov x, !Square0Offset
+...Start:
 ret
