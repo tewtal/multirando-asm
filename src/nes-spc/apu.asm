@@ -173,8 +173,9 @@ dmc_attenuation_cutoff: db $20
 ;========================================
 
 TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240Hz ticks
-WritesJumpPointer = $81     ;  2-byte address storing the pointer to the write handler
-ShiftResult       = $83     ;  2-byte heap variable used by pulse channels
+; $81, $82 reserved by Frame Counter
+WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write handler
+ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
 
 start:
 .start:
@@ -480,7 +481,6 @@ TickHandler:
 
 .processEnvelopes:
     ;  Process all envelopes and triangle linear counter
-    mov a, !Square0Flag
     call Pulse_Envelope_Tick
     ;  TODO: all the rest
 

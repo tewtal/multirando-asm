@@ -393,9 +393,8 @@ ret
 ret
 
 ;  Returns frequency-appropriate SRCN in [A]
+;  Modifies PitchHi and PitchLo to account for the sample chosen
 ._CalcSRCN:
-    ; mov a, PitchHi : push a
-    ; mov a, PitchLo : push a
     mov     a, #$00              ; SRCN = 0
 
     cmp     PitchHi, #$20
@@ -418,16 +417,9 @@ ret
     rol     PitchHi
 ..done:  ; A = SRCN (0–3)
     mov sq0Srcn, a             ; store result
-    ; pop a : mov PitchLo, a
-    ; pop a : mov PitchHi, a
 ret
 
 ._UpdateTargetPeriod:
-    ; TODO (no): calc lookup tables
-    ;  old spc uses SNESTABL, a *4096* byte lookup table
-    ;  we need to either burn cycles and do the 16-bit math,
-    ;  or generate an 7+3-bit lookup table: 1024 bytes I guess?
-
     ;  Load period heap memory
     ShiftResultLo = $00
     ShiftResultHi = $01
@@ -438,7 +430,7 @@ ret
     mov ShiftResultHi, a
 
 ..sweepShift:
-    mov sq0SweepShift+x, a
+    mov a, sq0SweepShift+x
     beq ...done          ; 0-bit shift → no work
 
 ...loop:

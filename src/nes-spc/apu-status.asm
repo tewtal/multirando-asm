@@ -21,7 +21,7 @@ Status:
     set1 !sq0LengthEnabledFlag
     bra +
 ..sq0Disabled:
-    clr1 !sq1ConstantVolumeFlag
+    clr1 !sq0LengthEnabledFlag
     mov a, #$00
     mov sq0LengthCounter+x, a       ; lengthCounter = 0
 +
