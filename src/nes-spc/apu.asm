@@ -282,7 +282,16 @@ Start240:
         mov TimerLatchIndex, a
 
         mov $F4,#$7D            ; move $7D to port 0 (SPC ready)
-        ; bra MainLoop
+
+        ;  Initialize game startup state that we skip due to jumping directly to gameplay modes
+        ;  via portal transitions.  Check the other games; z1 writes $0f to $4015 on the 3rd frame of execution
+        ;  and I suspect the other games do similarly just to enable the audio channels.
+        ;  Mimic $0f -> $4015 write.
+        call Run
+
+        set1 $9f.6
+        set1 $af.6
+        ; TODO: rest
 
 ;-----------------------------------------------
 ; Main loop

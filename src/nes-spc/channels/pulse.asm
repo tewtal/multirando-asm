@@ -116,7 +116,7 @@ Pulse:
     !blt ..muted     ; if real period < 8, muted
 ..sweepCheck:
     mov a, sq0StateFlags+x
-    and a, !SweepNegate
+    and a, #!SweepNegate
     bne ..notMuted  ; if sweepNegate, not muted
     mov a, sq0TargetPeriodHi
     cmp a, #$08
@@ -504,11 +504,11 @@ ret
     push y
     mov y, a
     mov a, sq0StateFlags+x
-    and a, !LengthEnabled
+    and a, #!LengthEnabled
     beq ...done             ; if length enabled, then
     push x
     mov a, y
-    clrc : ror a : ror a : ror a    ; value >> 3
+    clrc : lsr a : lsr a : lsr a    ; value >> 3
     mov x, a                ; retrieve value as index
     mov a, lengthCounterTable+x
     pop x
