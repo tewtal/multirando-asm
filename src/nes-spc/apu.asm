@@ -176,6 +176,8 @@ TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240H
 ; $81, $82 reserved by Frame Counter
 WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write handler
 ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
+; $87, $88 reserved by Apu Status
+; $89 reserved by Pulse
 
 start:
 .start:
@@ -350,7 +352,7 @@ JumpTableLo:
     ;  Square channel 0
     db Pulse_Envelope_Init&$FF, Pulse_Sweep_Init&$FF, Pulse_Period_SetLow&$FF, Pulse_LengthCounter_Load&$FF
     ;  Square channel 1
-    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    db Pulse_Envelope_Init2&$FF, Pulse_Sweep_Init2&$FF, Pulse_Period_SetLow2&$FF, Pulse_LengthCounter_Load2&$FF
     ;  Triangle channel
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  Noise channel
@@ -358,14 +360,14 @@ JumpTableLo:
     ;  DMC
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  Status and Frame counter
-    db NullRoutine&$FF, Status_set&$FF, NullRoutine&$FF, FrameCount_set&$FF
+    db NullRoutine&$FF, Status_Set&$FF, NullRoutine&$FF, FrameCount_set&$FF
 
 
 JumpTableHi:
     ;  Square channel 0
     db Pulse_Envelope_Init>>8, Pulse_Sweep_Init>>8, Pulse_Period_SetLow>>8, Pulse_LengthCounter_Load>>8
     ;  Square channel 1
-    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    db Pulse_Envelope_Init2>>8, Pulse_Sweep_Init2>>8, Pulse_Period_SetLow2>>8, Pulse_LengthCounter_Load2>>8
     ;  Triangle channel
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  Noise channel
@@ -373,7 +375,7 @@ JumpTableHi:
     ;  DMC
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  Status and Frame counter
-    db NullRoutine>>8, Status_set>>8, NullRoutine>>8, FrameCount_set>>8
+    db NullRoutine>>8, Status_Set>>8, NullRoutine>>8, FrameCount_set>>8
 
 
 ;------------------------------------------------------------------------
@@ -427,12 +429,13 @@ ret
 
 Run:
     ;  Run():
-    mov x, !Square0Offset
-    call Pulse_LengthCounter_Reload
+    call Pulse_LengthCounter_Reload     ; Square 0
+    call Pulse_LengthCounter_Reload2    ; Square 1
     ;  TODO: rest
 
     ;  channels->Run():
     call Pulse_UpdateOutput
+    call Pulse_UpdateOutput2
     ;  TODO: rest
 ret
 
@@ -491,6 +494,7 @@ TickHandler:
 .processEnvelopes:
     ;  Process all envelopes and triangle linear counter
     call Pulse_Envelope_Tick
+    call Pulse_Envelope_Tick2
     ;  TODO: all the rest
 
 
@@ -509,12 +513,12 @@ TickHandler:
 
 .processLCs:
     ;  Process all length counters and sweeps
-    ;  TODO: all
-    mov a, !Square0Offset
     call Pulse_LengthCounter_Tick
-    mov a, !Square0Offset
-    call Pulse_Sweep_Tick
+    call Pulse_LengthCounter_Tick2
+    ;  TODO: rest
 
+    call Pulse_Sweep_Tick
+    call Pulse_Sweep_Tick2
 .setOutput:
     ; mov a, sq0EnvelopeCounter
     ; mov x,!Square0Flag
@@ -558,6 +562,8 @@ CalcPitch:
 
     AccLo    = $12
     AccHi    = $13
+
+    push x
 
 ; --- D = P + 1 ----------------------------------  ✓
     clrc
@@ -665,6 +671,7 @@ NoAdd:
     mov   PitchHi, a
 
 ; ---- final pitch in PitchHi:PitchLo ------------
+    pop x
     ret
 
 

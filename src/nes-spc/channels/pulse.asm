@@ -1,5 +1,6 @@
 ;  Methods exposed which control the sq0 and sq1 pulse channels
 ;  Zero-page variables used by these channels are also declared here
+SpcRegisterSelector = $89
 
 ;  Sample data (TODO: rename / inline and add descriptions)
 
@@ -105,8 +106,13 @@ Pulse:
 ;.GetState(?)
 
 ;  Sends current pulse channel state to spc control registers
+.UpdateOutput2
+    mov x, !Square1Offset
+    mov SpcRegisterSelector, !Square1Offset
+    bra .UpdateOutput_Start
 .UpdateOutput
     mov x, !Square0Offset
+    mov SpcRegisterSelector, !Square0Offset
 ..Start:
     ;  if (_realPeriod < 8 || (!_sweepNegate && _sweepTargetPeriod > 0x7FF))
     mov a, sq0RealPeriodHi+x
@@ -118,34 +124,25 @@ Pulse:
     mov a, sq0StateFlags+x
     and a, #!SweepNegate
     bne ..notMuted  ; if sweepNegate, not muted
-    mov a, sq0TargetPeriodHi
+    mov a, sq0TargetPeriodHi+x
     cmp a, #$08
     bpl ..muted     ; if target period > 0x7ff, muted
     bra ..notMuted
 
 ..muted:
-    ;  then set channel vol = 0 or set channe KOFF
+    ;  then set channel vol -> 0
     mov a, #$00
 
     ; Mute VOL IN [A]
-    mov $F2,!Square0VolumeL              ; write volume
+    mov $F2,SpcRegisterSelector     ; channel volume L
     mov $F3, a
-    mov $F2,!Square0VolumeR
+    inc SpcRegisterSelector
+    mov $F2,SpcRegisterSelector     ; channel volume R
     mov $F3, a
     bra ..end
 
 ..notMuted:
-    ;  		if(_counter > 0) {
-		; 	if(_constantVolume) {
-		; 		return _volume;
-		; 	} else {
-		; 		return _counter;
-		; 	}
-		; } else {
-		; 	return 0;
-		; }
     mov a, sq0EnvelopeCounter+x
-    ; bmi ..muted   ; should not be needed
     beq ..muted
     mov a, sq0StateFlags+x
     and a, #!ConstantVolume
@@ -153,7 +150,7 @@ Pulse:
     mov a, sq0Volume+x
     bra +
 ..notConstant:
-    mov a, sq0LengthCounter+x
+    mov a, sq0EnvelopeCounter+x
 +
     push x
     mov x, a
@@ -161,9 +158,10 @@ Pulse:
     pop x
 
     ; SET VOL IN [A]
-    mov $F2,!Square0VolumeL              ; write volume
+    mov $F2,SpcRegisterSelector     ; channel volume L
     mov $F3, a
-    mov $F2,!Square0VolumeR
+    inc SpcRegisterSelector
+    mov $F2,SpcRegisterSelector     ; channel volume R
     mov $F3, a
 
     ; Prepare spc pitch
@@ -173,7 +171,6 @@ Pulse:
     mov PeriodHi, a
 
     call CalcPitch
-
     call ._CalcSRCN
 
     mov a, sq0Duty+x
@@ -181,13 +178,16 @@ Pulse:
     or a, sq0Srcn+x    ;  a = 0000_ddff
 
     ; SET SRCN
-    mov $F2,!Square0SRCN            ; sample # reg
-    mov $F3, a                   ; 00: 2kHz, 01: 1kHz, 02: 500Hz, 03: 250Hz
+    clrc : adc SpcRegisterSelector, #$03    ;  Get SRCN register
+    mov $F2,SpcRegisterSelector
+    mov $F3, a                   ; x0: 2kHz, x1: 1kHz, x2: 500Hz, x3: 250Hz
 
-    mov $f2, !Square0PitchL
-    mov $f3, PitchLo
-    mov $f2, !Square0PitchH
+    dec SpcRegisterSelector     ; Get pitch high register
+    mov $f2, SpcRegisterSelector
     mov $f3, PitchHi
+    dec SpcRegisterSelector     ; Get pitch low register
+    mov $f2, SpcRegisterSelector
+    mov $f3, PitchLo
 ..end:
 ret
 
@@ -209,37 +209,33 @@ ret
     rep 6 : lsr a
     mov sq0Duty+x, a
 
-    ;  Set halt [TODO: remove branch]
+    ;  Set halt
 ...setHalt:
     mov a, y
     and  a, #$20
-    cmp x, !Square0Offset
-    bne ....sq1
-    clr1 !sq0LengthHaltFlag
-    or a, sq0StateFlags
-    mov  sq0StateFlags, a
+    beq ....disable
+    mov a, sq0StateFlags+x
+    or a, #!LengthHalt
     bra +
-....sq1:
-    clr1 !sq1LengthHaltFlag
-    or a, sq1StateFlags
-    mov  sq1StateFlags, a
+....disable:
+    mov a, sq0StateFlags+x
+    and a, #~!LengthHalt
 +
+    mov sq0StateFlags+x, a
 
-    ;  Set constant volume [TODO: remove branch]
+    ;  Set constant volume
 ...setConstantVolume:
     mov a, y
     and a, #$10
-    cmp x, !Square0Offset
-    bne ....sq1
-    clr1 !sq0ConstantVolumeFlag
-    or a, sq0StateFlags
-    mov  sq0StateFlags, a
+    beq ....disable
+    mov a, sq0StateFlags+x
+    or a, #!ConstantVolume
     bra +
-....sq1:
-    clr1 !sq1ConstantVolumeFlag
-    or a, sq1StateFlags
-    mov  sq1StateFlags, a
+....disable:
+    mov a, sq0StateFlags+x
+    and a, #~!ConstantVolume
 +
+    mov sq0StateFlags+x, a
 
     ;  Set volume
     mov a, y
@@ -250,6 +246,9 @@ ret
     jmp ProcessWrites_handlerReturn
 
 ;  Tick the envelope
+..Tick2:
+    mov x, !Square1Offset
+    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
 ...Start:
@@ -352,9 +351,12 @@ ret
 
 
 ;  Tick the sweep
+..Tick2:
+    mov x, !Square1Offset
+    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
-..Start:
+...Start:
     dec sq0SweepDivider+x
     bne ...reloadSweep
     mov a, sq0SweepShift+x
@@ -416,7 +418,7 @@ ret
     asl     PitchLo
     rol     PitchHi
 ..done:  ; A = SRCN (0–3)
-    mov sq0Srcn, a             ; store result
+    mov sq0Srcn+x, a             ; store result
 ret
 
 ._UpdateTargetPeriod:
@@ -482,7 +484,10 @@ ret
 
 .LengthCounter:
 
-;  Tick the length counter for the pulse channel flag in [A]
+;  Tick the pulse channel's length counter
+..Tick2:
+    mov x, !Square1Offset
+    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
 ...Start:
@@ -497,6 +502,9 @@ ret
 ret
 
 ;  Load the length counter with value in [A]
+..Load2:
+    mov x, !Square1Offset
+    bra ..Load_Start
 ..Load:
     mov x, !Square0Offset
 ...Start:
@@ -536,6 +544,9 @@ ret
     jmp ProcessWrites_handlerReturn
 
 ;  Reload length counter
+..Reload2:
+    mov x, !Square1Offset
+    bra ..Reload_Start
 ..Reload:
     mov x, !Square0Offset
 ...Start:
@@ -564,6 +575,9 @@ ret
 .Period:
 
 ;  Set the period low byte in [A]
+..SetLow2:
+    mov x, !Square1Offset
+    bra ..SetLow_Start
 ..SetLow:
     mov x, !Square0Offset
 ...Start:
@@ -573,7 +587,7 @@ ret
     jmp ProcessWrites_handlerReturn
 
 ;  TODO: unused?
-..SetHigh:
-    mov x, !Square0Offset
-...Start:
-ret
+; ..SetHigh:
+;     mov x, !Square0Offset
+; ...Start:
+    ; ret
