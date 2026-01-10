@@ -142,7 +142,7 @@ Pulse:
     bra ..end
 
 ..notMuted:
-    mov a, sq0EnvelopeCounter+x
+    mov a, sq0LengthCounter+x
     beq ..muted
     mov a, sq0StateFlags+x
     and a, #!ConstantVolume
@@ -525,7 +525,8 @@ ret
     mov a, sq0LengthCounter+x
     mov sq0LengthPreviousValue+x, a ; previous value = counter
     
-    ; TODO:?? follow "Set need to run" logic
+    ;  Follow "Set need to run" logic
+    call Run
 
 ...done:
     ; SetPeriod((_realPeriod & 0xFF) | ((value & 0x07) << 8));
