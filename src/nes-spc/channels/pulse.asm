@@ -525,8 +525,7 @@ ret
     mov a, sq0LengthCounter+x
     mov sq0LengthPreviousValue+x, a ; previous value = counter
     
-    ;  Follow "Set need to run" logic
-    call Run
+    mov NeedToRun, #$01     ;  Set APU->NeedToRun
 
 ...done:
     ; SetPeriod((_realPeriod & 0xFF) | ((value & 0x07) << 8));
@@ -541,6 +540,16 @@ ret
     or a, #!EnvelopeStart
     mov sq0StateFlags+x, a
 
+    ;  Follow "Set need to run" logic
+    ;  TODO: Check state dp value
+    mov a, NeedToRun
+    beq ...skipRun
+    mov NeedToRun, #$00     ;  Reset APU->NeedToRun
+    push x
+    call Run
+    pop x
+
+...skipRun:
     pop y
     jmp ProcessWrites_handlerReturn
 
