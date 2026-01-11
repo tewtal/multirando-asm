@@ -504,9 +504,11 @@ ret
 ;  Load the length counter with value in [A]
 ..Load2:
     mov x, !Square1Offset
+    mov SpcRegisterSelector, !Square1Flag
     bra ..Load_Start
 ..Load:
     mov x, !Square0Offset
+    mov SpcRegisterSelector, !Square0Flag
 ...Start:
     ; 	_envelope.LengthCounter.LoadLengthCounter(value >> 3);
     push y
@@ -532,6 +534,14 @@ ret
     mov a, y
     and a, #$07
     mov sq0RealPeriodHi+x, a
+
+    ;  Emulate pulse sequencer restart (dutyPos = 0) by issuing a KOFF and KON
+    ;  to the current channel
+    push x
+    mov x, SpcRegisterSelector
+    call stopVoiceInX
+    call playVoiceInX
+    pop x
 
     ; //The envelope is also restarted.
     ; _envelope.ResetEnvelope();
