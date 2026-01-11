@@ -178,6 +178,7 @@ WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write h
 ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
 ; $87, $88 reserved by Apu Status
 ; $89 reserved by Pulse
+NeedToRun         = $8a
 
 start:
 .start:
