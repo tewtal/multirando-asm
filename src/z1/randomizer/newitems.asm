@@ -106,10 +106,17 @@ TakeItem_SetItemValueFF_extended:
 ; Loads the underworld room item Id from our extended tables instead of from
 ; the original level data (this lets us use the full 8-bit for item id:s)
 ;
+print "LoadRoomItemIdUW_extended = ", pc
 LoadRoomItemIdUW_extended:
     phx
     ldy $EB
-    
+
+    ; Was the dungeon data moved and extended?
+    ldx.b $10
+    lda.l LevelBlockBanksQ1, x
+    cmp.b #$86
+    bne .extended
+
     ; Load dungeon id
     lda.b $10
     cmp.b #$07
@@ -120,6 +127,23 @@ LoadRoomItemIdUW_extended:
     tyx
 .loadItem
     lda.l RoomItemsUW_extended, x
+    plx
+    cmp.b #$2F
+    rtl
+
+; Loads from a separate table depending on dungeon id
+; dungeon id is in [X]
+.extended
+    rep #$30
+    txa
+    and.w #$00ff
+    xba : lsr : and.w #$7fff
+    sta.w ExtendedItemTemp 
+    lda.b $eb : and.w #$00ff
+    clc : adc.w ExtendedItemTemp
+    tax
+    lda.l RoomItemsUW_extended_custom, x
+    sep #$30
     plx
     cmp.b #$2F
     rtl

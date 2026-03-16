@@ -142,9 +142,10 @@ z1_transition_table:
 
     ; Restore WRAM from BW-RAM backup
     dw $0003, $C800, $0040, $0000, $0000, $0800
+    dw $0003, !SRAM_Z1_EXPANDED_DUNGEONS&$ffff, !SRAM_Z1_EXPANDED_DUNGEONS>>16, $1B80, $0000, $0480
 
     ; Copy common routines from ROM -> RAM
-    dw $0003, $8000, $0087, $1000, $0000, $1000
+    dw $0003, $8000, $0087, $1000, $0000, $0C00
 
     ; Set up IRQ/NMI handlers
     dw $0004, $105c, !IRAM_NMI
@@ -169,7 +170,7 @@ m1_transition_table:
     dw $0003, $D000, $0040, $0000, $0000, $0800
 
     ; Copy common routines from ROM -> RAM
-    dw $0003, $8000, $0097, $1000, $0000, $1000
+    dw $0003, $8000, $0097, $1000, $0000, $0C00
 
     ; Set up IRQ/NMI handlers
     dw $0004, $105c, !IRAM_NMI

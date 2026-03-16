@@ -125,6 +125,7 @@ transition_to_z1:
     lda #$00 : sta $210d
 
     jsl nes_overlay_init
+    jsl PreConvertSpritePatterns
 
     ; Enable NMI and clear pending interrupts
     cli : lda.l $004210

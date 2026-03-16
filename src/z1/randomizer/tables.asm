@@ -284,4 +284,238 @@ LevelBlockBanksQ1:
     db $86 ; Dungeon 8
     db $86 ; Dungeon 9
 
+org $8A9000
+RoomItemsUW_extended_custom:
+.level0
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level1
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level2
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level3
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level4
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level5
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level6
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level7
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level8
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+.level9
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
 
+; =============================================
+; Enemy ID to sprite block lookup table (128 bytes)
+; Indexed by enemy_id: (EnemyMode << 6) | EnemyCode
+;   Mode 0 enemies: $00-$3F
+;   Mode 1 enemies: $40-$7F
+;
+; Values: block index from PreconvertedBlockInfo
+;   $02 = SP127  (enemy sprites for levels 1,2,7)
+;   $03 = SP358  (enemy sprites for levels 3,5,8)
+;   $04 = SP469  (enemy sprites for levels 4,6,9)
+;   $05 = Boss1257 (boss sprites for levels 1,2,5,7)
+;   $06 = Boss3468 (boss sprites for levels 3,4,6,8)
+;   $07 = Boss9    (boss sprites for level 9)
+;   $FF = no swap needed (uses common UW sprites)
+;
+; Place at known location for easy patching by randomizer
+org $8AA000
+EnemyIdToSpriteBlock:
+    ; Mode 0: $00-$0F
+    db $FF  ; $00 Nothing
+    db $FF  ; $01 Blue Lynel (OW)
+    db $FF  ; $02 Red Lynel (OW)
+    db $FF  ; $03 Blue Moblin (OW)
+    db $FF  ; $04 Red Moblin (OW)
+    db $02  ; $05 Blue Goriya → SP127
+    db $02  ; $06 Red Goriya → SP127
+    db $FF  ; $07 Red Octorok 1 (OW)
+    db $FF  ; $08 Red Octorok 2 (OW)
+    db $FF  ; $09 Blue Octorok 1 (OW)
+    db $FF  ; $0A Blue Octorok 2 (OW)
+    db $03  ; $0B Red Darknut → SP358
+    db $03  ; $0C Blue Darknut → SP358
+    db $FF  ; $0D Blue Tektite (OW)
+    db $FF  ; $0E Red Tektite (OW)
+    db $FF  ; $0F Blue Leever (OW)
+    ; Mode 0: $10-$1F
+    db $FF  ; $10 Red Leever (OW)
+    db $FF  ; $11 Unknown
+    db $04  ; $12 Vire → SP469
+    db $FF  ; $13 Zol (common)
+    db $FF  ; $14 Gel 1 (common)
+    db $FF  ; $15 Gel 2 (common)
+    db $03  ; $16 Pols Voice → SP358
+    db $04  ; $17 Like Like → SP469
+    db $FF  ; $18 Unknown
+    db $FF  ; $19 Unknown
+    db $FF  ; $1A Peahat (OW)
+    db $FF  ; $1B Blue Keese (common)
+    db $FF  ; $1C Red Keese (common)
+    db $FF  ; $1D Dark Keese (common)
+    db $FF  ; $1E Armos Knight
+    db $FF  ; $1F Boulder Set (OW)
+    ; Mode 0: $20-$2F
+    db $FF  ; $20 Boulder (OW)
+    db $FF  ; $21 Ghini (OW)
+    db $FF  ; $22 Flying Ghini (OW)
+    db $04  ; $23 Red Wizzrobe → SP469
+    db $04  ; $24 Blue Wizzrobe → SP469
+    db $FF  ; $25 Patra Child (spawned)
+    db $FF  ; $26 Patra Child (spawned)
+    db $02  ; $27 Wallmaster → SP127
+    db $02  ; $28 Rope → SP127
+    db $FF  ; $29 Unknown
+    db $02  ; $2A Stalfos → SP127
+    db $FF  ; $2B Bubble 1 (common)
+    db $FF  ; $2C Bubble 2 (common)
+    db $FF  ; $2D Bubble 3 (common)
+    db $FF  ; $2E Whirlwind
+    db $FF  ; $2F Pond Fairy
+    ; Mode 0: $30-$3F (bosses and special)
+    db $03  ; $30 Gibdo → SP358
+    db $05  ; $31 Triple Dodongo → Boss1257
+    db $05  ; $32 Single Dodongo → Boss1257
+    db $06  ; $33 Blue Gohma → Boss3468
+    db $06  ; $34 Red Gohma → Boss3468
+    db $FF  ; $35 Rupee Boss
+    db $FF  ; $36 Hungry Goriya
+    db $FF  ; $37 Zelda
+    db $05  ; $38 Single Digdogger → Boss1257
+    db $05  ; $39 Triple Digdogger → Boss1257
+    db $02  ; $3A Red Lanmola → SP127
+    db $04  ; $3B Blue Lanmola → SP469
+    db $06  ; $3C Manhandla → Boss3468
+    db $05  ; $3D Aquamentus → Boss1257
+    db $07  ; $3E Ganon → Boss9
+    db $FF  ; $3F Guard Fire
+    ; Mode 1: $40-$4F
+    db $FF  ; $40 Standing Fire
+    db $FF  ; $41 Moldorm (common)
+    db $06  ; $42 Gleeok 1 → Boss3468
+    db $06  ; $43 Gleeok 2 → Boss3468
+    db $06  ; $44 Gleeok 3 → Boss3468
+    db $06  ; $45 Gleeok 4 → Boss3468
+    db $FF  ; $46 Gleeok Head (spawned)
+    db $07  ; $47 Patra 1 → Boss9
+    db $07  ; $48 Patra 2 → Boss9
+    db $FF  ; $49 Three Pairs Of Traps
+    db $FF  ; $4A Corner Traps
+    db $FF  ; $4B Old Man
+    db $FF  ; $4C Old Man 2
+    db $FF  ; $4D Old Man 3
+    db $FF  ; $4E Old Man 4
+    db $FF  ; $4F Bomb Upgrader
+    ; Mode 1: $50-$5F
+    db $FF  ; $50 Old Man 5
+    db $FF  ; $51 Mugger
+    db $FF  ; $52 Old Man 6
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $53-$5F unused
+    db $FF  ; $60 Unknown
+    db $FF  ; $61 Unknown
+    ; Enemy lists: $62-$6F (list ids 0-13)
+    db $FF  ; $62 List 0: Moblins (OW)
+    db $FF  ; $63 List 1: Moblins (OW)
+    db $FF  ; $64 List 2: Peahat/Lynels (OW)
+    db $FF  ; $65 List 3: Lynels (OW)
+    db $FF  ; $66 List 4: Lynels/Leevers (OW)
+    db $FF  ; $67 List 5: Leevers/Peahats (OW)
+    db $FF  ; $68 List 6: Octoroks (OW)
+    db $FF  ; $69 List 7: Octoroks (OW)
+    db $FF  ; $6A List 8: Octoroks (OW)
+    db $FF  ; $6B List 9: Octoroks (OW)
+    db $FF  ; $6C List 10: Moblins/Octoroks (OW)
+    db $FF  ; $6D List 11: Traps/Zol (common)
+    db $FF  ; $6E List 12: Traps/Keese (common)
+    db $FF  ; $6F List 13: Bubble/Zol/Keese (common)
+    ; Enemy lists: $70-$7F (list ids 14-29)
+    db $03  ; $70 List 14: Pols Voice/Gibdo/Keese → SP358
+    db $04  ; $71 List 15: Bubble/Wizzrobes → SP469
+    db $04  ; $72 List 16: Bubble/Vire → SP469
+    db $04  ; $73 List 17: Bubble/Zol/Like-Like → SP469
+    db $03  ; $74 List 18: Bubble/Darknuts/Gibdo → SP358
+    db $02  ; $75 List 19: Bubble/Goriya/Keese → SP127
+    db $04  ; $76 List 20: Traps/Like-Like → SP469
+    db $04  ; $77 List 21: Traps/Wizzrobes → SP469
+    db $03  ; $78 List 22: Pols Voice/Darknuts → SP358
+    db $02  ; $79 List 23: Bubble/Wallmaster → SP127
+    db $02  ; $7A List 24: Goriyas → SP127
+    db $04  ; $7B List 25: Wizzrobes → SP469
+    db $04  ; $7C List 26: Bubble/Like-Like/Wizzrobes → SP469
+    db $04  ; $7D List 27: Bubbles/Wizzrobes → SP469
+    db $03  ; $7E List 28: Bubbles/Darknuts → SP358
+    db $02  ; $7F List 29: Bubbles/Wallmaster → SP127

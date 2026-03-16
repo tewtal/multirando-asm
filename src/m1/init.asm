@@ -9,7 +9,7 @@ SnesBoot:
     LDA.l ((!BASE_BANK+7)<<16)+$8000, x
     STA.l (!BASE_BANK<<16)+$1000, x
     INX #2
-    CPX #$1000
+    CPX #$0C00
     BNE -
 
     JSL spc_init_driver

@@ -632,6 +632,8 @@ ButtonsDownSnes = $0A4C
 ExitRoomTemp = $0A50
 ExitRoomTable = $0A52
 
+ExtendedItemTemp = $0A58
+
 ; Dynamic items
 DynamicItemIndexes = $0A60
 
@@ -659,3 +661,11 @@ QuickSwapIndex = $0A9C
 
 ; Item animations
 ;struct Animations $0aa0  ;  Already defined in common/nes/items.asm; but don't put anything else here
+
+; Expanded dungeons
+ExpandedDungeonState = $1B80
+
+; Pre-converted sprite patterns
+SpritePatternData = $7F1000
+CurrentSpriteSet = $0AB0
+CurrentBossSet = $0AB1
