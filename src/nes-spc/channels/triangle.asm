@@ -1,115 +1,65 @@
-;  Methods exposed which control the sq0 and sq1 pulse channels
-;  Zero-page variables used by these channels are also declared here
-SpcRegisterSelector = $89
+;  Methods exposed which control the triangle channel
+;  Zero-page variables used by the channel are also declared here
+
 
 ;  Sample data (TODO: rename / inline and add descriptions)
 
-; 1 sample - SRCN 0
-pulse0: incsrc "../samples/pl1a-0.asm"  ;  f = 2kHz
-pulse1: incsrc "../samples/pl1a-1.asm"  ;  f = 2kHz
-pulse2: incsrc "../samples/pl1a-2.asm"  ;  f = 2kHz
-pulse3: incsrc "../samples/pl1a-3.asm"  ;  f = 2kHz
-
-; 2 samples - SRCN 1
-pulse0d: incsrc "../samples/pl1-0.asm"  ;  f = 1kHz
-pulse1d: incsrc "../samples/pl1-1.asm"  ;  f = 1kHz
-pulse2d: incsrc "../samples/pl1-2.asm"  ;  f = 1kHz
-pulse3d: incsrc "../samples/pl1-3.asm"  ;  f = 1kHz
-
-; 4 samples - SRCN 2
-pulse0c: incsrc "../samples/pl2-0.asm"  ;  f = 500Hz
-pulse1c: incsrc "../samples/pl2-1.asm"  ;  f = 500Hz
-pulse2c: incsrc "../samples/pl2-2.asm"  ;  f = 500Hz
-pulse3c: incsrc "../samples/pl2-3.asm"  ;  f = 500Hz
-
-; 8 samples - SRCN 3
-pulse0b: incsrc "../samples/pl3-0.asm"  ;  f = 250Hz
-pulse1b: incsrc "../samples/pl3-1.asm"  ;  f = 250Hz
-pulse2b: incsrc "../samples/pl3-2.asm"  ;  f = 250Hz
-pulse3b: incsrc "../samples/pl3-3.asm"  ;  f = 250Hz
+tri_samp0: incsrc "../samples/tri6_sl3.asm"     ; 125 Hz
+tri_samp1: incsrc "../samples/tri6_sl2.asm"     ; 250 Hz
+tri_samp2: incsrc "../samples/tri6_sl1.asm"     ; 500 Hz - used 56
+tri_samp3: incsrc "../samples/tri6.asm"         ; 1 kHz - used 28
+tri_samp4: incsrc "../samples/tri6_sr1.asm"     ; 2 kHz - used 14
+tri_samp5: incsrc "../samples/tri6_sr2.asm"     ; 4 kHz - used 7
+tri_samp6: incsrc "../samples/tri6_sr3.asm"     ; 8 kHz - used 3
+tri_samp7: incsrc "../samples/tri6_sr4.asm"     ; broken(?) constant output - used 1 (TODO: REMOVE)
 
 
 ;  Variables
-;  $90->$9f: Square 0 internal state
-;  $a0->$af: Square 1 internal state
+;  $b0->$bf: Triangle internal state
 
-sq0Duty = $90
-sq0SweepPeriod = $91
-sq0SweepShift = $92
-sq0SweepDivider = $93
-sq0RealPeriodLo = $94
-sq0RealPeriodHi = $95
-sq0Volume     = $96
-sq0EnvelopeDivider = $97
-sq0EnvelopeCounter = $98
-sq0LengthCounter   = $99
-sq0LengthReloadValue = $9a
-sq0LengthPreviousValue = $9b
-sq0TargetPeriodLo = $9c
-sq0TargetPeriodHi = $9d
-sq0Srcn           = $9e
+triRealPeriodLo = $b4
+triRealPeriodHi = $b5
+triVolume     = $b6
+triLinearReloadValue = $b7
+triLinearCounter = $b8
 
-sq0StateFlags = $9f  ;  Channel state boolean flags:
-;  d--- ---- :
-!SweepEnabled = %10000000
-!sq0SweepEnabledFlag   = "sq0StateFlags.7"
-!sq1SweepEnabledFlag   = "sq1StateFlags.7"
+triLengthCounter   = $b9
+triLengthReloadValue = $ba
+triLengthPreviousValue = $bb
+
+triTargetPeriodLo = $bc
+triTargetPeriodHi = $bd
+triSrcn           = $be
+
+triStateFlags = $bf  ;  Channel state boolean flags:
 ;  -d-- ---- :  
 !LengthEnabled = %01000000
-!sq0LengthEnabledFlag   = "sq0StateFlags.6"
-!sq1LengthEnabledFlag   = "sq1StateFlags.6"
+!triLengthEnabledFlag   = "triStateFlags.6"
 ;  --d- ---- :
 !LengthHalt   = %00100000
-!sq0LengthHaltFlag   = "sq0StateFlags.5"
-!sq1LengthHaltFlag   = "sq1StateFlags.5"
-;  ---d ---- :  
-!ConstantVolume = %00010000
-!sq0ConstantVolumeFlag   = "sq0StateFlags.4"
-!sq1ConstantVolumeFlag   = "sq1StateFlags.4"
-;  ---- d--- :  
-!SweepNegate = %00001000
-!sq0SweepNegateFlag   = "sq0StateFlags.3"
-!sq1SweepNegateFlag   = "sq1StateFlags.3"
-;  ---- -d-- :  Unused
-;  ---- --d- :  
-!ReloadSweep = %00000010
-!sq0ReloadSweepFlag   = "sq0StateFlags.1"
-!sq1ReloadSweepFlag   = "sq1StateFlags.1"
-;  ---- ---d : 
-!EnvelopeStart  = %00000001
-!sq0EnvelopeStartFlag   = "sq0StateFlags.0"
-!sq1EnvelopeStartFlag   = "sq1StateFlags.0"
+!triLengthHaltFlag   = "triStateFlags.5"
+; ;  ---d ---- :  
+; !ConstantVolume = %00010000
+; !sq0ConstantVolumeFlag   = "sq0StateFlags.4"
+; ;  ---- d--- :  
+; !SweepNegate = %00001000
+; !sq0SweepNegateFlag   = "sq0StateFlags.3"
+; ;  ---- -d-- :  Unused
+;  d--- ---- :
+!LinearReload = %00000010
+!triLinearReloadFlag   = "triStateFlags.1"
+;  -d-- ---- :  
+!LinearControl = %00000001
+!triLinearControlFlag   = "triStateFlags.0"
 
-
-sq1Duty = $a0
-sq1SweepPeriod = $a1
-sq1SweepShift = $a2
-sq1SweepDivider = $a3
-sq1RealPeriodLo = $a4
-sq1RealPeriodHi = $a5
-sq1Volume     = $a6
-sq1EnvelopeDivider = $a7
-sq1EnvelopeCounter = $a8
-sq1LengthCounter   = $a9
-sq1LengthReloadValue = $aa
-sq1LengthPreviousValue = $ab
-sq1TargetPeriodLo = $ac
-sq1TargetPeriodHi = $ad
-sq1Srcn           = $ae
-
-sq1StateFlags = $af  ;  Channel state boolean flags (see sq0 above)
 
 ;  Methods
-Pulse:
+Triangle:
 
 ;.GetOutput(?)
 ;.GetState(?)
 
 ;  Sends current pulse channel state to spc control registers
-.UpdateOutput2
-    mov x, !Square1Offset
-    mov SpcRegisterSelector, !Square1Offset
-    bra .UpdateOutput_Start
 .UpdateOutput
     mov x, !Square0Offset
     mov SpcRegisterSelector, !Square0Offset
@@ -195,9 +145,6 @@ ret
 .Envelope:
 
 ;  Start a new envelope value in [A]
-..Init2:
-    mov x, !Square1Offset
-    bra ..Init_Start
 ..Init:
     mov x, !Square0Offset
 ...Start:
@@ -246,9 +193,6 @@ ret
     jmp ProcessWrites_handlerReturn
 
 ;  Tick the envelope
-..Tick2:
-    mov x, !Square1Offset
-    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
 ...Start:
@@ -291,9 +235,6 @@ ret
 
 .Sweep:
 ;  Start a new sweep value in [A]
-..Init2:
-    mov x, !Square1Offset
-    bra ..Init_Start
 ..Init:
     mov x, !Square0Offset
 ...Start:
@@ -351,9 +292,6 @@ ret
 
 
 ;  Tick the sweep
-..Tick2:
-    mov x, !Square1Offset
-    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
 ...Start:
@@ -394,33 +332,9 @@ ret
 +
 ret
 
-
-._CalcSRCN:
-    ;  Case statement for PeriodHi:PeriodLo
-    ;   when <= 0x6e then 2kHz sample (SRCN 0)
-    ;   when > 0x6e then 250Hz sample (SRCN 3)
-    mov   a, PeriodHi
-    bne   ..250HzRange       ; if high != 0 → $0100–$07FF → Range 3
-
-    mov   a, PeriodLo
-    cmp   a, #$6f
-    !blt   ..2kHzRange
-
-..250HzRange:
-    mov a, #$03
-    bra ..done
-
-..2kHzRange:
-    mov a, #$00
-..done
-    mov sq0Srcn+x, a             ; store result
-ret
-
-
-
 ;  Returns frequency-appropriate SRCN in [A]
 ;  Modifies PitchHi and PitchLo to account for the sample chosen
-._CalcSRCN_dep:
+._CalcSRCN:
     mov     a, #$00              ; SRCN = 0
 
     cmp     PitchHi, #$20
@@ -447,8 +361,8 @@ ret
 
 ._UpdateTargetPeriod:
     ;  Load period heap memory
-    ShiftResultLo = $00
-    ShiftResultHi = $01
+    ; ShiftResultLo = $00
+    ; ShiftResultHi = $01
 
     mov a, sq0RealPeriodLo+x
     mov ShiftResultLo, a
@@ -509,9 +423,6 @@ ret
 .LengthCounter:
 
 ;  Tick the pulse channel's length counter
-..Tick2:
-    mov x, !Square1Offset
-    bra ..Tick_Start
 ..Tick:
     mov x, !Square0Offset
 ...Start:
@@ -526,10 +437,6 @@ ret
 ret
 
 ;  Load the length counter with value in [A]
-..Load2:
-    mov x, !Square1Offset
-    mov SpcRegisterSelector, !Square1Flag
-    bra ..Load_Start
 ..Load:
     mov x, !Square0Offset
     mov SpcRegisterSelector, !Square0Flag
@@ -588,9 +495,6 @@ ret
     jmp ProcessWrites_handlerReturn
 
 ;  Reload length counter
-..Reload2:
-    mov x, !Square1Offset
-    bra ..Reload_Start
 ..Reload:
     mov x, !Square0Offset
 ...Start:
@@ -612,16 +516,12 @@ ret
 ret
 
 
-
 ;..SetEnabled(?)
 ;..GetStatus(?)
 
 .Period:
 
 ;  Set the period low byte in [A]
-..SetLow2:
-    mov x, !Square1Offset
-    bra ..SetLow_Start
 ..SetLow:
     mov x, !Square0Offset
 ...Start:

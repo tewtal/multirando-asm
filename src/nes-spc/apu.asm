@@ -1,3 +1,18 @@
+;  NES APU Engine for the Quad Randomizer
+;  by https://github.com/Andypro1
+
+;  Aims to emulate the NES APU at a fairly low level, while
+;  translating the sequencer into samples for the spc-700.
+
+;  References:
+;    -  https://www.nesdev.org/wiki/APU
+;           Cycle accurate detailed reference on the NES APU
+;    -  https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU
+;           A good implementation of the above spec in a high-level language
+;    -  https://github.com/Myself086/Project-Nested/tree/master/Assembly/Project/Spc700
+;           Earlier implementation of NES APU functionality on the spc-700
+
+
 print "spc init driver start = ", pc
 spc_init_driver:
     pha : phx : phy : phb : php
@@ -344,6 +359,7 @@ TimerExpired:
 
 incsrc "./apu-recv.asm"
 incsrc "./channels/pulse.asm"
+incsrc "./channels/triangle.asm"
 incsrc "./apu-status.asm"
 
 ;  Safe fill for invalid register values
@@ -533,147 +549,176 @@ ret
 ; CalcPitch
 ; Input : PeriodLo/PeriodHi
 ; Output: PitchLo/PitchHi
-; Table : 128 bytes
 ;-------------------------------------------------
 CalcPitch:
-    PeriodLo  = $02
-    PeriodHi  = $03
-
-    DLo       = $04
-    DHi       = $05
+    PeriodLo = $02
+    PeriodHi = $03
 
     PitchLo  = $06
     PitchHi  = $07
 
-    TmpLo    = $08
-    TmpHi    = $09
+    mov   a,PeriodLo
+    asl   a
+    mov   y,a
 
-    Remainder = $0a
-
-    NextLo   = $0b
-    NextHi   = $0c
-
-    DeltaLo  = $0d
-    DeltaHi  = $0e
-
-    MulR     = $0f
-
-    MulLo    = $10
-    MulHi    = $11
-
-    AccLo    = $12
-    AccHi    = $13
-
-    push x
-
-; --- D = P + 1 ----------------------------------  ✓
+    mov   a,PeriodHi
+    rol   a                ; include carry from low byte shift
     clrc
-    mov   a, PeriodLo
-    inc   a
-    mov   DLo, a
-    mov   a, PeriodHi
-    adc   a, #0
-    mov   DHi, a
+    adc   a,#(((pitchtable-$18)>>8)&$FF)
+    mov   $01,a
 
-; ---- r = D & 31 --------------------------------  ✓
-    mov   a, DLo
-    and   a, #$1F
-    mov   Remainder, a          ; r
+    mov   $00,#(pitchtable-$18)&$FF
 
-; ---- i = (D >> 5) * 2 --------------------------  ✓
-    mov   TmpLo, DLo
-    mov   TmpHi, DHi
-
-    lsr   TmpHi
-    ror   TmpLo
-    lsr   TmpHi
-    ror   TmpLo
-    lsr   TmpHi
-    ror   TmpLo
-    lsr   TmpHi
-    ror   TmpLo
-    lsr   TmpHi
-    ror   TmpLo
-
-    mov   a, TmpLo
-    and   a, #$3F
-    asl   a                     ; word index
-    mov   x, a
-
-; ---- load Pitch_i -------------------------------  ✓
-    mov   a, PitchTable64+x
-    mov   PitchLo, a
-    mov   a, PitchTable64+1+x
-    mov   PitchHi, a
-
-; ---- Pitch_{i+1} -------------------------------
-    inc   x
-    inc   x
-    mov   a, PitchTable64+x
-    mov   NextLo, a
-    mov   a, PitchTable64+1+x
-    mov   NextHi, a
-
-; ---- delta = Pitch_i - Pitch_{i+1} (unsigned) --
-    mov   a, PitchLo
-    setc : sbc   a, NextLo
-    mov   DeltaLo, a
-    mov   a, PitchHi
-    sbc   a, NextHi
-    mov   DeltaHi, a
-
-; ---- multiply delta * r ------------------------
-    mov   MulLo, DeltaLo
-    mov   MulHi, DeltaHi
-    mov   MulR,  Remainder
-
-    mov   AccLo, #0
-    mov   AccHi, #0
-    mov   x, #8
-
-MulLoop:
-    mov   a, MulR
-    and   a, #1
-    beq   NoAdd
-
-    mov   a, AccLo
-    clrc : adc   a, MulLo
-    mov   AccLo, a
-    mov   a, AccHi
-    adc   a, MulHi
-    mov   AccHi, a
-
-NoAdd:
-    asl   MulLo
-    rol   MulHi
-    lsr   MulR
-
-    dec   x
-    bne   MulLoop
-
-; ---- divide by 32 (unsigned, safe) -------------  ✓
-    lsr   AccHi
-    ror   AccLo
-    lsr   AccHi
-    ror   AccLo
-    lsr   AccHi
-    ror   AccLo
-    lsr   AccHi
-    ror   AccLo
-    lsr   AccHi
-    ror   AccLo
-
-; ---- Pitch = Pitch_i - correction --------------
-    mov   a, PitchLo
-    setc : sbc   a, AccLo
-    mov   PitchLo, a
-    mov   a, PitchHi
-    sbc   a, AccHi
-    mov   PitchHi, a
-
-; ---- final pitch in PitchHi:PitchLo ------------
-    pop x
+    mov   a,($00)+y
+    mov   PitchLo,a
+    inc   y
+    mov   a,($00)+y
+    mov   PitchHi,a
     ret
+
+
+
+
+
+; CalcPitch_dep:
+;     PeriodLo  = $02
+;     PeriodHi  = $03
+
+;     DLo       = $04
+;     DHi       = $05
+
+;     PitchLo  = $06
+;     PitchHi  = $07
+
+;     TmpLo    = $08
+;     TmpHi    = $09
+
+;     Remainder = $0a
+
+;     NextLo   = $0b
+;     NextHi   = $0c
+
+;     DeltaLo  = $0d
+;     DeltaHi  = $0e
+
+;     MulR     = $0f
+
+;     MulLo    = $10
+;     MulHi    = $11
+
+;     AccLo    = $12
+;     AccHi    = $13
+
+;     push x
+
+; ; --- D = P + 1 ----------------------------------  ✓
+;     clrc
+;     mov   a, PeriodLo
+;     inc   a
+;     mov   DLo, a
+;     mov   a, PeriodHi
+;     adc   a, #0
+;     mov   DHi, a
+
+; ; ---- r = D & 31 --------------------------------  ✓
+;     mov   a, DLo
+;     and   a, #$1F
+;     mov   Remainder, a          ; r
+
+; ; ---- i = (D >> 5) * 2 --------------------------  ✓
+;     mov   TmpLo, DLo
+;     mov   TmpHi, DHi
+
+;     lsr   TmpHi
+;     ror   TmpLo
+;     lsr   TmpHi
+;     ror   TmpLo
+;     lsr   TmpHi
+;     ror   TmpLo
+;     lsr   TmpHi
+;     ror   TmpLo
+;     lsr   TmpHi
+;     ror   TmpLo
+
+;     mov   a, TmpLo
+;     and   a, #$3F
+;     asl   a                     ; word index
+;     mov   x, a
+
+; ; ---- load Pitch_i -------------------------------  ✓
+;     mov   a, PitchTable64+x
+;     mov   PitchLo, a
+;     mov   a, PitchTable64+1+x
+;     mov   PitchHi, a
+
+; ; ---- Pitch_{i+1} -------------------------------
+;     inc   x
+;     inc   x
+;     mov   a, PitchTable64+x
+;     mov   NextLo, a
+;     mov   a, PitchTable64+1+x
+;     mov   NextHi, a
+
+; ; ---- delta = Pitch_i - Pitch_{i+1} (unsigned) --
+;     mov   a, PitchLo
+;     setc : sbc   a, NextLo
+;     mov   DeltaLo, a
+;     mov   a, PitchHi
+;     sbc   a, NextHi
+;     mov   DeltaHi, a
+
+; ; ---- multiply delta * r ------------------------
+;     mov   MulLo, DeltaLo
+;     mov   MulHi, DeltaHi
+;     mov   MulR,  Remainder
+
+;     mov   AccLo, #0
+;     mov   AccHi, #0
+;     mov   x, #8
+
+; MulLoop:
+;     mov   a, MulR
+;     and   a, #1
+;     beq   NoAdd
+
+;     mov   a, AccLo
+;     clrc : adc   a, MulLo
+;     mov   AccLo, a
+;     mov   a, AccHi
+;     adc   a, MulHi
+;     mov   AccHi, a
+
+; NoAdd:
+;     asl   MulLo
+;     rol   MulHi
+;     lsr   MulR
+
+;     dec   x
+;     bne   MulLoop
+
+; ; ---- divide by 32 (unsigned, safe) -------------  ✓
+;     lsr   AccHi
+;     ror   AccLo
+;     lsr   AccHi
+;     ror   AccLo
+;     lsr   AccHi
+;     ror   AccLo
+;     lsr   AccHi
+;     ror   AccLo
+;     lsr   AccHi
+;     ror   AccLo
+
+; ; ---- Pitch = Pitch_i - correction --------------
+;     mov   a, PitchLo
+;     setc : sbc   a, AccLo
+;     mov   PitchLo, a
+;     mov   a, PitchHi
+;     sbc   a, AccHi
+;     mov   PitchHi, a
+
+; ; ---- final pitch in PitchHi:PitchLo ------------
+;     pop x
+;     ret
 
 
 to_reset:
@@ -1018,6 +1063,7 @@ add_dynamic_entries:
 ret
 
 
+;  TODO: rewrite / rename vars and DOCUMENT
 set_directory_lut:
 		dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
 		dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
@@ -1222,16 +1268,17 @@ PitchTable64:
     dw $0077, $0075, $0073, $0071
 
 freqtable: incsrc "snestabl.asm"
-tritable: incsrc "tritabl3.asm"
+pitchtable: incsrc "apu-pitch-table.asm"
+; tritable: incsrc "tritabl3.asm"
 
-tri_samp0: incsrc "./samples/tri6_sl3.asm"
-tri_samp1: incsrc "./samples/tri6_sl2.asm"
-tri_samp2: incsrc "./samples/tri6_sl1.asm"
-tri_samp3: incsrc "./samples/tri6.asm"
-tri_samp4: incsrc "./samples/tri6_sr1.asm"
-tri_samp5: incsrc "./samples/tri6_sr2.asm"
-tri_samp6: incsrc "./samples/tri6_sr3.asm"
-tri_samp7: incsrc "./samples/tri6_sr4.asm"
+; tri_samp0: incsrc "./samples/tri6_sl3.asm"
+; tri_samp1: incsrc "./samples/tri6_sl2.asm"
+; tri_samp2: incsrc "./samples/tri6_sl1.asm"
+; tri_samp3: incsrc "./samples/tri6.asm"
+; tri_samp4: incsrc "./samples/tri6_sr1.asm"
+; tri_samp5: incsrc "./samples/tri6_sr2.asm"
+; tri_samp6: incsrc "./samples/tri6_sr3.asm"
+; tri_samp7: incsrc "./samples/tri6_sr4.asm"
 
 spc_driver_end:
 print "spc driver end = ", pc

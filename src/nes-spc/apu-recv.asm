@@ -13,6 +13,13 @@ ValuesQueue  = $50
 ; Stores register numbers at $20, $21, $22, ...
 ; Stores register values  at $50, $51, $52, ...
 ; Terminates when write index == $30
+; [Optimization TODO: transition to a two-values-at-once loop:
+;   - register numbers can be stored in 5 bits because $4009, $4014, $4016 are unused,
+;       leaving just 21 valid register numbers.  Then use the remaining 3 bits to
+;       come up with a simple diff scheme (add/sub?) to determine a second register number
+;   - Then use ApuIo1 and ApuIo2 for two register values, and ApuIo3 for the expected index value
+;       - or can we encode the expected index value into the 3 spare bits in ApuIo0, and use ApuIo3 for the second register number?
+;]
 apurecv:
     mov !ApuIo0, a              ; reply to CPU with $d7 (begin transfer)
 

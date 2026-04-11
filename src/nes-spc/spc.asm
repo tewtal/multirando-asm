@@ -918,7 +918,7 @@ notimer:
         mov a,(temp1)+y
         and a,#$e0
         xcn a
-        lsr a
+        lsr a   ; [A] contains top 3 bits from tritabl3.asm entries which encode the desired sample
         adc a,#triangle_sample_num&255	; Assume carry clear from LSR
         cmp a,tri_sample
         beq triangle_skip1

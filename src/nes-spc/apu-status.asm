@@ -13,7 +13,9 @@ Status:
     push y
     mov y, a    ; save value
 
+    push y      ; preserve value for after Run
     call Run
+    pop y
 
     mov ChannelFlagLoop, !Square0Flag   
     mov ChannelFlagOffset, !Square0Offset ;  Start with sq0 and loop through all channels
