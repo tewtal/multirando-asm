@@ -551,6 +551,7 @@ ret
 ; Output: PitchLo/PitchHi
 ;-------------------------------------------------
 CalcPitch:
+    !pitchtable = PitchTable_Index0d-$1a
     PeriodLo = $02
     PeriodHi = $03
 
@@ -564,10 +565,10 @@ CalcPitch:
     mov   a,PeriodHi
     rol   a                ; include carry from low byte shift
     clrc
-    adc   a,#(((pitchtable-$18)>>8)&$FF)
+    adc   a,#((!pitchtable>>8)&$FF)
     mov   $01,a
 
-    mov   $00,#(pitchtable-$18)&$FF
+    mov   $00,#!pitchtable&$FF
 
     mov   a,($00)+y
     mov   PitchLo,a
@@ -575,9 +576,6 @@ CalcPitch:
     mov   a,($00)+y
     mov   PitchHi,a
     ret
-
-
-
 
 
 ; CalcPitch_dep:
@@ -1268,7 +1266,8 @@ PitchTable64:
     dw $0077, $0075, $0073, $0071
 
 freqtable: incsrc "snestabl.asm"
-pitchtable: incsrc "apu-pitch-table.asm"
+PitchTable_Index0d: incsrc "apu-pitch-table.asm"
+
 ; tritable: incsrc "tritabl3.asm"
 
 ; tri_samp0: incsrc "./samples/tri6_sl3.asm"
