@@ -133,6 +133,7 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 
 !Square0Offset = #$00
 !Square1Offset = #$10
+!TriangleOffset = #$20
 
 ;  SPC dsp registers
 !Square0VolumeL  = #$00
@@ -309,6 +310,7 @@ Start240:
 
         set1 $9f.6
         set1 $af.6
+        set1 $bf.6
         ; TODO: rest
 
 ;-----------------------------------------------
@@ -371,7 +373,7 @@ JumpTableLo:
     ;  Square channel 1
     db Pulse_Envelope_Init2&$FF, Pulse_Sweep_Init2&$FF, Pulse_Period_SetLow2&$FF, Pulse_LengthCounter_Load2&$FF
     ;  Triangle channel
-    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    db Triangle_LinearCounter_Init&$FF, NullRoutine&$FF, Triangle_Period_SetLow&$FF, Triangle_Period_SetHigh&$FF
     ;  Noise channel
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  DMC
@@ -386,7 +388,7 @@ JumpTableHi:
     ;  Square channel 1
     db Pulse_Envelope_Init2>>8, Pulse_Sweep_Init2>>8, Pulse_Period_SetLow2>>8, Pulse_LengthCounter_Load2>>8
     ;  Triangle channel
-    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    db Triangle_LinearCounter_Init>>8, NullRoutine>>8, Triangle_Period_SetLow>>8, Triangle_Period_SetHigh>>8
     ;  Noise channel
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  DMC
@@ -448,11 +450,14 @@ Run:
     ;  Run():
     call Pulse_LengthCounter_Reload     ; Square 0
     call Pulse_LengthCounter_Reload2    ; Square 1
+    call Triangle_LengthCounter_Reload  ; Triangle
+
     ;  TODO: rest
 
     ;  channels->Run():
     call Pulse_UpdateOutput
     call Pulse_UpdateOutput2
+    call Triangle_UpdateOutput
     ;  TODO: rest
 ret
 
@@ -512,6 +517,7 @@ TickHandler:
     ;  Process all envelopes and triangle linear counter
     call Pulse_Envelope_Tick
     call Pulse_Envelope_Tick2
+    call Triangle_LinearCounter_Tick
     ;  TODO: all the rest
 
 
@@ -532,6 +538,7 @@ TickHandler:
     ;  Process all length counters and sweeps
     call Pulse_LengthCounter_Tick
     call Pulse_LengthCounter_Tick2
+    call Triangle_LengthCounter_Tick
     ;  TODO: rest
 
     call Pulse_Sweep_Tick
