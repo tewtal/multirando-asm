@@ -163,7 +163,7 @@ ret
     ; and _newHaltValue = _linearControlFlag;       //  !LengthPostReloadHalt flag
     ; both flags get the same value based on value & 0x80
 ...setLinearControl:
-    and  a, !LinearControl  ;  value & 0x80
+    and  a, #!LinearControl  ;  value & 0x80
     beq ....disable
     mov a, triStateFlags
     or a, #(!LinearControl|!LengthPostReloadHalt)
@@ -295,7 +295,7 @@ ret
     mov x, !TriangleOffset
 ...Start:
     mov a, sq0LengthReloadValue+x
-    beq ...end          ; if reload value != 0, then
+    beq ...endif          ; if reload value != 0, then
 
     mov a, sq0LengthCounter+x
     cmp a, sq0LengthPreviousValue+x
@@ -307,9 +307,17 @@ ret
 ...resetReloadValue:
     mov a, #$00
     mov sq0LengthReloadValue+x, a   ; reload value = 0
-...end:
-    ;  TODO: 
+...endif:
+
     ; _halt = _newHaltValue;
+...setHalt:
+    mov a, triStateFlags
+    and  a, #!LengthPostReloadHalt
+    beq ....disable
+    set1 !triLengthHaltFlag
+    ret
+....disable:
+    clr1 !triLengthHaltFlag
 ret
 
 
