@@ -443,6 +443,15 @@ ProcessWrites:
     bra .loop
 
 .done:
+    ;  Process NeedToRun once at the end of ProcessWrites
+    ;  that may have resulted from the register writes
+    ;  (length/linear counter loads/inits).
+    mov a, NeedToRun
+    beq .exit
+    mov NeedToRun, #$00 ; reset NeedToRun flag
+    call Run
+
+.exit:
 ret
 
 
@@ -1215,6 +1224,7 @@ lengthCounterTable:
 volumeTable:
     db $00, $08, $11, $19, $22, $2A, $33, $3B
     db $44, $4C, $55, $5D, $66, $6E, $77, $7F
+
 
 ; ; 1 sample
 ; pulse0: incsrc "pl1a-0.asm"

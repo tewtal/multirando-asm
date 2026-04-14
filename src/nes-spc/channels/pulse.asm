@@ -574,16 +574,6 @@ ret
     or a, #!EnvelopeStart
     mov sq0StateFlags+x, a
 
-    ;  Follow "Set need to run" logic
-    ;  TODO: Check state dp value
-    mov a, NeedToRun
-    beq ...skipRun
-    mov NeedToRun, #$00     ;  Reset APU->NeedToRun
-    push x
-    call Run
-    pop x
-
-...skipRun:
     pop y
     jmp ProcessWrites_handlerReturn
 
