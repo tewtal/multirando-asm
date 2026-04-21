@@ -276,17 +276,6 @@ ret
 ;     mov a, sq0StateFlags+x
 ;     or a, #!EnvelopeStart
 ;     mov sq0StateFlags+x, a
-
-;     ;  Follow "Set need to run" logic
-;     ;  TODO: Check state dp value
-;     mov a, NeedToRun
-;     beq ...skipRun
-;     mov NeedToRun, #$00     ;  Reset APU->NeedToRun
-;     push x
-;     call Run
-;     pop x
-
-; ...skipRun:
 ;     pop y
 ret
 
@@ -299,7 +288,6 @@ ret
 
     mov a, sq0LengthCounter+x
     cmp a, sq0LengthPreviousValue+x
-    ; TODO: Is there a BUG here?  lengthcounter off-by-1 to lengthpreviousvalue so recently-loaded length counter value gets blown away and reset to 0...
     bne ...resetReloadValue     ; if length counter == previous value, then
 
     mov a, sq0LengthReloadValue+x

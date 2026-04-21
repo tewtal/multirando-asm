@@ -8,6 +8,12 @@ FrameCount:
 ;  Params:
 ;   [A]: New value
 .set:
+    push y
+    push a
+    call Run
+    pop a
+    pop y
+
     ;  Set frame step mode and counter
     ;  [ACCURACY TODO]: Impelement a _writeDelayCounter (https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU/ApuFrameCounter.h)
     mov FrameCounterCycle, #$00

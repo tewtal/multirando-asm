@@ -11,6 +11,9 @@
 ;           A good implementation of the above spec in a high-level language
 ;    -  https://github.com/Myself086/Project-Nested/tree/master/Assembly/Project/Spc700
 ;           Earlier implementation of NES APU functionality on the spc-700
+;    -  https://github.com/bbbradsmith/NESertGolfing/blob/snes/spc/
+;           Noise channel sample mixin from Brad Smith's NESertGolfing snes up-port
+;           License:  CC BY 4.0
 
 
 print "spc init driver start = ", pc
@@ -125,15 +128,17 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 ;---------------------
 
 ;  Voice flags
-!Square0Flag  = #%00000001
-!Square1Flag  = #%00000010
-!TriangleFlag = #%00000100
-!NoiseFlag    = #%00001000
-!DmcFlag      = #%00010000
+!Square0Flag   = #%00000001
+!Square1Flag   = #%00000010
+!TriangleFlag  = #%00000100
+!NoiseFlag     = #%00001000
+!DmcFlag       = #%00010000
+!NoiseCompFlag = #%00100000
 
-!Square0Offset = #$00
-!Square1Offset = #$10
+!Square0Offset  = #$00
+!Square1Offset  = #$10
 !TriangleOffset = #$20
+!NoiseOffset    = #$30
 
 ;  SPC dsp registers
 !Square0VolumeL  = #$00
@@ -146,6 +151,8 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 !NoiseVolumeR    = #$31
 !DmcVolumeL      = #$40
 !DmcVolumeR      = #$41
+!NoiseCompVolumeL = #$50
+!NoiseCompVolumeR = #$51
 
 !Square0PitchL  = #$02
 !Square0PitchH  = #$03
@@ -157,12 +164,15 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 !NoisePitchH    = #$33
 !DmcPitchL      = #$42
 !DmcPitchH      = #$43
+!NoiseCompPitchL      = #$52
+!NoiseCompPitchH      = #$53
 
 !Square0SRCN  = #$04
 !Square1SRCN  = #$14
 !TriangleSRCN = #$24
 !NoiseSRCN    = #$34
 !DmcSRCN      = #$44
+!NoiseCompSRCN = #$54
 
 !KON          = #$4c
 !KOFF         = #$5c
@@ -228,6 +238,8 @@ start:
         mov $F3,#0
         mov $F2,#$45
         mov $F3,#0
+        mov $F2,#$55
+        mov $F3,#0
 
         mov $F2,#$07            ; infinite gain
         mov $F3,#$1F
@@ -238,6 +250,8 @@ start:
         mov $F2,#$37
         mov $F3,#$1F
         mov $F2,#$47
+        mov $F3,#$1F
+        mov $F2,#$57
         mov $F3,#$1F
 
         ;  Init triangle voice
@@ -251,10 +265,11 @@ start:
         mov $F2,!NoiseSRCN
         mov $F3,#$00            ; sample # for noise
 
+        mov $F2, !NoiseCompSRCN
+        mov $F3, #$18  ; TODO: de-constantize
 
         mov $F2,!KON
-        mov $F3,#%00001111      ;  KON sq0, sq1, tri, and noise
-
+        mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
 
         mov $F2,#$0C            ; main vol L
         mov $F3,#$7F
@@ -311,6 +326,7 @@ Start240:
         set1 $9f.6
         set1 $af.6
         set1 $bf.6
+        set1 $cf.6
         ; TODO: rest
 
 ;-----------------------------------------------
@@ -347,6 +363,26 @@ cpucheck:
 +
         cmp a,#$d7              ; wait for port 0 to be $d7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
         beq apurecv  ;  New cpu data waiting to send
+
+
+;;;  DEBUG:
+; .noisedebug:
+;     ; Oscillate a duty cycle for mixed noise clock generation
+;     !DSP_FLG = #$6C     ;  DSP register: FLG (noise clock)
+;     mov $F2, !DSP_FLG
+;     mov a, noiseDuty
+; ;     and a, #$02         ; 2-1-2-1 cadence (66% cycle)
+;     bne ..cyclen
+; ..cycle0:
+;     mov $F3, #$29       ;  DEBUG: test a typical noise clock value on cycle 0: #$3e with spectroid
+;     inc noiseDuty
+;     bra +
+; ..cyclen:
+;     mov $F3, #$3f       ;  DEBUG: try flattening freq curve with some low "punch" on cycle n
+;     mov a, #$00         ;  reset duty cycle
+;     mov noiseDuty, a
+; +
+
         bra WaitTick
 
 TimerExpired:
@@ -362,6 +398,7 @@ TimerExpired:
 incsrc "./apu-recv.asm"
 incsrc "./channels/pulse.asm"
 incsrc "./channels/triangle.asm"
+incsrc "./channels/noise.asm"
 incsrc "./apu-status.asm"
 
 ;  Safe fill for invalid register values
@@ -375,7 +412,7 @@ JumpTableLo:
     ;  Triangle channel
     db Triangle_LinearCounter_Init&$FF, NullRoutine&$FF, Triangle_Period_SetLow&$FF, Triangle_Period_SetHigh&$FF
     ;  Noise channel
-    db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
+    db Noise_Envelope_Init&$FF, NullRoutine&$FF, Noise_Period_Set&$FF, Noise_LengthCounter_Load&$FF
     ;  DMC
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  Status and Frame counter
@@ -390,7 +427,7 @@ JumpTableHi:
     ;  Triangle channel
     db Triangle_LinearCounter_Init>>8, NullRoutine>>8, Triangle_Period_SetLow>>8, Triangle_Period_SetHigh>>8
     ;  Noise channel
-    db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
+    db Noise_Envelope_Init>>8, NullRoutine>>8, Noise_Period_Set>>8, Noise_LengthCounter_Load>>8
     ;  DMC
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  Status and Frame counter
@@ -454,19 +491,20 @@ ProcessWrites:
 .exit:
 ret
 
-
+;  Execute the apu logic which updates the framecounter and all channels
 Run:
-    ;  Run():
+    ; TODO: FrameCounter->Run() logic
+
     call Pulse_LengthCounter_Reload     ; Square 0
     call Pulse_LengthCounter_Reload2    ; Square 1
     call Triangle_LengthCounter_Reload  ; Triangle
-
-    ;  TODO: rest
+    call Noise_LengthCounter_Reload     ; Noise
 
     ;  channels->Run():
     call Pulse_UpdateOutput
     call Pulse_UpdateOutput2
     call Triangle_UpdateOutput
+    call Noise_UpdateOutput
     ;  TODO: rest
 ret
 
@@ -484,6 +522,8 @@ TickHandler:
     ;           e e e e          e e e - e
     ;       - call subroutines (in large beq case statement?) for all 4 channels:
     ;           tickenvelope, ticklinearcounter, ticklengthcounter, ticksweep
+
+    ;  TODO: Find out why Mesen2 clocks length counters on frame numbers 0 and 2 (and not 1, 3, or 4)
 
     ;  Zero page memory allocations
     ;  $00->$1e: Reserved for immediate heap access for subroutines (if needed)
@@ -527,8 +567,7 @@ TickHandler:
     call Pulse_Envelope_Tick
     call Pulse_Envelope_Tick2
     call Triangle_LinearCounter_Tick
-    ;  TODO: all the rest
-
+    call Noise_Envelope_Tick
 
 ;  "Process length counters & sweeps" = fc==1 || fc==4 || (fc==3 && mode==0) 
 ;   already in simplest form
@@ -548,14 +587,10 @@ TickHandler:
     call Pulse_LengthCounter_Tick
     call Pulse_LengthCounter_Tick2
     call Triangle_LengthCounter_Tick
-    ;  TODO: rest
+    call Noise_LengthCounter_Tick
 
     call Pulse_Sweep_Tick
     call Pulse_Sweep_Tick2
-.setOutput:
-    ; mov a, sq0EnvelopeCounter
-    ; mov x,!Square0Flag
-    ; call playVoiceInX
 .endHandler:
 ret
 
@@ -1085,11 +1120,12 @@ set_directory_lut:
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
                 dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
+                dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
 end_directory_lut:
 
 
         triangle_sample_num = $10
-        srcn_base           = $18
+        srcn_base           = $1c
 
 
 ; ;======================================

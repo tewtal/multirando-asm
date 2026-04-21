@@ -44,9 +44,11 @@ NMIStart:
 
     jsl SnesApplyBGPriority
 
+    ;  Run standard z1 nmi start code:
     lda $ff
     ldx $5c
     jmp $E488
+
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd:
