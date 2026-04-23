@@ -205,6 +205,9 @@ ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
 ; $87, $88 reserved by Apu Status
 ; $89 reserved by Pulse
 NeedToRun         = $8a
+; $8b, $8c  reserved by Frame Counter
+; $8d, $8e: unused
+; $8f reserved by Frame Counter
 
 start:
 .start:
@@ -416,7 +419,7 @@ JumpTableLo:
     ;  DMC
     db NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF, NullRoutine&$FF
     ;  Status and Frame counter
-    db NullRoutine&$FF, Status_Set&$FF, NullRoutine&$FF, FrameCount_set&$FF
+    db NullRoutine&$FF, Status_Set&$FF, NullRoutine&$FF, FrameCount_Set&$FF
 
 
 JumpTableHi:
@@ -431,7 +434,7 @@ JumpTableHi:
     ;  DMC
     db NullRoutine>>8, NullRoutine>>8, NullRoutine>>8, NullRoutine>>8
     ;  Status and Frame counter
-    db NullRoutine>>8, Status_Set>>8, NullRoutine>>8, FrameCount_set>>8
+    db NullRoutine>>8, Status_Set>>8, NullRoutine>>8, FrameCount_Set>>8
 
 
 ;------------------------------------------------------------------------
@@ -491,9 +494,11 @@ ProcessWrites:
 .exit:
 ret
 
+incsrc "./apu-frame-counter.asm"
+
 ;  Execute the apu logic which updates the framecounter and all channels
 Run:
-    ; TODO: FrameCounter->Run() logic
+    call FrameCount_Run
 
     call Pulse_LengthCounter_Reload     ; Square 0
     call Pulse_LengthCounter_Reload2    ; Square 1
@@ -508,7 +513,6 @@ Run:
     ;  TODO: rest
 ret
 
-incsrc "./apu-frame-counter.asm"
 
 ;------------------------------------
 ; Frame tick routine (runs at 240 Hz)
@@ -523,7 +527,9 @@ TickHandler:
     ;       - call subroutines (in large beq case statement?) for all 4 channels:
     ;           tickenvelope, ticklinearcounter, ticklengthcounter, ticksweep
 
-    ;  TODO: Find out why Mesen2 clocks length counters on frame numbers 0 and 2 (and not 1, 3, or 4)
+    ;  DONE: Find out why Mesen2 clocks length counters on frame numbers 0 and 2 (and not 1, 3, or 4)
+        ;  because $4017 mode $80 performs immediate half-frame tick, then blocks FC tick for 2 cycles (0th and 1st)
+        ;  just implement frameCounter->Run as mesen2 does and verify results
 
     ;  Zero page memory allocations
     ;  $00->$1e: Reserved for immediate heap access for subroutines (if needed)
@@ -538,60 +544,8 @@ TickHandler:
     ;  $d0->$df: DMC channel internal state
     ;  $e0->$ef: Reserved for future expansion audio support
 
-
-
-
-
-    ;  TODO: Case statement determining which processes should be run on the current frame tick
-    call FrameCount_tick
-    
-
-
-;  Task lists for the current frame count:
-;  fc == 0 ?  envelopes
-;  fc == 1 ?  length counters; sweeps; envelopes
-;  fc == 2 ?  envelopes
-;  fc == 3 ?  mode == 0 ? length counters; sweeps; envelopes : (none)
-;  fc == 4 ?  length counters; sweeps; envelopes
-
-;  "Process envelopes" = !(mode == 1 && fc == 3)
-;   reduces nicely to mode + fc != 4
-
-    mov a, FrameCounterStepMode
-    clrc : adc a, FrameCounterCycle
-    cmp a, #$04     ;  Only way to have 4 here is 3+1 (can never have 4+0)
-    beq .endHandler
-
-.processEnvelopes:
-    ;  Process all envelopes and triangle linear counter
-    call Pulse_Envelope_Tick
-    call Pulse_Envelope_Tick2
-    call Triangle_LinearCounter_Tick
-    call Noise_Envelope_Tick
-
-;  "Process length counters & sweeps" = fc==1 || fc==4 || (fc==3 && mode==0) 
-;   already in simplest form
-
-    mov a, FrameCounterCycle
-    cmp a, #$01
-    beq .processLCs
-    cmp a, #$04
-    beq .processLCs
-    cmp a, #$03
-    bne .endHandler
-    cmp FrameCounterStepMode, #$00
-    bne .endHandler
-
-.processLCs:
-    ;  Process all length counters and sweeps
-    call Pulse_LengthCounter_Tick
-    call Pulse_LengthCounter_Tick2
-    call Triangle_LengthCounter_Tick
-    call Noise_LengthCounter_Tick
-
-    call Pulse_Sweep_Tick
-    call Pulse_Sweep_Tick2
-.endHandler:
+    ;  When a 240Hz tick step has fired, the frame counter needs to run which triggers the apu's need to run, so we call Run
+    call Run
 ret
 
 

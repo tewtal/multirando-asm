@@ -43,9 +43,9 @@ noiseStateFlags = $cf  ;  Channel state boolean flags:
 !noiseEnvelopeStartFlag   = "noiseStateFlags.0"
 
 
-;  Methods
 Noise:
 
+;  Lookups
 .frequencyTable:
     db $3f, $3f, $3f, $3f, $3f, $3e, $3e, $3d
     db $3c, $3b, $3a, $38, $36, $35, $32, $2f 
@@ -81,6 +81,9 @@ db  12, 12, 12, 12, 12, 12, 12, 12
 
     ; db $00, $08, $11, $19, $22, $2A, $33, $3B   ; DEBUG: full values
     ; db $44, $4C, $55, $5D, $66, $6E, $77, $7F
+
+
+;  Methods
 
 ;.GetOutput(?)
 ;.GetState(?)
