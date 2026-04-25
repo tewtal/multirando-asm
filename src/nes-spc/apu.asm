@@ -273,6 +273,7 @@ start:
 
         mov $F2,!KON
         mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
+        ; mov $F3,#%00001111      ;  DEBUG: remove noise complement for now
 
         mov $F2,#$0C            ; main vol L
         mov $F3,#$7F
@@ -366,26 +367,6 @@ cpucheck:
 +
         cmp a,#$d7              ; wait for port 0 to be $d7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
         beq apurecv  ;  New cpu data waiting to send
-
-
-;;;  DEBUG:
-; .noisedebug:
-;     ; Oscillate a duty cycle for mixed noise clock generation
-;     !DSP_FLG = #$6C     ;  DSP register: FLG (noise clock)
-;     mov $F2, !DSP_FLG
-;     mov a, noiseDuty
-; ;     and a, #$02         ; 2-1-2-1 cadence (66% cycle)
-;     bne ..cyclen
-; ..cycle0:
-;     mov $F3, #$29       ;  DEBUG: test a typical noise clock value on cycle 0: #$3e with spectroid
-;     inc noiseDuty
-;     bra +
-; ..cyclen:
-;     mov $F3, #$3f       ;  DEBUG: try flattening freq curve with some low "punch" on cycle n
-;     mov a, #$00         ;  reset duty cycle
-;     mov noiseDuty, a
-; +
-
         bra WaitTick
 
 TimerExpired:

@@ -23,10 +23,6 @@ ValuesQueue  = $50
 apurecv:
     mov !ApuIo0, a              ; reply to CPU with $d7 (begin transfer)
 
-    ; 63.613 cycles per scanline
-    ; Transfer via HDMA must take no more than 66 cycles per byte (currently N/A to quad rando)
-    ; Cycles used during transfer: 25 = 3+2 + 3+5+4 + 2+2+4
-
 RecvLoop:
         mov   x, #$00                   ; destination offset
         mov ExpectedWriteIndex, #$00    ;  First expected index is 0

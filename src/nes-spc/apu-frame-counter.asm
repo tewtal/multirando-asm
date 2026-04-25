@@ -1,7 +1,7 @@
 ;  Internal state and methods for managing the Apu Frame Counter
 FrameCounterCycle = $81     ;  Track the 240Hz subdivision being processed, from $00 -> $05 (or $04 for 5-step mode)
 FrameCounterStepMode = $82  ;  4-step or 5-step nes apu mode
-; FrameCounterTickBlockCounter =  $8b     ;  Tracks how the apu prevents ticks after running FrameCount_Tick
+FrameCounterTickBlockCounter =  $8b     ;  Tracks how the apu prevents ticks after running FrameCount_Tick
 FrameCounterNewValue = $8c  ;  Has a new value written to $4017 for processing 
 
 FrameCountFlags = $8f  ;  Channel state boolean flags:
@@ -23,12 +23,12 @@ FrameCount:
 
 ;  Represents which objects get Tick methods called for each FrameCounterCycle
 ;  Bytes are ---- --Le, where L is length counters/sweeps and e is envelopes/linear counter.
-;  TODO: Fix step table with placeholder 0 values now that you know mesen2 displays them 1-indexed and
-;  the first "tick" is 3728 apu cycles after a cycle count reset (which happens on all writes to $4017)
+;  Note that the added 0th indexes account for the difference between the SPC timer counter
+;  and the "step" as documented in the NES APU.  APU's first step occurs 3,728 cycles after the start (index 1 here)
 .tickUnit4StepTable:
-    db %00000001, %00000011, %00000001, %00000011
+    db %00000000, %00000001, %00000011, %00000001, %00000011
 .tickUnit5StepTable:
-    db %00000001, %00000011, %00000001, %00000000, %00000011
+    db %00000000, %00000001, %00000011, %00000001, %00000000, %00000011
 
 
 ;  Methods
@@ -47,6 +47,13 @@ FrameCount:
 
 
 .Run:
+    ;  Immediate exit if FrameCounterTickBlockCounter is set
+    mov a, FrameCounterTickBlockCounter
+    beq ..continue
+    mov FrameCounterTickBlockCounter, #$00  ;  reset
+    bra ..end
+
+..continue:
     mov a, FrameCounterStepMode
     beq ..4step
 ..5step:
@@ -77,8 +84,6 @@ FrameCount:
 ..quarterTick:
     call .QuarterTick
 +
-    ; mov FrameCounterTickBlockCounter, #$02  ; set cooldown
-
 ..updateStep:
     ;  Update current frame counter step
     inc FrameCounterCycle
@@ -93,6 +98,8 @@ FrameCount:
     mov a, FrameCountFlags
     and a, #!HasNewValue
     beq ..end
+
+    mov FrameCounterTickBlockCounter, #$01  ;  Prevent another immediate Apu.Run from ticking the frame count
 
     ;  [ACCURACY TODO]: Impelement a _writeDelayCounter (https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU/ApuFrameCounter.h)
     ;  _stepMode = ((_newValue & 0x80) == 0x80) ? 1 : 0;

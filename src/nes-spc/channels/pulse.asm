@@ -209,6 +209,9 @@ ret
     rep 6 : lsr a
     mov sq0Duty+x, a
 
+...setNeedToRun:
+    mov NeedToRun, #$01     ;  Set APU->NeedToRun
+
     ;  Set halt
 ...setHalt:
     mov a, y
