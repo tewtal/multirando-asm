@@ -52,9 +52,9 @@ triStateFlags = $bf  ;  Channel state boolean flags:
 ;  ---- --d- :
 !LinearReload = %00000010
 !triLinearReloadFlag   = "triStateFlags.1"
-;  -d-- ---- :  Unused
-; !LinearControl = %00000001
-; !triLinearControlFlag   = "triStateFlags.0"
+;  ---- ---d :
+!WasMuted = %00000001
+!triWasMutedFlag   = "triStateFlags.0"
 
 
 ;  Methods
@@ -76,14 +76,20 @@ Triangle:
 
 ..muted:
     ;  then set channel vol -> 0
-    mov a, #$00
+    ; mov a, #$00
 
-    ; Mute VOL IN [A]
-    mov $F2,SpcRegisterSelector     ; channel volume L
-    mov $F3, a
-    inc SpcRegisterSelector
-    mov $F2,SpcRegisterSelector     ; channel volume R
-    mov $F3, a
+    ; ; Mute VOL IN [A]
+    ; mov $F2,SpcRegisterSelector     ; channel volume L
+    ; mov $F3, a
+    ; inc SpcRegisterSelector
+    ; mov $F2,SpcRegisterSelector     ; channel volume R
+    ; mov $F3, a
+
+    ; KOFF voice
+    mov $F2, !KOFF
+    mov $F3, !TriangleFlag
+
+    set1 !triWasMutedFlag   ;  Track that output has stopped so we can KON the next note
     bra ..end
 
 ..notMuted:
@@ -116,6 +122,14 @@ Triangle:
     dec SpcRegisterSelector     ; Get pitch low register
     mov $f2, SpcRegisterSelector
     mov $f3, PitchLo
+
+    mov a, triStateFlags
+    and a, #!WasMuted
+    beq ..end
+    ; KON voice
+    mov x,!TriangleFlag
+    call playVoiceInX
+    clr1 !triWasMutedFlag
 ..end:
 ret
 
@@ -204,7 +218,6 @@ ret
     beq ...next
     ;  then: _linearCounter--;
     dec triLinearCounter
-
 
 ...next:
     mov a, triStateFlags

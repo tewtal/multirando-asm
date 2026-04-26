@@ -47,11 +47,11 @@ FrameCount:
 
 
 .Run:
-    ;  Immediate exit if FrameCounterTickBlockCounter is set
+    ;  Skip tick processing if FrameCounterTickBlockCounter is set
     mov a, FrameCounterTickBlockCounter
     beq ..continue
-    mov FrameCounterTickBlockCounter, #$00  ;  reset
-    bra ..end
+    mov FrameCounterTickBlockCounter, #$00
+    bra ..updateStep
 
 ..continue:
     mov a, FrameCounterStepMode
