@@ -1,48 +1,43 @@
 ;  Methods exposed for $4015 writes
-    ChannelFlagLoop = $87  ;  Heap memory to loop through each channel flag in Status_Set
-    ChannelFlagOffset = $88  ;  Heap memory to track the current flag offset through each channel in Status_Set
 
 ;  Methods
 Status:
 
-;.GetOutput(?)
-;.GetState(?)
-
 ;  Process $4015 write
 .Set:
     push y
-    mov y, a    ; save value
 
-    push y      ; preserve value for after Run
+    mov BitwiseScratch, a   ; preserve value
     call Run
-    pop y
 
-    mov ChannelFlagLoop, !Square0Flag   
-    mov ChannelFlagOffset, !Square0Offset ;  Start with sq0 and loop through all channels
-
-..loop:
-    mov x, ChannelFlagOffset    ;  x == index into zero page based on current channel
-    mov a, y
-    and a, ChannelFlagLoop
-    beq ..channelDisabled
-..channelEnabled:
-    mov a, sq0StateFlags+x
-    or a, #!LengthEnabled
-    mov sq0StateFlags+x, a
-    bra +
-..channelDisabled:
-    mov a, sq0StateFlags+x
-    and a, #~!LengthEnabled
-    mov sq0StateFlags+x, a
+    ;  72 cycles
     mov a, #$00
-    mov sq0LengthCounter+x, a       ; lengthCounter = 0 (TODO: ensure this applies to all 5 channels)
+    mov1 c, BitwiseScratch.0
+    mov1 !sq0LengthEnabledFlag, c
+    bcs +
+    mov sq0LengthCounter, a
 +
-    asl ChannelFlagLoop
-    cmp ChannelFlagLoop, #%00100000
-    beq ..done
 
-    clrc : adc ChannelFlagOffset, #$10
-    bra ..loop
-..done:
+    mov1 c, BitwiseScratch.1
+    mov1 !sq1LengthEnabledFlag, c
+    bcs +
+    mov sq1LengthCounter, a
++
+
+    mov1 c, BitwiseScratch.2
+    mov1 !triLengthEnabledFlag, c
+    bcs +
+    mov triLengthCounter, a
++
+
+    mov1 c, BitwiseScratch.3
+    mov1 !noiseLengthEnabledFlag, c
+    bcs +
+    mov noiseLengthCounter, a
++
+
+    mov1 c, BitwiseScratch.4
+    mov1 !dmcLengthEnabledFlag, c
+
     pop y
-jmp ProcessWrites_handlerReturn
+    jmp ProcessWrites_handlerReturn
