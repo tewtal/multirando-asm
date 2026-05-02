@@ -3,7 +3,7 @@
 !DSP_FLG = #$6C     ;  DSP register: FLG (noise clock)
 
 ;  Sample data
-noise_complement: incsrc "../samples/noise-complement.asm"
+; noise_complement: incsrc "../samples/noise-complement.asm"
 
 ;  Variables
 ;  $c0->$cf: Noise internal state
