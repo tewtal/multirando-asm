@@ -190,7 +190,7 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 ;                        This data is appended directly after the static directory lookup data at aram $0200
 ;  One byte value below indicating volume attenuation cutoff as it appears in NES register $4011 (pcm_raw)
 ;  (this is very game specific, and most games do not use this trickery (Zelda 1 does)):
-dmc_attenuation_cutoff: db $20
+dmc_attenuation_cutoff: db $41
 
 ;  Example dmc table (for Zelda 1):
 ;  $4000-$400f:  $00,$1d,$20,$4c,$80

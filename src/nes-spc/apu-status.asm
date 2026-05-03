@@ -7,8 +7,7 @@ Status:
 .Set:
     push y
 
-    mov BitwiseScratch, a   ; preserve value - careful reusing heap memory here,
-    call Run                ; but safe in this case because Run doesn't affect BitwiseScratch for now
+    mov BitwiseScratch, a
 
     ;  72 cycles
     mov a, #$00
