@@ -99,8 +99,17 @@ sq1Srcn           = $ae
 
 sq1StateFlags = $af  ;  Channel state boolean flags (see sq0 above)
 
-;  Methods
+
 Pulse:
+
+;  Lookups
+; Maps $00–$0F to $00–$7F (linear scaling)
+.volumeTable:
+    db $00, $08, $11, $19, $22, $2A, $33, $3B
+    db $44, $4C, $55, $5D, $66, $6E, $77, $7F
+
+
+;  Methods
 
 ;.GetOutput(?)
 ;.GetState(?)
@@ -154,7 +163,7 @@ Pulse:
 +
     push x
     mov x, a
-    mov a, volumeTable+x
+    mov a, .volumeTable+x
     pop x
 
     ; SET VOL IN [A]

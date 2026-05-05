@@ -716,12 +716,6 @@ end_directory_lut:
 lengthCounterTable:
         db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 
-
-; Maps $00–$0F to $00–$7F (linear scaling)
-volumeTable:
-    db $00, $08, $11, $19, $22, $2A, $33, $3B
-    db $44, $4C, $55, $5D, $66, $6E, $77, $7F
-
 PitchTable_Index0d: incsrc "apu-pitch-table.asm"
 
 spc_driver_end:
