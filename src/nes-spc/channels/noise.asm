@@ -52,10 +52,13 @@ noiseStateFlags = $cf  ;  Channel state boolean flags:
 Noise:
 
 ;  Lookups
+
+; nes apu noise period to spc noise clock lookup
 .frequencyTable:
     db $3f, $3f, $3f, $3f, $3f, $3e, $3e, $3d
     db $3c, $3b, $3a, $38, $36, $35, $32, $2f 
 
+; Lookup for randomized loop points in the complement channel
 .complementLoopOffsets:
     dw $1059,$0B13,$0E6A,$0A56,$0489,$029A,$09E1,$07E9
     dw $078F,$114C,$04BF,$015F,$0936,$0639,$0BE2,$03A8
@@ -63,23 +66,27 @@ Noise:
     dw $0249,$0A17,$0A9E,$040B,$0BC7,$0963
 .endComplementLoopOffsets
 
-; .volumeTable:
-;     ; db $00, $04, $08, $0c, $11, $15, $19, $1d
-;     ; db $22, $26, $2a, $2e, $13, $37, $3b, $3F
+; Amount in dB to decrease complement channel output
+; based on current noise frequency $00 -> $0f
+.complementAttenuationTable:
+    db $02, $03, $03, $01, $00, $06, $05, $0A
+    db $0D, $0D, $0F, $13, $17, $19, $1C, $20
 
-;     db $00, $06, $0c, $13, $17, $25, $2a, $22
-;     db $33, $3a, $40, $45, $30, $50, $55, $5F
+; round(128 * 10^(-dB / 20))
+; for dB 0..32
+.complementAttenuationGainTable:
+    db $80,$72,$66,$5B,$51,$48,$40,$39
+    db $33,$2D,$29,$24,$20,$1D,$1A,$17
+    db $14,$12,$10,$0E,$0D,$0B,$0A,$09
+    db $08,$07,$06,$06,$05,$05,$04,$04,$03
 
+; Base volumes for noise complement channel
 .complementVolumeTable:
-; db  0, 127, 127, 127, 127, 42, 46, 46     ;  orig table
-; db  46, 46, 46, 46, 46, 46, 46, 46
     db $00, $03, $05, $08, $0a, $0d, $0f, $12
     db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Try matching .volumeTable first
 
+; Base volumes for noise channel
 .volumeTable:
-; db  0, 5, 6, 8, 10, 11, 12, 12
-; db  12, 12, 12, 12, 12, 12, 12, 12
-
     db $00, $03, $05, $08, $0a, $0d, $0f, $12
     db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Scaled linearly (TODO: check accuracy)
                                                 ;  from $00 to matching NES max volume; $29 in this case
@@ -142,14 +149,34 @@ Noise:
 
     pop a   ; restore volume to set
 
+    ; ; ; push x
+    ; ; ; mov x, a
+    ; ; ; mov a, Noise_complementVolumeTable+x
+    ; ; ; pop x
+
+    ;  Testing genned replacement:
+    GainComputeResult = $0a
+
     push x
     mov x, a
     mov a, Noise_complementVolumeTable+x
+    mov GainComputeResult, a    ; base volume
+
+    ;  Lookup attenuation value for the current noise period
+    mov x, noisePeriod
+    mov a, Noise_complementAttenuationTable+x
+    mov x, a
+    mov a, Noise_complementAttenuationGainTable+x
+    mov y, a
+
+    mov a, GainComputeResult
+    mul ya                      ; YA = base * Q7 gain
+    asl a
+    mov a, y
+    rol a                       ; A = attenuated volume
     pop x
 
-    ; SET noise complement VOL IN [A]  TODO: de-dupe
-    ; TODO: Calculate subtracted volume from noisePeriod lookup table
-    ; based on curve plots
+    ; SET noise complement VOL IN [A]
     mov $F2,!NoiseCompVolumeL     ; channel volume L
     mov $F3, a
     mov $F2,!NoiseCompVolumeR     ; channel volume R
