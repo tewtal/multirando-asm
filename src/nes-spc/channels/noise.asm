@@ -2,13 +2,19 @@
 ;  Zero-page variables used by this channel are also declared here
 !DSP_FLG = #$6C     ;  DSP register: FLG (noise clock)
 
+!NoiseCompDirectoryEntry  = $0200+($18*4)
+!NoiseCompLoopLo          = !NoiseCompDirectoryEntry+2
+!NoiseCompLoopHi          = !NoiseCompDirectoryEntry+3
+!NoiseComplementLoopCount = (Noise_endComplementLoopOffsets-Noise_complementLoopOffsets)/2
+
 ;  Sample data
-; noise_complement: incsrc "../samples/noise-complement.asm"
+noise_complement: incbin "../samples/noise-complement.brr"
 
 ;  Variables
 ;  $c0->$cf: Noise internal state
 
-noiseDuty = $c0
+noiseComplementSampleIndex = $c0
+noiseComplementLfsr        = $c1
 
 noisePeriod = $c4
 ; noiseRealPeriodHi = $c5
@@ -50,11 +56,12 @@ Noise:
     db $3f, $3f, $3f, $3f, $3f, $3e, $3e, $3d
     db $3c, $3b, $3a, $38, $36, $35, $32, $2f 
 
-.complementaryPitchTable:
-    ; dw $04E2,$04E2,$04E2,$04E2,$04E2,$0271,$0271,$01A1    ;  orig table
-    ; dw $0138,$00FA,$00D0,$007D,$0068,$003E,$001F,$0010
-    dw $0138,$0138,$0138,$0138,$0138,$0271,$0271,$01A1
-    dw $0138,$00FA,$00D0,$007D,$0068,$003E,$001F,$0010
+.complementLoopOffsets:
+    dw $1059,$0B13,$0E6A,$0A56,$0489,$029A,$09E1,$07E9
+    dw $078F,$114C,$04BF,$015F,$0936,$0639,$0BE2,$03A8
+    dw $05FA,$0291,$017A,$0E19,$0000,$0F30,$0009,$0FED
+    dw $0249,$0A17,$0A9E,$040B,$0BC7,$0963
+.endComplementLoopOffsets
 
 ; .volumeTable:
 ;     ; db $00, $04, $08, $0c, $11, $15, $19, $1d
@@ -64,15 +71,18 @@ Noise:
 ;     db $33, $3a, $40, $45, $30, $50, $55, $5F
 
 .complementVolumeTable:
-db  0, 127, 127, 127, 127, 42, 46, 46     ;  orig table
-db  46, 46, 46, 46, 46, 46, 46, 46
+; db  0, 127, 127, 127, 127, 42, 46, 46     ;  orig table
+; db  46, 46, 46, 46, 46, 46, 46, 46
+    db $00, $03, $05, $08, $0a, $0d, $0f, $12
+    db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Try matching .volumeTable first
 
 .volumeTable:
 ; db  0, 5, 6, 8, 10, 11, 12, 12
 ; db  12, 12, 12, 12, 12, 12, 12, 12
 
-    db $00, $08, $11, $19, $22, $2A, $33, $3B   ; DEBUG: full values
-    db $44, $4C, $55, $5D, $66, $6E, $77, $7F
+    db $00, $03, $05, $08, $0a, $0d, $0f, $12
+    db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Scaled linearly (TODO: check accuracy)
+                                                ;  from $00 to matching NES max volume; $29 in this case
 
 
 ;  Methods
@@ -138,58 +148,58 @@ db  46, 46, 46, 46, 46, 46, 46, 46
     pop x
 
     ; SET noise complement VOL IN [A]  TODO: de-dupe
+    ; TODO: Calculate subtracted volume from noisePeriod lookup table
+    ; based on curve plots
     mov $F2,!NoiseCompVolumeL     ; channel volume L
     mov $F3, a
     mov $F2,!NoiseCompVolumeR     ; channel volume R
     mov $F3, a
-
-
-    call ._CalcNoiseSampleNumber
-
-    ; SET Noise frequency (TODO:)
-    ; mov $F2, !DSP_FLG
 
     push x
     mov $F2, !DSP_FLG
     mov x, noisePeriod
     mov a, Noise_frequencyTable+x
     mov $F3, a
-
-	mov A, X    ;  Double noise period for 16-bit table index
-	asl A
-	mov X, A
-
-    mov $f2, !NoiseCompPitchL
-	mov a, Noise_complementaryPitchTable+0+X ; pitch for complementary noise sample
-	mov $f3, A
-    mov $f2, !NoiseCompPitchH
-	mov a, Noise_complementaryPitchTable+1+X
-	mov $f3, A
-
     pop x
 ..end:
 ret
 
 
-._CalcNoiseSampleNumber: ;TODO:
-    ;  Case statement for PeriodHi:PeriodLo
-    ;   when <= 0x6e then 2kHz sample (SRCN 0)
-    ;   when > 0x6e then 250Hz sample (SRCN 3)
-;     mov   a, PeriodHi
-;     bne   ..250HzRange       ; if high != 0 → $0100–$07FF → Range 3
+._updateComplementLoopPoint:
+    ; Advance an 8-bit Galois LFSR.
+    ; State must never be zero, so seed it if needed.
+    mov a, noiseComplementLfsr
+    bne +
+    mov a, #$5A
++
+    lsr a
+    bcc +
+    eor a, #$B8
++
+    mov noiseComplementLfsr, a
 
-;     mov   a, PeriodLo
-;     cmp   a, #$6f
-;     !blt   ..2kHzRange
+    ; Convert pseudo-random byte to table index.
+    ; Current table count is 30, so mask to 0..31 and fold 30/31 back to 0/1.
+    and a, #$1F
+    cmp a, #!NoiseComplementLoopCount
+    bcc +
+    setc : sbc a, #!NoiseComplementLoopCount
++
+    mov noiseComplementSampleIndex, a
 
-; ..250HzRange:
-;     mov a, #$03
-;     bra ..done
+    ; X = table index * 2
+    asl a
+    mov x, a
 
-; ..2kHzRange:
-;     mov a, #$00
-; ..done
-;     mov sq0Srcn+x, a             ; store result
+    ; loop_addr_lo = low(noise_complement) + offset_lo
+    mov a, #noise_complement&$ff
+    clrc : adc a, .complementLoopOffsets+0+x
+    mov !NoiseCompLoopLo, a
+
+    ; loop_addr_hi = high(noise_complement) + offset_hi + carry
+    mov a, #noise_complement>>8
+    adc a, .complementLoopOffsets+1+x
+    mov !NoiseCompLoopHi, a
 ret
 
 
@@ -295,6 +305,9 @@ ret
     and a, #!LengthHalt
     bne ...end                      ;  if counter > 0 && !halt, then
     dec sq0LengthCounter+x
+
+    call ._updateComplementLoopPoint    ;  Randomly cycle the noise complement
+                                        ;  channel loop point on every length tick
 ...end:
 ret
 

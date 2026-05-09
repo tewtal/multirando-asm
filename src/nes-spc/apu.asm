@@ -271,6 +271,14 @@ start:
         mov $F2,!TriangleVolumeR
         mov $F3,#$7F    ; max vol R
 
+        ;  Init noise complement voice - standard pitch $1000
+        mov y, #$00
+        mov a, !NoiseCompPitchL
+        movw $f2, ya
+        mov y, #$10
+        inc a
+        movw $f2, ya
+
         mov $F2,!NoiseSRCN
         mov $F3,#$00            ; sample # for noise
 
@@ -278,8 +286,8 @@ start:
         mov $F3, #$18  ; TODO: de-constantize
 
         mov $F2,!KON
-        ; mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
-        mov $F3,#%00001111      ;  DEBUG: remove noise complement for now
+        mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
+        ; mov $F3,#%00001111      ;  DEBUG: remove noise complement for now
 
         mov $F2,#$0C            ; main vol L
         mov $F3,#$7F
@@ -706,12 +714,12 @@ set_directory_lut:
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
                 dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
-                ; dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
+                dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
 end_directory_lut:
 
 
     triangle_sample_num = $10
-    srcn_base           = $18
+    srcn_base           = $1c
 
 lengthCounterTable:
         db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
