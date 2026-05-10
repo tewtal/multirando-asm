@@ -48,6 +48,10 @@ dmcStateFlags = $df  ;  Channel state boolean flags:
 
 DMC:
 
+;  Constants
+!DMCFullVolume = #$59  ;  Matches NES output dB
+!DMCLowVolume  = #$30
+
 ;  Lookups
 ; round(bytes_per_quarter_frame * 8)
 .samplesPerQuarterFrame:
@@ -184,16 +188,16 @@ ret
     bcs .halfvolume         ;  If value > threshold value in dmc_attenuation_cutoff, half volume
 
 .fullvolume:                    ;  Otherwise, full volume
-    mov $F2,!DmcVolumeL
-    mov $F3,#$7f    ;  Full volume
-    mov $F2,!DmcVolumeR
-    mov $F3,#$7f    ;  Full volume
+    mov $F2, !DmcVolumeL
+    mov $F3, !DMCFullVolume
+    mov $F2, !DmcVolumeR
+    mov $F3, !DMCFullVolume
     bra +
 .halfvolume:
-    mov $F2,!DmcVolumeL
-    mov $F3,#$3f    ;  Half volume
-    mov $F2,!DmcVolumeR
-    mov $F3,#$3f    ;  Half volume
+    mov $F2, !DmcVolumeL
+    mov $F3, !DMCLowVolume
+    mov $F2, !DmcVolumeR
+    mov $F3, !DMCLowVolume
 +
     jmp ProcessWrites_handlerReturn
 

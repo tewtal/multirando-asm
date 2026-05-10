@@ -103,10 +103,10 @@ sq1StateFlags = $af  ;  Channel state boolean flags (see sq0 above)
 Pulse:
 
 ;  Lookups
-; Maps $00–$0F to $00–$7F (linear scaling)
+; Maps $00–$0F to $00–$5F (linear scaled and mapped to NES channel dB output)
 .volumeTable:
-    db $00, $08, $11, $19, $22, $2A, $33, $3B
-    db $44, $4C, $55, $5D, $66, $6E, $77, $7F
+    db $00, $06, $0D, $13, $19, $1F, $26, $2C
+    db $33, $39, $3F, $45, $4C, $52, $59, $5F
 
 
 ;  Methods

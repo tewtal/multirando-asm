@@ -16,7 +16,6 @@ tri_samp7: incsrc "../samples/tri6_sr4.asm"     ; broken(?) constant output - us
 
 ;  Variables
 ;  $b0->$bf: Triangle internal state
-
 triRealPeriodLo = $b4
 triRealPeriodHi = $b5
 ; triVolume     = $b6
@@ -57,8 +56,13 @@ triStateFlags = $bf  ;  Channel state boolean flags:
 !triWasMutedFlag   = "triStateFlags.0"
 
 
-;  Methods
 Triangle:
+
+;  Constants
+!TriangleVolume = #$53  ;  Matches NES output dB
+
+
+;  Methods
 
 ;.GetOutput(?)
 ;.GetState(?)
@@ -93,7 +97,7 @@ Triangle:
     bra ..end
 
 ..notMuted:
-    mov a, #$7f  ;TODO: this is max volume; determine correct relative volume given our triangle samples and in relation to the other channels
+    mov a, !TriangleVolume
 
     ; SET VOL IN [A]
     mov $F2,SpcRegisterSelector     ; channel volume L

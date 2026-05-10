@@ -81,15 +81,17 @@ Noise:
     db $08,$07,$06,$06,$05,$05,$04,$04,$03
 
 ; Base volumes for noise complement channel
+; TODO: eliminate dupe table if it doesn't vary from .volumeTable
 .complementVolumeTable:
-    db $00, $03, $05, $08, $0a, $0d, $0f, $12
-    db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Try matching .volumeTable first
+    db $00, $03, $05, $07, $09, $0c, $0e, $10
+    db $12, $15, $17, $19, $1c, $1f, $22, $25
 
 ; Base volumes for noise channel
 .volumeTable:
-    db $00, $03, $05, $08, $0a, $0d, $0f, $12
-    db $14, $17, $1a, $1c, $1f, $22, $26, $29   ;  Scaled linearly (TODO: check accuracy)
-                                                ;  from $00 to matching NES max volume; $29 in this case
+    db $00, $03, $05, $07, $09, $0c, $0e, $10  ;  $29 was NES target max volume match
+    db $12, $15, $17, $19, $1c, $1f, $22, $25  ;  but loudness measurements indicate $25 may be better
+                                                
+
 
 
 ;  Methods
@@ -333,8 +335,8 @@ ret
     bne ...end                      ;  if counter > 0 && !halt, then
     dec sq0LengthCounter+x
 
-    call ._updateComplementLoopPoint    ;  Randomly cycle the noise complement
-                                        ;  channel loop point on every length tick
+    ; call ._updateComplementLoopPoint    ;  Randomly cycle the noise complement
+    ;                                     ;  channel loop point on every length tick
 ...end:
 ret
 
