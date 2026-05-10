@@ -412,7 +412,7 @@ JumpTableLo:
     ;  Noise channel
     db Noise_Envelope_Init&$FF, NullRoutine&$FF, Noise_Period_Set&$FF, Noise_LengthCounter_Load&$FF
     ;  DMC
-    db DMC_Period_Set&$FF, DMC_Volume_Set&$FF, DMC_Sample_Set&$FF, NullRoutine&$FF
+    db DMC_Period_Set&$FF, DMC_Volume_Set&$FF, DMC_Sample_Set&$FF, DMC_Length_Set&$FF
     ;  Status and Frame counter
     db NullRoutine&$FF, Status_Set&$FF, NullRoutine&$FF, FrameCount_Set&$FF
 
@@ -427,7 +427,7 @@ JumpTableHi:
     ;  Noise channel
     db Noise_Envelope_Init>>8, NullRoutine>>8, Noise_Period_Set>>8, Noise_LengthCounter_Load>>8
     ;  DMC
-    db DMC_Period_Set>>8, DMC_Volume_Set>>8, DMC_Sample_Set>>8, NullRoutine>>8
+    db DMC_Period_Set>>8, DMC_Volume_Set>>8, DMC_Sample_Set>>8, DMC_Length_Set>>8
     ;  Status and Frame counter
     db NullRoutine>>8, Status_Set>>8, NullRoutine>>8, FrameCount_Set>>8
 
@@ -541,6 +541,10 @@ TickHandler:
 
     ;  When a 240Hz tick step has fired, the frame counter needs to run which triggers the apu's need to run, so we call Run
     call Run
+
+    ;  Tick the active DMC regardless of frame counter rules/steps.
+    ;  This operates on a strict 240Hz cadence
+    call DMC_Length_Tick
 ret
 
 

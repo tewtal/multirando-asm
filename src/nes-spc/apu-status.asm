@@ -37,6 +37,7 @@ Status:
 
     mov1 c, BitwiseScratch.4
     mov1 !dmcLengthEnabledFlag, c
+    call DMC_Run    ; no length counter on this channel; must call Run to process sequential $4015 writes
 
     pop y
     jmp ProcessWrites_handlerReturn

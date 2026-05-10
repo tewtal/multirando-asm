@@ -9,8 +9,8 @@
 dmcRealPeriodLo = $d4
 dmcRealPeriodHi = $d5
 dmcOutputLevel     = $d6
-dmcLinearReloadValue = $d7
-dmcLinearCounter = $d8
+dmcSampleLengthLo = $d7
+dmcSampleLengthHi = $d8
 
 dmcBytesRemainingLo  = $d9
 dmcBytesRemainingHi = $da
@@ -46,8 +46,15 @@ dmcStateFlags = $df  ;  Channel state boolean flags:
 ;  ---- ---d :  Unused
 
 
-;  Methods
 DMC:
+
+;  Lookups
+; round(bytes_per_quarter_frame * 8)
+.samplesPerQuarterFrame:
+    db $11, $14, $16, $17, $1A, $1D, $21, $23
+    db $27, $2F, $35, $3A, $46, $59, $68, $8A
+
+;  Methods
 
 ;.GetOutput(?)
 ;.GetState(?)
@@ -69,6 +76,8 @@ DMC:
 ..turnOff:
     ;   disabledelay -> nonzero
     ;   needtorun -> true
+    mov dmcBytesRemainingLo, #$00
+    mov dmcBytesRemainingHi, #$00
     set1 !dmcSilenceFlag
     mov x,!DmcFlag
     call stopVoiceInX
@@ -76,11 +85,20 @@ DMC:
 
     ; else if sample not currently playing
 ..initSample:
-    mov $f2, #$7c
-    mov a, $f3   ; check if dmc voice is finished playing
+    mov a, dmcBytesRemainingLo
+    or  a, dmcBytesRemainingHi
+    bne ..updateState          ; Mesen: enable while active does not restart
 
-    and a,!DmcFlag
+    mov a, dmcSampleLengthLo
+    or  a, dmcSampleLengthHi
     beq ..updateState
+
+    call ._initSample          ; select SRCN, pitch, load bytesRemaining
+    bcs ..turnOn               ; carry set = sample found
+
+    set1 !dmcSilenceFlag
+    bra ..updateState
+
 ..turnOn:
     ;   startdelay -> nonzero
     ;   needtorun -> true
@@ -91,7 +109,6 @@ DMC:
     ; else (implied)
     ;   game tried to start a sample when one was already playing; IGNORE IT
 
-
 ..updateState:
     ;  Manage state after acting on it above
     mov1 c, !dmcLengthEnabledFlag
@@ -99,16 +116,63 @@ DMC:
     bra ..bye
 
 ..end:
-    ;  TODO: replace with actual cycle length estimation and implement $4013 writes
-    ;  For now, just check if the sample is finished to clear the length enabled
-    mov $f2, #$7c
-    mov a, $f3   ; check if dmc voice is finished playing
-
-    and a, !DmcFlag
-    beq ..bye
+    mov a, dmcBytesRemainingLo
+    or a, dmcBytesRemainingHi
+    bne ..bye
     clr1 !dmcLengthEnabledFlag
 ..bye:
 ret
+
+
+;  Prepare loaded values for sample playback
+._initSample:
+    mov x, #$00
+
+..selectSample:
+    mov a, $4000+x
+    cmp a, dmcCurrentAddr
+    beq ..setSample
+
+    inc x
+    cmp x, #$10
+    bne ..selectSample
+
+    clrc
+    ret
+
+..setSample:
+    mov dmcCurrentIndex, x
+
+    mov a, x
+    clrc : adc a, #srcn_base&$ff
+    mov $F2, !DmcSRCN
+    mov $F3, a
+
+    mov a, dmcSampleLengthLo
+    mov dmcBytesRemainingLo, a
+    mov a, dmcSampleLengthHi
+    mov dmcBytesRemainingHi, a
+
+..selectPlaybackSpeed:
+    mov a, dmcRealPeriodLo     ; masked $4010 low nibble
+    cmp a, $4010+x
+    !blt ..slowspeed
+
+..normalspeed:
+    mov $F2, !DmcPitchL
+    mov $F3, #$06
+    mov $F2, !DmcPitchH
+    mov $F3, #$0b
+    setc
+    ret
+
+..slowspeed:
+    mov $F2, !DmcPitchL
+    mov $F3, #$45
+    mov $F2, !DmcPitchH
+    mov $F3, #$08
+    setc
+    ret
 
 
 .Volume:
@@ -131,6 +195,56 @@ ret
     mov $F2,!DmcVolumeR
     mov $F3,#$3f    ;  Half volume
 +
+    jmp ProcessWrites_handlerReturn
+
+
+.Length:
+
+;  Run every quarter frame to update bytes remaining
+..Tick:
+    mov1 c, !dmcSilenceFlag
+    bcs ...end
+    mov1 c, !dmcLengthEnabledFlag
+    bcc ...end
+    
+    mov x, dmcRealPeriodLo
+    mov a, dmcBytesRemainingLo
+    setc
+    sbc a, .samplesPerQuarterFrame+x
+    mov dmcBytesRemainingLo, a
+
+    mov a, dmcBytesRemainingHi
+    sbc a, #$00
+    mov dmcBytesRemainingHi, a
+    bcc ...finished
+    bne ...end
+    mov a, dmcBytesRemainingLo
+    bne ...end
+
+...finished:
+    mov dmcBytesRemainingLo, #$00
+    mov dmcBytesRemainingHi, #$00
+    clr1 !dmcLengthEnabledFlag
+    ; set1 !dmcSilenceFlag
+    mov x, !DmcFlag
+    call stopVoiceInX
+...end:
+ret
+
+;  Process $4013 write
+..Set:
+    ;  _sampleLength = ((value << 4) | 0x0001) * 8;
+    push y
+    mov y, a
+    lsr a
+    mov dmcSampleLengthHi, a
+
+    mov a, #$08
+    bcc +
+    or a, #$80
++
+    mov dmcSampleLengthLo, a
+    pop y
     jmp ProcessWrites_handlerReturn
 
 
@@ -174,27 +288,12 @@ ret
 ..Set:
     mov x, !DMCOffset
 ...Start:
+    mov BitwiseScratch, a
+    and a, #$0f
+    mov dmcRealPeriodLo, a
 
     ; _loopFlag = (value & 0x40) == 0x40;
-    mov BitwiseScratch, a
-    mov1 c, BitwiseScratch.2
-    mov1 !dmcLoopFlag, c    ;  Transfer a.2 to dmcStateFlags.2
-
-    ; _period = period;
-    mov x, dmcCurrentIndex
-    cmp a,$4010+x   ;  Compare incoming value with playback speed table
-    !blt .slowspeed
-
-    mov $F2,!DmcPitchL
-    mov $F3,#$06
-    mov $F2,!DmcPitchH
-    mov $F3,#$0b
-    bra +
-.slowspeed:                     
-    mov $F2,!DmcPitchL
-    mov $F3,#$45
-    mov $F2,!DmcPitchH
-    mov $F3,#$08
-+
+    mov1 c, BitwiseScratch.6
+    mov1 !dmcLoopFlag, c
 
     jmp ProcessWrites_handlerReturn
