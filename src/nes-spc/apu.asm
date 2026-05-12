@@ -208,7 +208,8 @@ TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240H
 ; $81, $82 reserved by Frame Counter
 WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write handler
 ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
-; $87, $88: unused
+TickStepOccurring = $87
+; $88: unused
 ; $89 reserved by Pulse
 NeedToRun         = $8a
 ; $8b, $8c  reserved by Frame Counter
@@ -383,8 +384,8 @@ cpucheck:
         bra WaitTick
 
 TimerExpired:
-        ; --- Advance pattern index ---
-        inc TimerLatchIndex
+        inc TickStepOccurring   ; mark that we've entered an apu step for FrameCounter.Run()
+        inc TimerLatchIndex     ; advance pattern index
         mov a, TimerLatchIndex
         cmp a, #3
         bne MainLoop
@@ -478,6 +479,8 @@ ProcessWrites:
     bra .loop
 
 .done:
+    mov QueueLength, #$00    ; finished; reset writes queue index
+
     ;  Process NeedToRun once at the end of ProcessWrites
     ;  that may have resulted from the register writes
     ;  (length/linear counter loads/inits).

@@ -26,9 +26,9 @@ FrameCount:
 ;  Note that the added 0th indexes account for the difference between the SPC timer counter
 ;  and the "step" as documented in the NES APU.  APU's first step occurs 3,728 cycles after the start (index 1 here)
 .tickUnit4StepTable:
-    db %00000000, %00000001, %00000011, %00000001, %00000011
+    db %00000001, %00000011, %00000001, %00000011
 .tickUnit5StepTable:
-    db %00000000, %00000001, %00000011, %00000001, %00000000, %00000011
+    db %00000001, %00000011, %00000001, %00000000, %00000011
 
 
 ;  Methods
@@ -39,6 +39,8 @@ FrameCount:
     mov FrameCounterNewValue, a ;  store new $4017 value
     set1 !vcHasNewValueFlag
 
+    ;  This call to run emulates the Run scheduled at the end of every frame,
+    ;  although this is not the correct place to do this.  TODO: revisit sequence
     push y
     call Run
     pop y
@@ -47,11 +49,17 @@ FrameCount:
 
 
 .Run:
-    ;  Skip tick processing if FrameCounterTickBlockCounter is set
-    mov a, FrameCounterTickBlockCounter
-    beq ..continue
-    mov FrameCounterTickBlockCounter, #$00
-    bra ..updateStep
+    ;  Prevent frame counter tick unless we've reached an actual
+    ;  tick step via the timer expiring
+    mov a, TickStepOccurring
+    beq ..checkNewValue
+    mov TickStepOccurring, #$00
+
+    ; ;  Skip tick processing if FrameCounterTickBlockCounter is set
+    ; mov a, FrameCounterTickBlockCounter
+    ; beq ..continue
+    ; mov FrameCounterTickBlockCounter, #$00
+    ; bra ..updateStep
 
 ..continue:
     mov a, FrameCounterStepMode
@@ -94,12 +102,13 @@ FrameCount:
     mov FrameCounterCycle, #$00 ;  Start new cycle
 +
 
+..checkNewValue:
     ;  if _newValue
     mov a, FrameCountFlags
     and a, #!HasNewValue
     beq ..end
 
-    mov FrameCounterTickBlockCounter, #$01  ;  Prevent another immediate Apu.Run from ticking the frame count
+    ; mov FrameCounterTickBlockCounter, #$01  ;  Prevent another immediate Apu.Run from ticking the frame count
 
     ;  [ACCURACY TODO]: Impelement a _writeDelayCounter (https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU/ApuFrameCounter.h)
     ;  _stepMode = ((_newValue & 0x80) == 0x80) ? 1 : 0;
