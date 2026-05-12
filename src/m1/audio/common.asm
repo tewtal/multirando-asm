@@ -1,4 +1,4 @@
-print "apu-routines = ", pc
+; APU Update routines
 
 !ApuWritesIndex  = $090f
 !ApuNumberWrites = $0910
@@ -10,22 +10,9 @@ print "apu-routines = ", pc
 !CpuReadyValue   = #$d7
 !CpuDoneValue    = #$30
 
-; APU Update routines
 SnesUpdateAudio:
     phx : phy : pha : php
     sep #$30
-
-;     lda $915
-;     bne +
-;     ; silence everything
-;     ldx #$00
-; -
-;     stz $900, x
-;     inx
-;     cpx #$17
-;     bne -
-
-; +
 
     ;  cpu<->apu handshake
     lda !ApuIo0
@@ -77,6 +64,76 @@ SnesUpdateAudio:
     rtl
 
 
+;  TODO: rewrite/deprecate?
+LoadSFXRegisters:
+    lda $e0
+    cmp #$00
+    beq .sq1
+    cmp #$04
+    beq .sq2
+    cmp #$08
+    beq .tri
+.noise
+    lda ($e2), y
+    jsr WriteAPUNoiseCtrl0
+    iny
+    ;  Don't write to unused register $400d (sloppy m1 devs)
+    ;lda ($e2), y
+    ;jsr WriteAPUNoiseCtrl1
+    iny
+    lda ($e2), y
+    jsr WriteAPUNoiseCtrl2
+    iny
+    lda ($e2), y
+    jsr WriteAPUNoiseCtrl3
+    iny
+    bra .end
+.sq1
+    lda ($e2), y
+    jsr WriteAPUSq0Ctrl0
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq0Ctrl1
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq0Ctrl2
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq0Ctrl3
+    iny
+    bra .end
+.sq2
+    lda ($e2), y
+    jsr WriteAPUSq1Ctrl0
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq1Ctrl1
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq1Ctrl2
+    iny
+    lda ($e2), y
+    jsr WriteAPUSq1Ctrl3
+    iny
+    bra .end
+.tri
+    lda ($e2), y
+    jsr WriteAPUTriCtrl0
+    iny
+    lda ($e2), y
+    jsr WriteAPUTriCtrl1
+    iny
+    lda ($e2), y
+    jsr WriteAPUTriCtrl2
+    iny
+    lda ($e2), y
+    jsr WriteAPUTriCtrl3
+    iny
+    bra .end
+.end
+    lda #$00
+    rts
+
 
 ;  Params:
 ;   [A] has the apu register number
@@ -106,7 +163,7 @@ WriteAPUSq0Ctrl0:
 WriteAPUSq0Ctrl0_I_Y:
     php
     xba
-    tya     ;  [Y] has the apu reg.
+    tya     ;  [Y] has the apu BASE reg.
     jsr EnqueueApuWrite
     ; sta.w APUBase, y
     plp    
@@ -167,11 +224,11 @@ WriteAPUSq0Ctrl1_Y:
     plp
     rts    
 
-;  TODO: deprecate
 WriteAPUSq0Ctrl1_I_Y:
     php
     xba
-    tya     ;  [Y] has the apu reg.
+    tya     ;  [Y] has the apu BASE reg.
+    inc
     jsr EnqueueApuWrite
 ;     cpy #$00
 ;     bne +
@@ -210,11 +267,11 @@ WriteAPUSq0Ctrl2_X:
     plp
     rts
 
-;  TODO: deprecate
 WriteAPUSq0Ctrl2_I_Y:
     php
     xba
-    tya     ;  [Y] has the apu reg.
+    tya     ;  [Y] has the apu BASE reg.
+    inc : inc
     jsr EnqueueApuWrite
     ; sta.w APUBase+$02, y
     plp
@@ -260,11 +317,11 @@ WriteAPUSq0Ctrl3_X:
     plp
     rts
 
-;  TODO: deprecate
 WriteAPUSq0Ctrl3_I_Y:
     php
     xba
-    tya     ;  [Y] has the apu reg.
+    tya     ;  [Y] has the apu BASE reg.
+    clc : adc #$03
     jsr EnqueueApuWrite
 ;     cpy #$00
 ;     bne +
@@ -506,16 +563,16 @@ WriteAPUNoiseCtrl0:
     plp
     rts
 
-!apuReg = #$0d ;$400d
+; !apuReg = #$0d ;$400d
 
-WriteAPUNoiseCtrl1:
-    php
-    xba
-    lda !apuReg
-    jsr EnqueueApuWrite
-    ; sta.w APUBase+$0D
-    plp
-    rts
+; WriteAPUNoiseCtrl1:
+;     php
+;     xba
+;     lda !apuReg
+;     jsr EnqueueApuWrite
+;     ; sta.w APUBase+$0D
+;     plp
+;     rts
 
 !apuReg = #$0e ;$400e
 
@@ -615,49 +672,5 @@ WriteApuFrameCounter:
     ; sta ApuFrameCounter
     ; lda #$20
     ; tsb.w APUExtraControl
-    plp
-    rts
-
-!apuReg = #$10 ;$4010
-
-WriteAPUDMCFreq:
-    php
-    xba
-    lda !apuReg
-    jsr EnqueueApuWrite
-    ; sta DmcFreq_4010
-    plp
-    rts
-
-!apuReg = #$11 ;$4011
-
-WriteAPUDMCCounter:
-    php
-    xba
-    lda !apuReg
-    jsr EnqueueApuWrite
-    ; stx.w DmcCounter_4011
-    plp
-    rts
-
-!apuReg = #$12 ;$4012
-
-WriteAPUDMCAddr:
-    php
-    xba
-    lda !apuReg
-    jsr EnqueueApuWrite
-    ; sta DmcAddress_4012
-    plp
-    rts
-
-!apuReg = #$13 ;$4013
-
-WriteAPUDMCLength:
-    php
-    xba
-    lda !apuReg
-    jsr EnqueueApuWrite
-    ; sta DmcLength_4013
     plp
     rts

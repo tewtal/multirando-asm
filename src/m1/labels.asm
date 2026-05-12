@@ -21,8 +21,10 @@ m1_TransferTarget = $0B18
 m1_TransferSourceSet = $0B20
 m1_PalIdx = $0B0E
 
+; TODO: Move to labels in audio dir
 m1_APUBase = $0900
 m1_APUExtraControl = $0916
+m1_ApuFrameCounter = $917
 m1_APUSq0Length = $0920
 m1_APUSq1Length = $0922
 m1_APUTriLength = $0924

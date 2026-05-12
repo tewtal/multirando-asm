@@ -398,11 +398,21 @@ ret
     mov sq0SweepDivider+x, a    ; divider = period
 
 ...reloadSweep:
+    ; if(_reloadSweep)
+    ;   _sweepDivider = _sweepPeriod;
     mov a, sq0StateFlags+x
     and a, #!ReloadSweep
     beq +
     mov a, sq0SweepPeriod+x
     mov sq0SweepDivider+x, a    ; divider = period
+
+    ; _reloadSweep = false;
+    cmp x, !Square0Offset
+    bne ...sq1
+    clr1 !sq0ReloadSweepFlag
+    bra +
+...sq1:
+    clr1 !sq1ReloadSweepFlag
 +
 ret
 
@@ -570,6 +580,7 @@ ret
     mov a, y
     and a, #$07
     mov sq0RealPeriodHi+x, a
+    call ._UpdateTargetPeriod
 
     ;  Emulate pulse sequencer restart (dutyPos = 0) by issuing a KOFF and KON
     ;  to the current channel
