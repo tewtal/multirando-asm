@@ -8,7 +8,6 @@ print "apu-routines = ", pc
 !ApuIo2          = $2142
 !SpcReadyValue   = #$7d
 !CpuReadyValue   = #$d7
-!CpuDoneValue    = #$30
 
 ; APU Update routines
 SnesUpdateAudio:
@@ -27,6 +26,9 @@ SnesUpdateAudio:
 
 ; +
 
+    ldy !ApuWritesIndex   ;  Set up decrementing loop index in [Y]
+    beq .end              ;  no queued writes, skip handshake/transfer
+
     ;  cpu<->apu handshake
     lda !ApuIo0
     cmp !SpcReadyValue    ;  Check for spc readiness
@@ -34,43 +36,33 @@ SnesUpdateAudio:
     jmp .end
 +
 
-    lda #$f5
-    sta !ApuIo2           ;  Init index to an invalid value (refactor this later)
+    sty !ApuIo2           ;  Send transfer length
     lda !CpuReadyValue    ;  Indicate cpu readiness
     sta !ApuIo0
 
--   ;  spc ack wait loop
-    lda !ApuIo0
+-   lda !ApuIo0           ;  Wait for SPC to ack CPU ready
     cmp !CpuReadyValue
     bne -
-    ;  end handshake
 
-;  spc now ready to receive data
-;; Transfers a variable length queue of audio register writes
-;; to the spc-700 receiving loop in ../nes-spc/apu-recv.asm:16
     ldx #$00
---
-    cpx !ApuWritesIndex     ;  Exit condition
-    beq .finishedTransfer
-
+.transferLoop:
     lda !ApuNumberWrites,x
-    sta !ApuIo0     ;  Send the apu index
+    sta !ApuIo0           ;  Send the apu index
 
     lda !ApuValueWrites,x
-    sta !ApuIo1     ;  Send the apu value
-    stx !ApuIo2     ;  Send the current write index
-    inx             ;  Next write index
+    sta !ApuIo1           ;  Send the apu value
+    stx !ApuIo2           ;  Send the current write index
+    inx                   ;  Next write index
 
     ;  spc ack wait loop
 -   cpx !ApuIo2
     bne -
 
-    bra --          ;  Next iteration
+    dey
+    bne .transferLoop
 
 .finishedTransfer:
     stz !ApuWritesIndex     ;  Reset queue
-    lda !CpuDoneValue
-    sta !ApuIo2         ;  Send "I'm done" value; no need to wait for ack
 
 .end
     plp : pla : ply : plx

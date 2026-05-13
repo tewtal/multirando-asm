@@ -2,7 +2,6 @@
 !ApuIo0 = $f4
 !ApuIo1 = $f5
 !ApuIo2 = $f6
-!MaxQueueSize = #$30
 ExpectedWriteIndex = $00
 QueueLength  = $1f
 NumbersQueue = $20
@@ -12,7 +11,7 @@ ValuesQueue  = $50
 ; Receives 2-byte records from SNES via APU ports
 ; Stores register numbers at $20, $21, $22, ...
 ; Stores register values  at $50, $51, $52, ...
-; Terminates when write index == $30
+; Transfer length is sent via APU port 2 before the first record.
 ; [Optimization TODO: transition to a two-values-at-once loop:
 ;   - register numbers can be stored in 5 bits because $4009, $4014, $4016 are unused,
 ;       leaving just 21 valid register numbers.  Then use the remaining 3 bits to
@@ -21,41 +20,35 @@ ValuesQueue  = $50
 ;       - or can we encode the expected index value into the 3 spare bits in ApuIo0, and use ApuIo3 for the second register number?
 ;]
 apurecv:
-    mov !ApuIo0, a              ; reply to CPU with $d7 (begin transfer)
+    mov a, !ApuIo2              ; read transfer length
+    mov QueueLength, a
+    mov x, #$00
+    mov ExpectedWriteIndex, #$00
+    mov !ApuIo2, #$00           ; ack length, request record 0
+    mov !ApuIo0, #$d7           ; ack CPU ready after length is captured
 
-RecvLoop:
-        mov   x, #$00                   ; destination offset
-        mov ExpectedWriteIndex, #$00    ;  First expected index is 0
-
-; --- Main receive loop ---
 NextBlock:
+    mov a, ExpectedWriteIndex
+    cmp a, QueueLength
+    beq Done
+
 WaitIndex:
-        mov   a, !ApuIo2
-        cmp   a, !MaxQueueSize
-        beq   Done
-        cmp   a, ExpectedWriteIndex
-        bne   WaitIndex           ; wait for expected index
+    mov a, !ApuIo2
+    cmp a, ExpectedWriteIndex
+    bne WaitIndex
 
-        ; Read and store data bytes
-        mov   a, !ApuIo0
-        mov   NumbersQueue+x, a
+    mov a, !ApuIo0
+    mov NumbersQueue+x, a
 
-        mov   a, !ApuIo1
-        mov   ValuesQueue+x, a
-        inc   x
+    mov a, !ApuIo1
+    mov ValuesQueue+x, a
 
-        ; expected index++
-        inc   ExpectedWriteIndex
-        mov   !ApuIo2, ExpectedWriteIndex    ;  signal for the next block
-
-        bra   NextBlock
+    inc x
+    inc ExpectedWriteIndex
+    mov !ApuIo2, ExpectedWriteIndex
+    bra NextBlock
 
 Done:
-    ; --- Finished transfer.  Prep cpu for next send.
-    mov $f4, #$7d           ; move $7D to port 0 (SPC ready)
-
-    mov QueueLength, x      ; store the new writes queue length for processing
+    mov $f4, #$7d
     call ProcessWrites
-
     bra WaitTick
-;  End apurecv
