@@ -26,21 +26,20 @@ SnesUpdateAudio:
     lda !CpuReadyValue    ;  Indicate cpu readiness
     sta !ApuIo0
 
-    ldy !ApuWritesIndex   ;  Set up decrementing loop index in [Y]
-    beq .end                 ; no queued writes, skip handshake/transfer
-
 -   ;  spc ack wait loop
     lda !ApuIo0
     cmp !CpuReadyValue
     bne -
     ;  end handshake
 
-    ;  spc now ready to receive data
-    ;  Transfers a variable length queue of audio register writes
-    ;  to the spc-700 receiving loop in ../nes-spc/apu-recv.asm:16
+;  spc now ready to receive data
+;; Transfers a variable length queue of audio register writes
+;; to the spc-700 receiving loop in ../nes-spc/apu-recv.asm:16
     ldx #$00
+--
+    cpx !ApuWritesIndex     ;  Exit condition
+    beq .finishedTransfer
 
-.transferLoop:
     lda !ApuNumberWrites,x
     sta !ApuIo0     ;  Send the apu index
 
@@ -53,8 +52,7 @@ SnesUpdateAudio:
 -   cpx !ApuIo2
     bne -
 
-    dey ; next index
-    bne .transferLoop
+    bra --          ;  Next iteration
 
 .finishedTransfer:
     stz !ApuWritesIndex     ;  Reset queue
