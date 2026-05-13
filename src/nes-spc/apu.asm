@@ -403,34 +403,19 @@ incsrc "./apu-status.asm"
 ;  Safe fill for invalid register values
 NullRoutine: jmp ProcessWrites_handlerReturn
 
-JumpTableLo:
+JumpTable:
     ;  Square channel 0
-    db Pulse_Envelope_Init&$FF, Pulse_Sweep_Init&$FF, Pulse_Period_SetLow&$FF, Pulse_LengthCounter_Load&$FF
+    dw Pulse_Envelope_Init, Pulse_Sweep_Init, Pulse_Period_SetLow, Pulse_LengthCounter_Load
     ;  Square channel 1
-    db Pulse_Envelope_Init2&$FF, Pulse_Sweep_Init2&$FF, Pulse_Period_SetLow2&$FF, Pulse_LengthCounter_Load2&$FF
+    dw Pulse_Envelope_Init2, Pulse_Sweep_Init2, Pulse_Period_SetLow2, Pulse_LengthCounter_Load2
     ;  Triangle channel
-    db Triangle_LinearCounter_Init&$FF, NullRoutine&$FF, Triangle_Period_SetLow&$FF, Triangle_Period_SetHigh&$FF
+    dw Triangle_LinearCounter_Init, NullRoutine, Triangle_Period_SetLow, Triangle_Period_SetHigh
     ;  Noise channel
-    db Noise_Envelope_Init&$FF, NullRoutine&$FF, Noise_Period_Set&$FF, Noise_LengthCounter_Load&$FF
+    dw Noise_Envelope_Init, NullRoutine, Noise_Period_Set, Noise_LengthCounter_Load
     ;  DMC
-    db DMC_Period_Set&$FF, DMC_Volume_Set&$FF, DMC_Sample_Set&$FF, DMC_Length_Set&$FF
+    dw DMC_Period_Set, DMC_Volume_Set, DMC_Sample_Set, DMC_Length_Set
     ;  Status and Frame counter
-    db NullRoutine&$FF, Status_Set&$FF, NullRoutine&$FF, FrameCount_Set&$FF
-
-
-JumpTableHi:
-    ;  Square channel 0
-    db Pulse_Envelope_Init>>8, Pulse_Sweep_Init>>8, Pulse_Period_SetLow>>8, Pulse_LengthCounter_Load>>8
-    ;  Square channel 1
-    db Pulse_Envelope_Init2>>8, Pulse_Sweep_Init2>>8, Pulse_Period_SetLow2>>8, Pulse_LengthCounter_Load2>>8
-    ;  Triangle channel
-    db Triangle_LinearCounter_Init>>8, NullRoutine>>8, Triangle_Period_SetLow>>8, Triangle_Period_SetHigh>>8
-    ;  Noise channel
-    db Noise_Envelope_Init>>8, NullRoutine>>8, Noise_Period_Set>>8, Noise_LengthCounter_Load>>8
-    ;  DMC
-    db DMC_Period_Set>>8, DMC_Volume_Set>>8, DMC_Sample_Set>>8, DMC_Length_Set>>8
-    ;  Status and Frame counter
-    db NullRoutine>>8, Status_Set>>8, NullRoutine>>8, FrameCount_Set>>8
+    dw NullRoutine, Status_Set, NullRoutine, FrameCount_Set
 
 
 ;------------------------------------------------------------------------
@@ -461,12 +446,13 @@ ProcessWrites:
     bcs .done
 
     ;  Calculate a jump pointer based on this register number
-    ;  [OPT TODO]: Single dw'd jump table and x *= 2
     mov a, NumbersQueue+y
+    asl a
     mov x, a
-    mov a, JumpTableLo+x
+    mov a, JumpTable+x
     mov WritesJumpPointer, a
-    mov a, JumpTableHi+x
+    inc x
+    mov a, JumpTable+x
     mov WritesJumpPointer+1, a
 
     mov a, ValuesQueue+y    ;  Load param in [A]
