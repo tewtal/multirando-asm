@@ -2,11 +2,6 @@
 ;  Zero-page variables used by this channel are also declared here
 !DSP_FLG = #$6C     ;  DSP register: FLG (noise clock)
 
-!NoiseCompDirectoryEntry  = $0200+($18*4)
-!NoiseCompLoopLo          = !NoiseCompDirectoryEntry+2
-!NoiseCompLoopHi          = !NoiseCompDirectoryEntry+3
-!NoiseComplementLoopCount = (Noise_endComplementLoopOffsets-Noise_complementLoopOffsets)/2
-
 ;  Sample data
 noise_complement: incbin "../samples/noise-complement.brr"
 
@@ -58,14 +53,6 @@ Noise:
     db $3f, $3f, $3f, $3f, $3f, $3e, $3e, $3d
     db $3c, $3b, $3a, $38, $36, $35, $32, $2f 
 
-; Lookup for randomized loop points in the complement channel
-.complementLoopOffsets:
-    dw $1059,$0B13,$0E6A,$0A56,$0489,$029A,$09E1,$07E9
-    dw $078F,$114C,$04BF,$015F,$0936,$0639,$0BE2,$03A8
-    dw $05FA,$0291,$017A,$0E19,$0000,$0F30,$0009,$0FED
-    dw $0249,$0A17,$0A9E,$040B,$0BC7,$0963
-.endComplementLoopOffsets
-
 ; Amount in dB to decrease complement channel output
 ; based on current noise frequency $00 -> $0f
 .complementAttenuationTable:
@@ -88,10 +75,8 @@ Noise:
 
 ; Base volumes for noise channel
 .volumeTable:
-    db $00, $03, $05, $07, $09, $0c, $0e, $10  ;  $29 was NES target max volume match
-    db $12, $15, $17, $19, $1c, $1f, $22, $25  ;  but loudness measurements indicate $25 may be better
-                                                
-
+    db $00, $03, $05, $07, $09, $0c, $0e, $10
+    db $12, $15, $17, $19, $1c, $1f, $22, $25
 
 
 ;  Methods
@@ -191,44 +176,6 @@ Noise:
     mov $F3, a
     pop x
 ..end:
-ret
-
-
-._updateComplementLoopPoint:
-    ; Advance an 8-bit Galois LFSR.
-    ; State must never be zero, so seed it if needed.
-    mov a, noiseComplementLfsr
-    bne +
-    mov a, #$5A
-+
-    lsr a
-    bcc +
-    eor a, #$B8
-+
-    mov noiseComplementLfsr, a
-
-    ; Convert pseudo-random byte to table index.
-    ; Current table count is 30, so mask to 0..31 and fold 30/31 back to 0/1.
-    and a, #$1F
-    cmp a, #!NoiseComplementLoopCount
-    bcc +
-    setc : sbc a, #!NoiseComplementLoopCount
-+
-    mov noiseComplementSampleIndex, a
-
-    ; X = table index * 2
-    asl a
-    mov x, a
-
-    ; loop_addr_lo = low(noise_complement) + offset_lo
-    mov a, #noise_complement&$ff
-    clrc : adc a, .complementLoopOffsets+0+x
-    mov !NoiseCompLoopLo, a
-
-    ; loop_addr_hi = high(noise_complement) + offset_hi + carry
-    mov a, #noise_complement>>8
-    adc a, .complementLoopOffsets+1+x
-    mov !NoiseCompLoopHi, a
 ret
 
 
