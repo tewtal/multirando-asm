@@ -2,51 +2,72 @@
 !ApuIo0 = $f4
 !ApuIo1 = $f5
 !ApuIo2 = $f6
-ExpectedWriteIndex = $00
+!ApuIo3 = $f7
+ExpectedPacketSeq = $00
 QueueLength  = $1f
 NumbersQueue = $20
 ValuesQueue  = $50
 
 ; SPC700 receive loop
-; Receives 2-byte records from SNES via APU ports
+; Receives up to two 2-byte records per SNES/APU port packet
 ; Stores register numbers at $20, $21, $22, ...
 ; Stores register values  at $50, $51, $52, ...
 ; Transfer length is sent via APU port 2 before the first record.
-; [Optimization TODO: transition to a two-values-at-once loop:
-;   - register numbers can be stored in 5 bits because $4009, $4014, $4016 are unused,
-;       leaving just 21 valid register numbers.  Then use the remaining 3 bits to
-;       come up with a simple diff scheme (add/sub?) to determine a second register number
-;   - Then use ApuIo1 and ApuIo2 for two register values, and ApuIo3 for the expected index value
-;       - or can we encode the expected index value into the 3 spare bits in ApuIo0, and use ApuIo3 for the second register number?
-;]
+; Packet format:
+;   f4 bits 0-4: register 0; bits 5-7: packet sequence/ack
+;   f5: value 0
+;   f6: register 1; ignored when QueueLength ends after record 0
+;   f7: value 1
 apurecv:
     mov a, !ApuIo2              ; read transfer length
     mov QueueLength, a
     mov x, #$00
-    mov ExpectedWriteIndex, #$00
-    mov !ApuIo2, #$00           ; ack length, request record 0
+    mov ExpectedPacketSeq, #$00
     mov !ApuIo0, #$d7           ; ack CPU ready after length is captured
 
-NextBlock:
-    mov a, ExpectedWriteIndex
+NextPacket:
+    mov a, x
     cmp a, QueueLength
     beq Done
 
-WaitIndex:
-    mov a, !ApuIo2
-    cmp a, ExpectedWriteIndex
-    bne WaitIndex
+WaitPacket:
+    mov a, !ApuIo0
+    and a, #$e0
+    cmp a, ExpectedPacketSeq
+    bne WaitPacket
 
     mov a, !ApuIo0
+    and a, #$1f
     mov NumbersQueue+x, a
 
     mov a, !ApuIo1
     mov ValuesQueue+x, a
 
     inc x
-    inc ExpectedWriteIndex
-    mov !ApuIo2, ExpectedWriteIndex
-    bra NextBlock
+
+    mov a, x
+    cmp a, QueueLength
+    beq Done
+
+    mov a, !ApuIo2
+    mov NumbersQueue+x, a
+
+    mov a, !ApuIo3
+    mov ValuesQueue+x, a
+
+    inc x
+
+    mov a, x
+    cmp a, QueueLength
+    beq Done
+
+    mov a, ExpectedPacketSeq
+    clrc
+    adc a, #$20
+    and a, #$e0
+    mov ExpectedPacketSeq, a
+    mov !ApuIo0, a
+    bra NextPacket
 
 Done:
     mov $f4, #$7d

@@ -29,7 +29,7 @@ m1_APUSq0Length = $0920
 m1_APUSq1Length = $0922
 m1_APUTriLength = $0924
 m1_APUNoiLength = $0926
-m1_APUIOTemp = $0928
+m1_ApuPacketSeq = $0928
 
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02

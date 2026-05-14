@@ -6,6 +6,8 @@ print "apu-routines = ", pc
 !ApuIo0          = $2140
 !ApuIo1          = $2141
 !ApuIo2          = $2142
+!ApuIo3          = $2143
+!ApuPacketSeq    = $0928
 !SpcReadyValue   = #$7d
 !CpuReadyValue   = #$d7
 
@@ -45,21 +47,50 @@ SnesUpdateAudio:
     bne -
 
     ldx #$00
+    stz !ApuPacketSeq
 .transferLoop:
+    lda !ApuValueWrites,x
+    sta !ApuIo1           ;  Send first apu value
+
+    cpy #$01
+    beq .sendSingle
+
+    inx
     lda !ApuNumberWrites,x
-    sta !ApuIo0           ;  Send the apu index
+    sta !ApuIo2           ;  Send second apu index
 
     lda !ApuValueWrites,x
-    sta !ApuIo1           ;  Send the apu value
-    stx !ApuIo2           ;  Send the current write index
-    inx                   ;  Next write index
+    sta !ApuIo3           ;  Send second apu value
 
-    ;  spc ack wait loop
--   cpx !ApuIo2
+    dex
+    lda !ApuPacketSeq
+    ora !ApuNumberWrites,x
+    sta !ApuIo0           ;  Send packet sequence + first apu index
+
+    inx                   ;  Next write index
+    inx
+    dey
+    dey
+    beq .finishedTransfer
+
+    lda !ApuPacketSeq
+    clc
+    adc #$20
+    and #$e0
+    sta !ApuPacketSeq
+
+    ;  spc packet ack wait loop
+-   lda !ApuIo0
+    and #$e0
+    cmp !ApuPacketSeq
     bne -
 
-    dey
-    bne .transferLoop
+    bra .transferLoop
+
+.sendSingle:
+    lda !ApuPacketSeq
+    ora !ApuNumberWrites,x
+    sta !ApuIo0           ;  Send packet sequence + first apu index
 
 .finishedTransfer:
     stz !ApuWritesIndex     ;  Reset queue
