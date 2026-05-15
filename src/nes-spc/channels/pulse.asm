@@ -70,7 +70,10 @@ sq0StateFlags = $9f  ;  Channel state boolean flags:
 !SweepNegate = %00001000
 !sq0SweepNegateFlag   = "sq0StateFlags.3"
 !sq1SweepNegateFlag   = "sq1StateFlags.3"
-;  ---- -d-- :  Unused
+;  ---- -d-- :
+!WasMuted = %00000100
+!sq0WasMutedFlag   = "sq0StateFlags.2"
+!sq1WasMutedFlag   = "sq1StateFlags.2"
 ;  ---- --d- :  
 !ReloadSweep = %00000010
 !sq0ReloadSweepFlag   = "sq0StateFlags.1"
@@ -139,15 +142,21 @@ Pulse:
     bra ..notMuted
 
 ..muted:
-    ;  then set channel vol -> 0
-    mov a, #$00
+    ; KOFF voice
+    push x
+    cmp x, !Square0Offset
+    bne +
+    mov x, !Square0Flag
+    bra ++
++
+    mov x, !Square1Flag
+++
+    call stopVoiceInX
+    pop x
 
-    ; Mute VOL IN [A]
-    mov $F2,SpcRegisterSelector     ; channel volume L
-    mov $F3, a
-    inc SpcRegisterSelector
-    mov $F2,SpcRegisterSelector     ; channel volume R
-    mov $F3, a
+    mov a, sq0StateFlags+x
+    or a, #!WasMuted
+    mov sq0StateFlags+x, a      ;  Track that output has stopped so we can KON the next note
     bra ..end
 
 ..notMuted:
@@ -197,6 +206,26 @@ Pulse:
     dec SpcRegisterSelector     ; Get pitch low register
     mov $f2, SpcRegisterSelector
     mov $f3, PitchLo
+
+    mov a, sq0StateFlags+x
+    and a, #!WasMuted
+    beq ..end
+
+    ; KON voice
+    push x
+    cmp x, !Square0Offset
+    bne +
+    mov x, !Square0Flag
+    bra ++
++
+    mov x, !Square1Flag
+++
+    call playVoiceInX
+    pop x
+
+    mov a, sq0StateFlags+x
+    and a, #~!WasMuted
+    mov sq0StateFlags+x, a
 ..end:
 ret
 
