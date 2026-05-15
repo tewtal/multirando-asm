@@ -3,6 +3,9 @@
 !B0 = ((!BASE_BANK)<<16)
 !B7 = ((!BASE_BANK+$7)<<16)
 
+;  Audio update routine end
+%zhook($e564, "jsl SnesUpdateAudio")
+
 ;  APU Status writes ($4015)
 org !B0+$982B : jsr WriteAPUControl
 org !B0+$9830 : jsr WriteAPUControl
@@ -14,6 +17,10 @@ org !B7+$E465 : jsr WriteAPUControl
 org !B7+$ec46 : jsr WriteAPUControl
 org !B0+$9be5 : jsr WriteAPUControl
 org !B0+$9bea : jsr WriteAPUControl
+
+; org !B0+$9ed4 : db $15, $15, $15, $15   ; DEBUG: max volumes
+; org !B0+$9ed8 : db $00, $00, $00, $00   ; DEBUG: change noise frequency noise for comparison
+; org !B0+$9edc : db $08, $08, $08, $08   ; DEBUG: max length noise for ow song for comparison
 
 ;  Frame counter writes ($4017)
 org !B0+$9837 : jsr WriteApuFrameCounter

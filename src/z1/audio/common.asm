@@ -7,7 +7,7 @@ print "apu-routines = ", pc
 !ApuIo1          = $2141
 !ApuIo2          = $2142
 !ApuIo3          = $2143
-!ApuPacketSeq    = $0928
+!ApuPacketSeq    = $0970
 !SpcReadyValue   = #$7d
 !CpuReadyValue   = #$d7
 
@@ -15,18 +15,6 @@ print "apu-routines = ", pc
 SnesUpdateAudio:
     phx : phy : pha : php
     sep #$30
-
-;     lda $915
-;     bne +
-;     ; silence everything
-;     ldx #$00
-; -
-;     stz $900, x
-;     inx
-;     cpx #$17
-;     bne -
-
-; +
 
     ldy !ApuWritesIndex   ;  Set up decrementing loop index in [Y]
     beq .end              ;  no queued writes, skip handshake/transfer
@@ -97,6 +85,10 @@ SnesUpdateAudio:
 
 .end
     plp : pla : ply : plx
+
+    ;  Native code
+    inc $15
+    lda $11
     rtl
 
 

@@ -7,7 +7,7 @@
 !ApuIo1          = $2141
 !ApuIo2          = $2142
 !ApuIo3          = $2143
-!ApuPacketSeq    = $0928
+!ApuPacketSeq    = $0970
 !SpcReadyValue   = #$7d
 !CpuReadyValue   = #$d7
 
@@ -86,7 +86,41 @@ SnesUpdateAudio:
     rtl
 
 
-;  TODO: rewrite/deprecate?
+SendOneAudioRecord:
+    phx : pha
+    ;  cpu<->apu handshake
+    lda !ApuIo0
+    cmp !SpcReadyValue    ;  Check for spc readiness
+    beq +
+    jmp .end
++
+
+    lda #$01
+    sta !ApuIo2            ;  Send transfer length
+    lda !CpuReadyValue     ;  Indicate cpu readiness
+    sta !ApuIo0
+
+-   lda !ApuIo0            ;  Wait for SPC to ack CPU ready
+    cmp !CpuReadyValue
+    bne -
+
+    ldx #$00
+    stz !ApuPacketSeq
+
+    lda !ApuValueWrites, x
+    sta !ApuIo1
+
+    lda !ApuPacketSeq
+    ora !ApuNumberWrites, x
+    sta !ApuIo0
+.finishedTransfer:
+    stz !ApuWritesIndex
+
+.end:
+    pla : plx
+    rts
+
+
 LoadSFXRegisters:
     lda $e0
     cmp #$00

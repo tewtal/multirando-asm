@@ -52,7 +52,6 @@ NMIStart:
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd:
-    jsl SnesUpdateAudio
     jsl SnesProcessFrame
     plp : plb : ply : plx : pla
     jmp $E576

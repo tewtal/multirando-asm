@@ -552,15 +552,6 @@ VScrolling = $A08
 !VScrollOffset = $0F
 !VSpriteOffset = $0F
 
-;  TODO: Move to labels in audio dir
-APUBase = $0900
-APUExtraControl = $0916
-APUSq0Length = $0920
-APUSq1Length = $0922
-APUTriLength = $0924
-APUNoiLength = $0926
-ApuPacketSeq = $0928
-
 struct Z1ATTR $7E0B30
     .TopLeft: skip 1
     .TopRight: skip 1
