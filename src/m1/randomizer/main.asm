@@ -14,6 +14,7 @@ incsrc "transition_out.asm"
 incsrc "transition_in.asm"
 incsrc "loadgame.asm"
 incsrc "ending.asm"
+warnpc $99ffff
 
 ; Patch transition door
 org $90A6C9

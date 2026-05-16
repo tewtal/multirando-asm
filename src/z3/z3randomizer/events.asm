@@ -163,6 +163,9 @@ OnFileLoad:
 	JSL.l RefreshRainAmmo
 	JSL.l SetEscapeAssist
 
+        ; Combo
+        JSL.l ComboOnFileLoadHook
+
 	LDA.l IsEncrypted : CMP.b #01 : BNE +
 		JSL LoadStaticDecryptionKey
 	+

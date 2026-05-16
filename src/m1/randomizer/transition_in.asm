@@ -24,15 +24,17 @@ transition_to_m1:
     lda #$8f : sta $2100
     jsl SetupScrollHDMA
 
+    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
+
     ; Clear SNES port buffers
     rep #$30
     ldx #$0000
     lda #$0000
 
 -
-    sta.l $7e2000, x
+    sta.l $7e2200, x
     inx #2
-    cpx #$2000
+    cpx #$1e00
     bne -
 
     ldx #$0000

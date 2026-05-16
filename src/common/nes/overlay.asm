@@ -382,7 +382,7 @@ overlay_item_names:
     dw "       M1 Morph Ball      "
     dw "       M1 Varia Suit      "
     dw "         Goal Single      "
-    dw "          Goal Multi      "
+    dw "      Triforce Shard      "
     dw "       M1 Wave Beam       "
     dw "        M1 Ice Beam       "
     dw "         M1 ETank         "
@@ -403,7 +403,7 @@ overlay_item_names:
     dw "     Desert Palace Map    "
     dw "    Eastern Palace Map    "
     dw "   Maridia Boss Keycard   "
-    dw "     HYRULE CASTLE Map    " ; 7F
+    dw "     Hyrule Castle Map    " ; 7F
 
     dw "   Brinstar L 1 Keycard   " ; 80
     dw "   Brinstar L 2 Keycard   "

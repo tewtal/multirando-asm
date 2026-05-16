@@ -16,9 +16,9 @@ org $02E214
 
 ; allows Frog sprite to spawn in LW and also allows his friend to spawn in their house
 org $868a76 ; < 30a76 - sprite_prep.asm:785 (LDA $7EF3CA : AND.w #$40)
-lda.b IndoorsFlag : eor.b #1 : nop #2
+    lda.b IndoorsFlag : eor.b #1 : nop #2
 
 ; allows Frog to be accepted at Blacksmith
 org $86b3ee ; < 333ee - sprite_smithy_bros.asm:347 (LDA $7EF3CC : CMP.b #$08 : BEQ .no_returning_smithy_tagalong)
-jsl OWSmithAccept : nop #2
-db #$b0 ; BCS to replace BEQ
+    jsl OWSmithAccept : nop #2
+    db #$b0 ; BCS to replace BEQ

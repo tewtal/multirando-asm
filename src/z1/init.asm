@@ -23,17 +23,7 @@ SnesBoot:
     LDA #$11 : STA $212C
     JSL SetupScrollHDMA
 
-    ; Clear SNES OAM Buffer
-    REP #$10
-    LDA #$F0
-    LDX #$0000
-
--
-    STA $7E2000, X
-    STA $7E2001, X
-    INX #4
-    CPX #$0200
-    BNE -
+    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
 
     SEP #$30
 

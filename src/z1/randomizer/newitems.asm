@@ -11,6 +11,8 @@ SaveItems:
     lda #$0002
     jsl mb_CopyItemBuffer          ; Copy Z1 items from WRAM-buffer into item buffer
     
+    jsl nes_ClearAnimatedItems     ; Avoid interference with ppu writes by disabling any active animations
+
     plp
     lda.b #$00
     sta.b $11
@@ -19,7 +21,7 @@ SaveItems:
 UploadItemPalettes:
     lda #$80 : sta $2100
     
-    lda #$C0 : sta $2121
+    lda #$90 : sta $2121
     ldx #$00
 -
     lda.l nes_new_item_palettes, x
@@ -27,7 +29,7 @@ UploadItemPalettes:
     lda.l nes_new_item_palettes+1, x
     sta $2122
     inx : inx
-    cpx #$80
+    cpx #$e0
     bne -
 
     lda #$8f : sta $2100
@@ -138,9 +140,9 @@ LoadRoomItemIdUW_extended:
 ; [0344]: RightSpriteOffset
 print "Anim_WriteSpecificItemSprites_extended = ", pc
 Anim_WriteSpecificItemSprites_extended:
+    stx $08     ;  ATS - store object index in [X] regardless of which branch we take
     cpy.b #$30
     bcs .extended
-    stx $08                     
     lda #$01                    
     sta $07
     lda #$08                    
@@ -171,6 +173,7 @@ Anim_WriteSpecificItemSprites_extended:
     sec
     rtl
 
+;  ATS - Currently unused
 GetDynamicItemIndex:
     phx
     ldx #!MAX_DYNAMIC_SLOTS
@@ -228,8 +231,10 @@ PrepDynamicItem:
     ; Get the ROM address containing the item data to be uploaded
     sec : sbc #$0030 
     jsl mb_CheckProgressiveItemLong
+    sta.w TransferTmp  ;  Preserve item id in [A]
+
     asl #2 : tax
-    
+
     ; Store Attribute data
     lda.l ItemData+$2, x 
     sta.w DynamicItemAttrs, y
@@ -253,6 +258,11 @@ PrepDynamicItem:
 
     lda.w DynamicItemIndex : asl : tax
     lda.l DynamicItemVramOffsets, x
+
+    pha
+    ldx.w TransferTmp  ; Prep subroutine arguments in [X] and [A]
+    jsl nes_StoreAnimatedItems
+    pla
 
     sta [$F0], y
     iny #4
@@ -323,14 +333,14 @@ ItemData:
     dw $9B80, $0505     ; 02 - Tempered Sword
     dw $9D00, $0404     ; 02 - Gold Sword
     dw $9F80, $0707     ; 04 - Shield
-    dw $A000, $0404     ; 05 - Red Shield
+    dw $A000, $3434     ; 05 - Red Shield
     dw $A080, $0404     ; 06 - Mirror Shield
-    dw $8900, $0606     ; 07 - Firerod
-    dw $9000, $0707     ; 08 - Icerod  
+    dw $8900, $1414     ; 07 - Firerod
+    dw $9000, $2424     ; 08 - Icerod
     dw $9480, $0505     ; 09 - Hammer
     dw $8880, $0404     ; 0A - Hookshot
-    dw $8A00, $0404     ; 0B - Bow                       
-    dw $A100, $0707     ; 0C - Blue Boomerang
+    dw $8A00, $0404     ; 0B - Bow
+    dw $A100, $2424     ; 0C - Blue Boomerang
     dw $8E80, $0404     ; 0D - Powder
     dw $9E00, $0404     ; 0E - Dummy - Bee (bottle content)
     dw $9080, $0404     ; 0F - Bombos
@@ -340,17 +350,17 @@ ItemData:
     dw $9400, $0505     ; 12 - Lamp
     dw $9600, $0404     ; 13 - Shovel
     dw $9680, $0707     ; 14 - Flute                      
-    dw $9180, $0606     ; 15 - Somaria
+    dw $9180, $1414     ; 15 - Somaria
     dw $9A00, $0404     ; 16 - Bottle
-    dw $A200, $0606     ; 17 - Piece of Heart
+    dw $A200, $1414     ; 17 - Piece of Heart
     dw $9300, $0707     ; 18 - Byrna
-    dw $9380, $0606     ; 19 - Cape
+    dw $9380, $1414     ; 19 - Cape
     dw $9500, $0404     ; 1A - Mirror
     dw $9580, $0404     ; 1B - Glove
     dw $9700, $0404     ; 1C - Mitt
     dw $9880, $0505     ; 1D - Book
     dw $9900, $0707     ; 1E - Flippers
-    dw $9980, $0606     ; 1F - Pearl
+    dw $9980, $1414     ; 1F - Pearl
     
     dw $8000, $0404     ; 20 - Dummy 
     dw $9800, $0404     ; 21 - Net
@@ -358,11 +368,11 @@ ItemData:
     dw $9F00, $0505     ; 23 - Red Tunic
     dw $AB80, $0404     ; 24 - Dummy - key
     dw $AD00, $0404     ; 25 - Dummy - compass
-    dw $A280, $0606     ; 26 - Heart Container - no anim
+    dw $A280, $1414     ; 26 - Heart Container - no anim
     dw $8C00, $0707     ; 27 - Bomb 1
     dw $A680, $0707     ; 28 - 3 Bombs                    
     dw $8E00, $0505     ; 29 - Mushroom
-    dw $AE80, $0606     ; 2A - Red Boomerang
+    dw $AE80, $1414     ; 2A - Red Boomerang
     dw $9A80, $0505     ; 2B - Red Potion
     dw $9C00, $0505     ; 2C - Green Potion
     dw $9C00, $0707     ; 2D - Blue Potion
@@ -373,9 +383,9 @@ ItemData:
     dw $A800, $0707     ; 31 - 10 Bombs
     dw $AB00, $0404     ; 32 - Dummy - big key
     dw $AD80, $0404     ; 33 - Dummy - map
-    dw $A880, $0505     ; 34 - 1 Rupee
-    dw $AA00, $0707     ; 35 - 5 Rupees
-    dw $AA80, $0606     ; 36 - 20 Rupees
+    dw $A880, $3434     ; 34 - 1 Rupee
+    dw $AA00, $2424     ; 35 - 5 Rupees
+    dw $AA80, $1414     ; 36 - 20 Rupees
     dw $8000, $0404     ; 37 - Dummy - Pendant of Courage
     dw $8000, $0404     ; 38 - Dummy - Pendant of Wisdom
     dw $8000, $0404     ; 39 - Dummy - Pendant of Power
@@ -383,8 +393,8 @@ ItemData:
     dw $8000, $0404     ; 3B - Bow and silver Arrows
     dw $9E00, $0404     ; 3C - Bee
     dw $9100, $0404     ; 3D - Fairy
-    dw $A280, $0606     ; 3E - Heart Container - Boss
-    dw $A280, $0606     ; 3F - Heart Container - Sanc
+    dw $A280, $1414     ; 3E - Heart Container - Boss
+    dw $A280, $1414     ; 3F - Heart Container - Sanc
     
     dw $AC80, $0505     ; 40 - 100 Rupees
     dw $AC00, $0505     ; 41 - 50 Rupees
@@ -393,11 +403,11 @@ ItemData:
     dw $A600, $0404     ; 44 - 10 Arrows
     dw $8000, $0404     ; 45 - Dummy - small magic
     dw $8A80, $0505     ; 46 - 300 Rupees
-    dw $AA80, $0606     ; 47 - 20 Rupees
+    dw $AA80, $1414     ; 47 - 20 Rupees
     dw $9E80, $0404     ; 48 - Good Bee
     dw $A780, $0404     ; 49 - Fighter Sword
     dw $8000, $0404     ; 4A - Dummy - activated flute
-    dw $9780, $0606     ; 4B - Boots                      
+    dw $9780, $1414     ; 4B - Boots                      
     dw $8000, $0404     ; 4C - Dummy - 50+bombs
     dw $8000, $0404     ; 4D - Dummy - 70+arrows
     dw $A180, $0505     ; 4E - Half Magic
@@ -572,7 +582,7 @@ ItemData:
     dw $BE80, $0404     ; E7 - Dungeon Map          (Z1)
     dw $BA80, $0505     ; E8 - 1 Rupee              (Z1)
     dw $BA00, $0505     ; E9 - Small Key            (Z1)
-    dw $C000, $0505     ; EA - Heart Container      (Z1)
+    dw $C000, $3434     ; EA - Heart Container      (Z1)
     dw $0000, $0404     ; EB - Triforce Fragment    (Z1)    ; TODO: Add this when shuffling rewards
     dw $BF80, $0404     ; EC - Magical Shield       (Z1)
     dw $BB80, $0404     ; ED - Boomerang            (Z1)

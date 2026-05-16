@@ -77,6 +77,7 @@ incsrc "labels.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
+incsrc "audio/hooks.asm"
 
 
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
@@ -85,6 +86,7 @@ incsrc "hooks.asm"
 org $A78000
 base $7E1000
 incsrc "common.asm"
+incsrc "audio/common.asm"
 warnpc $A72000
 
 ; Include SNES port functions that doesn't have to be in the common code area
@@ -94,6 +96,6 @@ incsrc "snes.asm"
 
 ; Include randomizer additions
 org $A89000
-incsrc "../nes-spc/spc.asm"
+incsrc "../nes-spc/apu.asm"
 org $AFFFFF
 db $00

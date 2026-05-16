@@ -16,6 +16,9 @@ org $A9B33C
 org $8bde80
     jml sm_setup_credits
 
+org $809e21
+    dw #$0500                ; Set timer to 5 minutes for now so map rando escape should always be possible
+
 org $b7fd00
 sm_check_ending_door:        ; Check if all the other games has been beaten, and only then activate the escape.
     pha
@@ -32,6 +35,14 @@ sm_check_ending_door:        ; Check if all the other games has been beaten, and
     jml $8fc926         ; Jump to "LDA #$0012"
 
 sm_check_ending_mb:
+    ; Refill energy and ammo after beating the game to make escape easier
+    ; Mostly a map rando thing, but isn't a problem in other cases either
+    lda $09c4 : sta $09c2  ; Energy
+    lda $09c8 : sta $09c6  ; Missiles
+    lda $09cc : sta $09ca  ; Super Missiles
+    lda $09d0 : sta $09ce  ; Power Bombs
+    lda $09d4 : sta $09d6  ; Reserve Tanks
+
     lda #$0001
     jsl mb_check_and_set_ending
    

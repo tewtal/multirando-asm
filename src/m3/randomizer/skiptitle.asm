@@ -18,8 +18,11 @@ skip_title:
     pea $8282 : plb : plb
 
     ; ; Load file 1
-    ; lda.w #$0000
-    ; jsl $818085
+    ;lda.w #$0000
+    ;jsl $818085
+
+    ; Load the map data properly
+    jsl $80858c
 
     ; Run main loop in game mode 06 (loading game)
     jml $828944

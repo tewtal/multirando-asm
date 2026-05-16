@@ -38,3 +38,7 @@ config_keycards:     ; DF0206
 ; Sprite screw attack config flag
 config_screw_attack: ; DF0208
     dw #$0000
+
+; Reload button combo
+config_reload_button_combo: ; DF020A
+    dw #$3030  ; L + R + Select + Start

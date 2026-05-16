@@ -21,19 +21,14 @@ m1_TransferTarget = $0B18
 m1_TransferSourceSet = $0B20
 m1_PalIdx = $0B0E
 
-m1_APUBase = $0900
-m1_APUExtraControl = $0916
-m1_APUSq0Length = $0920
-m1_APUSq1Length = $0922
-m1_APUTriLength = $0924
-m1_APUNoiLength = $0926
-m1_APUIOTemp = $0928
-
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02
 M1AttrTransferOffset = $0A04
 M1CurSplitVScroll = $0A06
 M1VScrolling = $0A08
+
+; Item animations
+;struct Animations $0aa0  ;  Already defined in common/nes/items.asm; but don't put anything else here
 
 struct ATTR $7E0B30
     .TopLeft: skip 1
@@ -60,6 +55,9 @@ m1_SnesPPUDataString = $7E3002
 m1_SnesPPUDataStringPtr = $7E3000
 
 ; Internal M1 RAM Labels
+m1_FrameCounter = $2d
+m1_RoomPalette = $68
+m1_CurrentArea = $74    ;  $10 = Brinstar, $11 = Norfair, $12 = Kraid, $13 = Tourian, $14 = Ridley
 m1_MirrorCntrl = $fa
 m1_ScrollY = $fc
 m1_ScrollX = $fd

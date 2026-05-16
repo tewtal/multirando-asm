@@ -84,6 +84,7 @@ incsrc "labels.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
+incsrc "audio/hooks.asm"
 
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
 ; The reason for this is that the main "common" MMC1 bank at $C000-$FFFF is more or less full
@@ -91,6 +92,8 @@ incsrc "hooks.asm"
 org $A78000
 base $7E1000
 incsrc "common.asm"
+incsrc "audio/common.asm"
+CommonBankEnd:
 warnpc $A7C000
 
 ; Include SNES port functions that doesn't have to be in the common code area
@@ -109,9 +112,9 @@ namespace off
 
 ; Include randomizer additions
 org $A99000
-incsrc "dpcm.asm"
+incsrc "audio/dpcm.asm"
 org $AA9000
-incsrc "../nes-spc/spc.asm"
+incsrc "../nes-spc/apu.asm"
 
 ;  DPCM audio
 org $AB8000

@@ -410,7 +410,7 @@ item_names:
     dw "___       M1 Morph Ball      ___"
     dw "___       M1 Varia Suit      ___"
     dw "___         Goal Single      ___"
-    dw "___          Goal Multi      ___"
+    dw "___      Triforce Shard      ___"
     dw "___       M1 Wave Beam       ___"
     dw "___        M1 Ice Beam       ___"
     dw "___         M1 ETank         ___"
@@ -431,7 +431,7 @@ item_names:
     dw "___     Desert Palace Map    ___"
     dw "___    Eastern Palace Map    ___"
     dw "___   Maridia Boss Keycard   ___"
-    dw "___     HYRULE CASTLE Map    ___" ; 7F
+    dw "___     Hyrule Castle Map    ___" ; 7F
 
     dw "___   Brinstar L 1 Keycard   ___" ; 80
     dw "___   Brinstar L 2 Keycard   ___"

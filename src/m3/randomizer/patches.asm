@@ -9,6 +9,22 @@ TYX
 org $86B713
 gadora_fix_ret:
 
+
+; Patch from Benox (via dagit and moehr)
+org $82E659
+    JSR handle_door_transition
+    NOP
+
+; Free space in bank $82:
+org $82F7D0
+handle_door_transition:
+    ; Lets fix the entering from water to no water animation bug 
+    STZ $0A9C
+    JSL $878064 ; run hi-jacked instruction
+    RTS
+
+warnpc $82F800
+
 ; Removes Gravity Suit heat protection
 org $8de37d
     db $01

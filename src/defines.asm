@@ -62,6 +62,12 @@ print "SRAM buffer ends at ", hex(!INVENTORY_TEMP_3)
 
 !SRAM_RANDOLIVE = $40AD00   ; to $40AEFF
 
+;  Z1 sram
+!SRAM_Z1_Start = $406000
+!SRAM_Z1_End   = $407fff
+!Z1_TunicTable #= !SRAM_Z1_Start+$1325
+!Z1_TunicColor #= !SRAM_Z1_Start+$0804
+
 ; New multiworld communication stuff
 ; !SRAM_MW_ITEMS_RECV = $40B000
 ; !SRAM_MW_ITEMS_RECV_RPTR = $40B600

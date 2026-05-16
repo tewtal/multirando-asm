@@ -26,7 +26,7 @@ warnpc $FF0000
 org $FF0000
 base $CF0000
 namespace off
-incsrc "../nes-spc/spc.asm"
+incsrc "../nes-spc/apu.asm"
 
 org $FF4000
 namespace menu

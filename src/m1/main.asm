@@ -8,6 +8,7 @@ incsrc "rom.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
+incsrc "audio/hooks.asm"
 
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
 ; The reason for this is that the main "common" MMC1 bank at $C000-$FFFF is more or less full
@@ -15,14 +16,20 @@ incsrc "hooks.asm"
 org $978000
 base $7E1000
 incsrc "common.asm"
+print "m1 common.asm end = ", pc
+incsrc "audio/common.asm"
+print "m1 audio/common.asm end = ", pc
 incsrc "randomizer/wavy_ice.asm"  ; This has to exist in RAM
-warnpc $891000
+print "m1 randomizer/wavy_ice.asm end = ", pc
+warnpc $978f00
 
 ; Include SNES port functions that doesn't have to be in the common code area
 org $979000
 incsrc "labels.asm"
 incsrc "init.asm"
 incsrc "snes.asm"
+print "m1 SNES port functions end = ", pc
+warnpc $979fff
 
 ; Include randomizer additions
 org $988000
