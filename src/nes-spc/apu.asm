@@ -36,93 +36,6 @@ arch spc700-inline
 org $1000
 startpos start
 
-;========================================
-;       NES Registers
-;----------------------------------------
-
-; sq4000     = $40 ; $4000 - Pulse/square 0 channel
-; sq4001     = $41 ; $4001
-; sq4002     = $42 ; $4002
-; sq4003     = $43 ; $4003
-; sq4004     = $44 ; $4004 - Pulse/square 1 channel
-; sq4005     = $45 ; $4005
-; sq4006     = $46 ; $4006
-; sq4007     = $47 ; $4007
-; tr4008     = $48 ; $4008 - Triangle channel
-; tr4009     = $49 ; $4009
-; tr400A     = $4A ; $400A
-; tr400B     = $4b ; $400B
-; no400C     = $4C ; $400C - Noise channel
-; no400D     = $4D ; $400D
-; no400E     = $4E ; $400E
-; no400F     = $4F ; $400F
-; pcm_freq   = $50 ; $4010 - DMC channel
-; pcm_raw    = $51 ; $4011
-; pcm_addr   = $52 ; $4012
-; pcm_length = $53 ; $4013
-
-; sound_ctrl = $55 ; $4015
-
-; no4016     = $56 ; $4016
-; ; Bit flags for no4016:
-; ; 0x01 = Reset square 0
-; ; 0x02 = Reset square 1
-; ; 0x04 = Reset triangle
-; ; 0x08 = Reset noise
-; ; 0x10 = Initiate dmc playback
-; ; 0x20 = [repurposed as $4017 write active]
-; ; 0x40 = Square 0 sweep
-; ; 0x80 = Square 1 sweep
-
-; apu4017    = $57 ; $4017
-
-;=====================
-;     SPC Memory
-;---------------------
-
-; pulse0duty       = $60
-; pulse0dutyold    = $61
-; pulse1duty       = $62
-; pulse1dutyold    = $63
-; puls0_sample     = $64
-; puls1_sample     = $65
-; puls0_sample_old = $66
-; puls1_sample_old = $67
-; temp1            = $68
-; temp2            = $69
-; temp3            = $6A
-; temp4            = $6B
-; temp5            = $6C
-; temp6            = $6D
-; temp7            = $6E
-; temp8            = $6F
-; old4003          = $70
-
-; sweeptemp1    = $78
-; sweeptemp2    = $79
-; sweep_freq_lo = $7A
-; sweep_freq_hi = $7B
-
-; linear_count_lo = $7D
-; linear_count_hi = $7E
-; timer3count_lo  = $7F
-; timer3count_hi  = $80
-; sweep1          = $81
-; sweep2          = $82
-; sweep_freq_lo2  = $83
-; sweep_freq_hi2  = $84
-; timer3val       = $85 ; Captures up counter for Timer 3. Value only ever 0, 1, or 2
-; decay1volume    = $86
-; decay1rate      = $87 ; Square 0 channel
-; decay_status    = $88 ; Voice bit flags indicating which have currently decrementing length counters
-; decay2volume    = $89
-; decay2rate      = $8A ; Square 1 channel
-; decay3volume    = $8B
-; decay3rate      = $8C ; Noise channel
-; tri_sample      = $8E
-voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
-
-
 ;=====================
 ;     Constants
 ;---------------------
@@ -178,6 +91,10 @@ voicesPlaying   = $8f ; Voice bit flags tracking which are currently playing
 !KON          = #$4c
 !KOFF         = #$5c
 
+;  Fixed values
+!TriangleVolume   = #$53  ;  Matches NES output dB
+!NoiseCompSRCNVal = #$14
+
 !blt = "BCC"
 !bge = "BCS"
 
@@ -209,11 +126,10 @@ TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240H
 WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write handler
 ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
 TickStepOccurring = $87
-; $88: unused
 ; $89 reserved by Pulse
 NeedToRun         = $8a
 ; $8b, $8c  reserved by Frame Counter
-; $8d, $8e: unused
+voicesPlaying   = $8d ; Voice bit flags tracking which are currently playing
 ; $8f reserved by Frame Counter
 
 start:
@@ -237,6 +153,7 @@ start:
         ;   2: Triangle Wave
         ;   3: Noise
         ;   4: dmc
+        ;   5: Noise complement
 
         mov $F2,#$05            ; ADSR off, GAIN enabled
         mov $F3,#0
@@ -265,12 +182,15 @@ start:
         mov $F3,#$1F
 
         ;  Init triangle voice
-        mov $F2,!TriangleSRCN            ; sample # for triangle
-        mov $F3,#triangle_sample_num
-        mov $F2,!TriangleVolumeL
-        mov $F3,#$7F    ; max vol L
-        mov $F2,!TriangleVolumeR
-        mov $F3,#$7F    ; max vol R
+        mov $F2, !TriangleSRCN            ; sample # for triangle
+        mov $F3, #triangle_sample_num
+
+        ;  Init triangle fixed volume
+        mov a, !TriangleVolume
+        mov $F2, !TriangleVolumeL     ; channel volume L
+        mov $F3, a
+        mov $F2, !TriangleVolumeR     ; channel volume R
+        mov $F3, a
 
         ;  Init noise complement voice - standard pitch $1000
         mov y, #$00
@@ -284,7 +204,7 @@ start:
         mov $F3,#$00            ; sample # for noise
 
         mov $F2, !NoiseCompSRCN
-        mov $F3, #$18  ; TODO: de-constantize
+        mov $F3, !NoiseCompSRCNVal
 
         mov $F2,!KON
         mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
@@ -418,23 +338,31 @@ JumpTable:
     dw NullRoutine, Status_Set, NullRoutine, FrameCount_Set
 
 
+;  This subroutine is a hack to guarantee apu writes and ticks are processed 100% in sequence.
+;  Unfortunately, ProcessWrites can take up so much apu time that not all ticks occur before the next
+;  sequence of writes.  Particularly FrameCounterStep $03.  fc==3 *must* run before $4017 resets it
+;  to 0 - otherwise the envelope and linear counters can be off by 1.
+;  We'll revisit the need for this after cycle optimization.
+CheckInterimTick:
+    mov a, FrameCounterCycle
+    cmp a, #$03
+    !bge .end
+
+    ; --- Perform variable-length work ---
+    inc TickStepOccurring
+    call TickHandler
+.end:
+    ret
+
+
 ;------------------------------------------------------------------------
 ;  Process all queued apu register writes in the order they were recieved
 ;------------------------------------------------------------------------
 ProcessWrites:
-    ;  x=0; while x<queuelength
-    ;   switch NumbersQueue, x
-    ;       case 0:
-    ;       case 1:
-    ;       ...
-    ;       case 17:
-    ;
-    ;
-    ;   x++
-    ;  end while
-;     QueueLength  = $1f
 ; NumbersQueue = $20
 ; ValuesQueue  = $50
+
+    call CheckInterimTick   ;  Ensure all of the prior frames ticks have been processed before processing new writes
 
     ;  Run call precedes all register writes.  
     ;  Instead of calling it for each queued write, try doing it once at the start.
@@ -575,7 +503,6 @@ CalcPitch:
 ;  Subroutines to support the main
 ;  processing loop
 ;=================================
-
 to_reset:
     pop a : pop a  ;  Remove call stack entry [check]
     mov     $F2,!KOFF
@@ -705,14 +632,14 @@ set_directory_lut:
 		dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
 		dw	pulse2,pulse2, pulse2d,pulse2d, pulse2c,pulse2c, pulse2b,pulse2b
 		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
-                dw      tri_samp0,tri_samp0, tri_samp1, tri_samp1, tri_samp2, tri_samp2, tri_samp3, tri_samp3
-                dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
+                dw      tri_samp0,tri_samp0, tri_samp0, tri_samp0, tri_samp3, tri_samp3, tri_samp3, tri_samp3
+                ; dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
                 dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
 end_directory_lut:
 
 
     triangle_sample_num = $10
-    srcn_base           = $1c
+    srcn_base           = $18
 
 lengthCounterTable:
         db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30

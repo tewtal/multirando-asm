@@ -5,13 +5,13 @@
 ;  Sample data (TODO: rename / inline and add descriptions)
 
 tri_samp0: incsrc "../samples/tri6_sl3.asm"     ; 125 Hz
-tri_samp1: incsrc "../samples/tri6_sl2.asm"     ; 250 Hz
-tri_samp2: incsrc "../samples/tri6_sl1.asm"     ; 500 Hz - used 56
+; tri_samp1: incsrc "../samples/tri6_sl2.asm"     ; 250 Hz
+; tri_samp2: incsrc "../samples/tri6_sl1.asm"     ; 500 Hz - used 56
 tri_samp3: incsrc "../samples/tri6.asm"         ; 1 kHz - used 28
-tri_samp4: incsrc "../samples/tri6_sr1.asm"     ; 2 kHz - used 14
-tri_samp5: incsrc "../samples/tri6_sr2.asm"     ; 4 kHz - used 7
-tri_samp6: incsrc "../samples/tri6_sr3.asm"     ; 8 kHz - used 3
-tri_samp7: incsrc "../samples/tri6_sr4.asm"     ; broken(?) constant output - used 1 (TODO: REMOVE)
+; tri_samp4: incsrc "../samples/tri6_sr1.asm"     ; 2 kHz - used 14
+; tri_samp5: incsrc "../samples/tri6_sr2.asm"     ; 4 kHz - used 7
+; tri_samp6: incsrc "../samples/tri6_sr3.asm"     ; 8 kHz - used 3
+; tri_samp7: incsrc "../samples/tri6_sr4.asm"     ; broken(?) constant output - used 1 (TODO: REMOVE)
 
 
 ;  Variables
@@ -58,10 +58,6 @@ triStateFlags = $bf  ;  Channel state boolean flags:
 
 Triangle:
 
-;  Constants
-!TriangleVolume = #$53  ;  Matches NES output dB
-
-
 ;  Methods
 
 ;.GetOutput(?)
@@ -79,33 +75,15 @@ Triangle:
     bne ..notMuted
 
 ..muted:
-    ;  then set channel vol -> 0
-    ; mov a, #$00
-
-    ; ; Mute VOL IN [A]
-    ; mov $F2,SpcRegisterSelector     ; channel volume L
-    ; mov $F3, a
-    ; inc SpcRegisterSelector
-    ; mov $F2,SpcRegisterSelector     ; channel volume R
-    ; mov $F3, a
-
     ; KOFF voice
     mov $F2, !KOFF
     mov $F3, !TriangleFlag
+    clr1 voicesPlaying.2
 
     set1 !triWasMutedFlag   ;  Track that output has stopped so we can KON the next note
     bra ..end
 
 ..notMuted:
-    mov a, !TriangleVolume
-
-    ; SET VOL IN [A]
-    mov $F2,SpcRegisterSelector     ; channel volume L
-    mov $F3, a
-    inc SpcRegisterSelector
-    mov $F2,SpcRegisterSelector     ; channel volume R
-    mov $F3, a
-
     ; Prepare spc pitch
     mov a, triRealPeriodLo
     mov PeriodLo, a
@@ -116,7 +94,7 @@ Triangle:
     call ._CalcSRCN
 
     ; SET SRCN
-    clrc : adc SpcRegisterSelector, #$03    ;  Get SRCN register
+    clrc : adc SpcRegisterSelector, #$04    ;  Get SRCN register
     mov $F2,SpcRegisterSelector
     mov $F3, a
 
@@ -255,7 +233,6 @@ ret
     mov SpcRegisterSelector, !TriangleFlag
 ...Start:
     ; 	_envelope.LengthCounter.LoadLengthCounter(value >> 3);
-    ; push y
     mov y, a
     mov a, sq0StateFlags+x
     and a, #!LengthEnabled
@@ -274,26 +251,6 @@ ret
     mov NeedToRun, #$01     ;  Set APU->NeedToRun
 
 ...done:
-;     ; SetPeriod((_realPeriod & 0xFF) | ((value & 0x07) << 8));
-;     mov a, y
-;     and a, #$07
-;     mov sq0RealPeriodHi+x, a
-
-;     ;  Emulate pulse sequencer restart (dutyPos = 0) by issuing a KOFF and KON
-;     ;  to the current channel
-;     push x
-;     mov x, SpcRegisterSelector
-;     call stopVoiceInX
-;     call playVoiceInX
-;     pop x
-
-;     ; //The envelope is also restarted.
-;     ; _envelope.ResetEnvelope();
-;     ;  Set reloadSweep = true
-;     mov a, sq0StateFlags+x
-;     or a, #!EnvelopeStart
-;     mov sq0StateFlags+x, a
-;     pop y
 ret
 
 ; Reload length counter
