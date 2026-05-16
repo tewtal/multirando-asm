@@ -15,4 +15,4 @@ org $FF8000
 incsrc "nes/data.asm"
 incsrc "nes/items.asm"
 print "nes/items.asm end: ", pc
-warnpc $FC0000
+warnpc $FFE000
