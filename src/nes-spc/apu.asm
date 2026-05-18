@@ -292,18 +292,17 @@ WaitTick:
 cpucheck:
         ; --- Check and process cpu sends
         mov a,$F4
-        cmp	a,$F4
-        bne cpucheck
-
-        cmp a,#$F5              ; wait for port 0 to be $F5 (Reset)
-        bne +
-        call to_reset
-+
         cmp a,#$d7              ; wait for port 0 to be $d7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
         beq apurecv  ;  New cpu data waiting to send
         bra WaitTick
 
 TimerExpired:
+        ;  Check for an spc reset signal
+        mov a, $f4
+        cmp a, #$f5
+        bne +
+        call to_reset
++
         inc TickStepOccurring   ; mark that we've entered an apu step for FrameCounter.Run()
         inc TimerLatchIndex     ; advance pattern index
         mov a, TimerLatchIndex
