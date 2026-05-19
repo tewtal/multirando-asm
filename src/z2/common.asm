@@ -45,7 +45,6 @@ NMIStart:
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd:
-    jsl SnesUpdateAudio    
     jsl SnesProcessFrame
 
     lda $ff
@@ -59,7 +58,6 @@ NMIEnd:
 
 ; Replace the NES NMI end with a SNES-specific one and allow hooking of NMI after any standard code
 NMIEnd_Bank5:
-    jsl SnesUpdateAudio    
     jsl SnesProcessFrame
 
     lda $ff
@@ -74,11 +72,32 @@ NMIEnd_Code1:
     pla
     plp
 
-    jsl SnesUpdateAudio    
     jsl SnesProcessFrame
 
     plp : plb : ply : plx : pla
     rti
+
+AudioRoutine1:
+    jsl SnesUpdateAudio
+
+    ;  Native code
+    LDA      #$00                      ; 0x18020 $8010 A9 00
+    STA      $EB                       ; 0x18022 $8012 85 EB
+    STA      $EA                       ; 0x18024 $8014 85 EA
+rts
+
+AudioRoutine2:
+    jsl SnesUpdateAudio
+
+    ;  Native code
+    LDA      #$00                      ; 0x19032 $9022 A9 00
+    STA      $EF                       ; 0x19034 $9024 85 EF
+    STA      $EE                       ; 0x19036 $9026 85 EE
+    STA      $ED                       ; 0x19038 $9028 85 ED
+    STA      $EC                       ; 0x1903a $902A 85 EC
+    STA      $EB                       ; 0x1903c $902C 85 EB
+    STA      $E9                       ; 0x1903e $902E 85 E9
+rts
 
 
 ; Emulate MMC1 PRG bank switch, bank number in A

@@ -4,6 +4,10 @@ optimize address ram
 !B6 = ((!BASE_BANK+$6)<<16)
 !B7 = ((!BASE_BANK+$7)<<16)
 
+;  Hooks for ends of the sound routines
+org !B6+$8010 : jsr AudioRoutine1 : rts
+org !B6+$9022 : jsr AudioRoutine2 : rts
+
 ;  APU control calls
 org !B6+$8007 : jsr Apu_Control_WriteA
 org !B6+$9261 : jsr Apu_Control_WriteA
