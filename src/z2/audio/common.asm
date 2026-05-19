@@ -81,6 +81,10 @@ SnesUpdateAudio:
     sta !ApuIo0           ;  Send packet sequence + first apu index
 
 .finishedTransfer:
+-   lda !ApuIo0
+    cmp !SpcReadyValue      ; wait until SPC has reached Done and published $7d
+    bne -
+    stz !ApuIo0             ; leave SPC-readable CPU->APU port 0 as fixed benign value
     stz !ApuWritesIndex     ;  Reset queue
 
 .end
