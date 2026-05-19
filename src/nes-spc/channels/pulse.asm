@@ -611,13 +611,20 @@ ret
     mov sq0RealPeriodHi+x, a
     call ._UpdateTargetPeriod
 
-    ;  Emulate pulse sequencer restart (dutyPos = 0) by issuing a KOFF and KON
-    ;  to the current channel
+    ; Emulate pulse sequencer restart by stopping now, then letting
+    ; UpdateOutput recalc SRCN/pitch and KON after the DSP regs are current.
     push x
     mov x, SpcRegisterSelector
     call stopVoiceInX
-    call playVoiceInX
     pop x
+    cmp x, !Square0Offset
+    beq ...mute0
+...mute1:
+    set1 !sq1WasMutedFlag
+    bra +
+...mute0:
+    set1 !sq0WasMutedFlag
++
 
     ; //The envelope is also restarted.
     ; _envelope.ResetEnvelope();
