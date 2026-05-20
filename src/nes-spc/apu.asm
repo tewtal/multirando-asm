@@ -47,12 +47,19 @@ startpos start
 !NoiseFlag     = #%00001000
 !DmcFlag       = #%00010000
 !NoiseCompFlag = #%00100000
+!Square0AltFlag = #%01000000
+!Square1AltFlag = #%10000000
+
+!BothSquare0s = #%01000001
+!BothSquare1s = #%10000010
 
 !Square0Offset  = #$00
 !Square1Offset  = #$10
 !TriangleOffset = #$20
 !NoiseOffset    = #$30
 !DMCOffset      = #$40
+!Square0AltOffset = #$60
+!Square1AltOffset = #$70
 
 ;  SPC dsp registers
 !Square0VolumeL  = #$00
@@ -67,6 +74,10 @@ startpos start
 !DmcVolumeR      = #$41
 !NoiseCompVolumeL = #$50
 !NoiseCompVolumeR = #$51
+!Square0AltVolumeL = #$60
+!Square0AltVolumeR = #$61
+!Square1AltVolumeL = #$70
+!Square1AltVolumeR = #$71
 
 !Square0PitchL  = #$02
 !Square0PitchH  = #$03
@@ -80,6 +91,10 @@ startpos start
 !DmcPitchH      = #$43
 !NoiseCompPitchL      = #$52
 !NoiseCompPitchH      = #$53
+!Square0AltPitchL = #$62
+!Square0AltPitchH = #$63
+!Square1AltPitchL = #$72
+!Square1AltPitchH = #$73
 
 !Square0SRCN  = #$04
 !Square1SRCN  = #$14
@@ -87,6 +102,8 @@ startpos start
 !NoiseSRCN    = #$34
 !DmcSRCN      = #$44
 !NoiseCompSRCN = #$54
+!Square0AltSRCN = #$64
+!Square1AltSRCN = #$74
 
 !KON          = #$4c
 !KOFF         = #$5c
@@ -154,6 +171,8 @@ start:
         ;   3: Noise
         ;   4: dmc
         ;   5: Noise complement
+        ;   6: Square Wave 0 alternate range
+        ;   7: Square Wave 1 alternate range
 
         mov $F2,#$05            ; ADSR off, GAIN enabled
         mov $F3,#0
@@ -167,6 +186,10 @@ start:
         mov $F3,#0
         mov $F2,#$55
         mov $F3,#0
+        mov $F2,#$65
+        mov $F3,#0
+        mov $F2,#$75
+        mov $F3,#0
 
         mov $F2,#$07            ; infinite gain
         mov $F3,#$1F
@@ -179,6 +202,10 @@ start:
         mov $F2,#$47
         mov $F3,#$1F
         mov $F2,#$57
+        mov $F3,#$1F
+        mov $F2,#$67
+        mov $F3,#$1F
+        mov $F2,#$77
         mov $F3,#$1F
 
         ;  Init triangle voice
