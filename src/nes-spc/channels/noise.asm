@@ -56,7 +56,7 @@ Noise:
 ; Amount in dB to decrease complement channel output
 ; based on current noise frequency $00 -> $0f
 .complementAttenuationTable:
-    db $02, $03, $03, $01, $00, $06, $05, $0A
+    db $20, $06, $03, $01, $00, $06, $05, $0A
     db $0D, $0D, $0F, $13, $17, $19, $1C, $20
 
 ; round(128 * 10^(-dB / 20))
@@ -67,15 +67,10 @@ Noise:
     db $14,$12,$10,$0E,$0D,$0B,$0A,$09
     db $08,$07,$06,$06,$05,$05,$04,$04,$03
 
-; Base volumes for noise complement channel
-; TODO: eliminate dupe table if it doesn't vary from .volumeTable
-.complementVolumeTable:
-    db $00, $03, $05, $07, $09, $0c, $0e, $10
-    db $12, $15, $17, $19, $1c, $1f, $22, $25
-
-; Base volumes for noise channel
+; Base volumes for noise channels
 .volumeTable:
-    db $00, $03, $05, $07, $09, $0c, $0e, $10
+.complementVolumeTable:
+    db $00, $01, $05, $07, $09, $0c, $0e, $10
     db $12, $15, $17, $19, $1c, $1f, $22, $25
 
 

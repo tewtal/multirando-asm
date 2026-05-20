@@ -1,6 +1,9 @@
 ;  Methods exposed which control the sq0 and sq1 pulse channels
 ;  Zero-page variables used by these channels are also declared here
 SpcRegisterSelector = $89
+PulseActiveVoiceFlag = $04
+PulseInactiveVoiceFlag = $05
+PulseOutputVolume = $09
 
 ;  Sample data (TODO: rename / inline and add descriptions)
 
@@ -142,17 +145,7 @@ Pulse:
     bra ..notMuted
 
 ..muted:
-    ; KOFF voice
-    push x
-    cmp x, !Square0Offset
-    bne +
-    mov x, !Square0Flag
-    bra ++
-+
-    mov x, !Square1Flag
-++
-    call stopVoiceInX
-    pop x
+    call ._StopPulseVoices
 
     mov a, sq0StateFlags+x
     or a, #!WasMuted
@@ -174,13 +167,7 @@ Pulse:
     mov x, a
     mov a, .volumeTable+x
     pop x
-
-    ; SET VOL IN [A]
-    mov $F2,SpcRegisterSelector     ; channel volume L
-    mov $F3, a
-    inc SpcRegisterSelector
-    mov $F2,SpcRegisterSelector     ; channel volume R
-    mov $F3, a
+    mov PulseOutputVolume, a
 
     ; Prepare spc pitch
     mov a, sq0RealPeriodLo+x
@@ -190,6 +177,15 @@ Pulse:
 
     call CalcPitch
     call ._CalcSRCN
+    call ._SelectPulseVoice
+
+    ; SET VOL IN [A]
+    mov a, PulseOutputVolume
+    mov $F2,SpcRegisterSelector     ; channel volume L
+    mov $F3, a
+    inc SpcRegisterSelector
+    mov $F2,SpcRegisterSelector     ; channel volume R
+    mov $F3, a
 
     mov a, sq0Duty+x
     asl a : asl a   ;  Shift duty into bits 0000_dd00
@@ -207,19 +203,11 @@ Pulse:
     mov $f2, SpcRegisterSelector
     mov $f3, PitchLo
 
-    mov a, sq0StateFlags+x
-    and a, #!WasMuted
-    beq ..end
-
-    ; KON voice
+    ; KOFF the inactive range voice and KON the active range voice.
     push x
-    cmp x, !Square0Offset
-    bne +
-    mov x, !Square0Flag
-    bra ++
-+
-    mov x, !Square1Flag
-++
+    mov x, PulseInactiveVoiceFlag
+    call stopVoiceInX
+    mov x, PulseActiveVoiceFlag
     call playVoiceInX
     pop x
 
@@ -228,6 +216,57 @@ Pulse:
     mov sq0StateFlags+x, a
 ..end:
 ret
+
+._SelectPulseVoice:
+    cmp x, !Square0Offset
+    bne ..square1
+
+    mov a, sq0Srcn+x
+    bne ..square0_250Hz
+
+..square0_2kHz:
+    mov SpcRegisterSelector, !Square0Offset
+    mov PulseActiveVoiceFlag, !Square0Flag
+    mov PulseInactiveVoiceFlag, !Square0AltFlag
+    ret
+
+..square0_250Hz:
+    mov SpcRegisterSelector, !Square0AltOffset
+    mov PulseActiveVoiceFlag, !Square0AltFlag
+    mov PulseInactiveVoiceFlag, !Square0Flag
+    ret
+
+..square1:
+    mov a, sq0Srcn+x
+    bne ..square1_250Hz
+
+..square1_2kHz:
+    mov SpcRegisterSelector, !Square1Offset
+    mov PulseActiveVoiceFlag, !Square1Flag
+    mov PulseInactiveVoiceFlag, !Square1AltFlag
+    ret
+
+..square1_250Hz:
+    mov SpcRegisterSelector, !Square1AltOffset
+    mov PulseActiveVoiceFlag, !Square1AltFlag
+    mov PulseInactiveVoiceFlag, !Square1Flag
+    ret
+
+._StopPulseVoices:
+    push x
+    cmp x, !Square0Offset
+    bne ..square1
+
+    mov x, !BothSquare0s
+    call stopVoiceInX
+    pop x
+    ret
+
+..square1:
+    mov x, !BothSquare1s
+    call stopVoiceInX
+    pop x
+    ret
 
 
 .Envelope:
@@ -613,25 +652,22 @@ ret
 
     ; Emulate pulse sequencer restart by stopping now, then letting
     ; UpdateOutput recalc SRCN/pitch and KON after the DSP regs are current.
-    push x
-    mov x, SpcRegisterSelector
-    call stopVoiceInX
-    pop x
-    cmp x, !Square0Offset
-    beq ...mute0
-...mute1:
-    set1 !sq1WasMutedFlag
-    bra +
-...mute0:
-    set1 !sq0WasMutedFlag
-+
+    call ._StopPulseVoices
+    mov NeedToRun, #$01     ; TODO: Verify
 
     ; //The envelope is also restarted.
     ; _envelope.ResetEnvelope();
     ;  Set reloadSweep = true
-    mov a, sq0StateFlags+x
-    or a, #!EnvelopeStart
-    mov sq0StateFlags+x, a
+    cmp x, !Square0Offset
+    beq ...mute0
+...mute1:
+    set1 !sq1WasMutedFlag
+    set1 !sq1EnvelopeStartFlag
+    bra +
+...mute0:
+    set1 !sq0WasMutedFlag
+    set1 !sq0EnvelopeStartFlag
++
 
     pop y
     jmp ProcessWrites_handlerReturn
