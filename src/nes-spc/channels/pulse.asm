@@ -617,21 +617,20 @@ ret
     mov x, SpcRegisterSelector
     call stopVoiceInX
     pop x
-    cmp x, !Square0Offset
-    beq ...mute0
-...mute1:
-    set1 !sq1WasMutedFlag
-    bra +
-...mute0:
-    set1 !sq0WasMutedFlag
-+
 
     ; //The envelope is also restarted.
     ; _envelope.ResetEnvelope();
     ;  Set reloadSweep = true
-    mov a, sq0StateFlags+x
-    or a, #!EnvelopeStart
-    mov sq0StateFlags+x, a
+    cmp x, !Square0Offset
+    beq ...mute0
+...mute1:
+    set1 !sq1WasMutedFlag
+    set1 !sq1EnvelopeStartFlag
+    bra +
+...mute0:
+    set1 !sq0WasMutedFlag
+    set1 !sq0EnvelopeStartFlag
++
 
     pop y
     jmp ProcessWrites_handlerReturn

@@ -18,7 +18,7 @@ org !B7+$ec46 : jsr WriteAPUControl
 org !B0+$9be5 : jsr WriteAPUControl
 org !B0+$9bea : jsr WriteAPUControl
 
-; org !B0+$9ed4 : db $15, $15, $15, $15   ; DEBUG: max volumes
+; org !B0+$9ed4 : db $1f, $1f, $1f, $1f   ; DEBUG: max volumes
 ; org !B0+$9ed8 : db $00, $00, $00, $00   ; DEBUG: change noise frequency noise for comparison
 ; org !B0+$9edc : db $08, $08, $08, $08   ; DEBUG: max length noise for ow song for comparison
 
