@@ -10,17 +10,17 @@ pulse1: incsrc "../samples/pl1a-1.asm"  ;  f = 2kHz
 pulse2: incsrc "../samples/pl1a-2.asm"  ;  f = 2kHz
 pulse3: incsrc "../samples/pl1a-3.asm"  ;  f = 2kHz
 
-; 2 samples - SRCN 1
-pulse0d: incsrc "../samples/pl1-0.asm"  ;  f = 1kHz
-pulse1d: incsrc "../samples/pl1-1.asm"  ;  f = 1kHz
-pulse2d: incsrc "../samples/pl1-2.asm"  ;  f = 1kHz
-pulse3d: incsrc "../samples/pl1-3.asm"  ;  f = 1kHz
+; ; 2 samples - SRCN 1
+; pulse0d: incsrc "../samples/pl1-0.asm"  ;  f = 1kHz
+; pulse1d: incsrc "../samples/pl1-1.asm"  ;  f = 1kHz
+; pulse2d: incsrc "../samples/pl1-2.asm"  ;  f = 1kHz
+; pulse3d: incsrc "../samples/pl1-3.asm"  ;  f = 1kHz
 
-; 4 samples - SRCN 2
-pulse0c: incsrc "../samples/pl2-0.asm"  ;  f = 500Hz
-pulse1c: incsrc "../samples/pl2-1.asm"  ;  f = 500Hz
-pulse2c: incsrc "../samples/pl2-2.asm"  ;  f = 500Hz
-pulse3c: incsrc "../samples/pl2-3.asm"  ;  f = 500Hz
+; ; 4 samples - SRCN 2
+; pulse0c: incsrc "../samples/pl2-0.asm"  ;  f = 500Hz
+; pulse1c: incsrc "../samples/pl2-1.asm"  ;  f = 500Hz
+; pulse2c: incsrc "../samples/pl2-2.asm"  ;  f = 500Hz
+; pulse3c: incsrc "../samples/pl2-3.asm"  ;  f = 500Hz
 
 ; 8 samples - SRCN 3
 pulse0b: incsrc "../samples/pl3-0.asm"  ;  f = 250Hz
@@ -122,17 +122,18 @@ Pulse:
     mov x, !Square1Offset
     mov SpcRegisterSelector, !Square1Offset
     bra .UpdateOutput_Start
-.UpdateOutput
+.UpdateOutput  ; Cycles: 7.
     mov x, !Square0Offset
     mov SpcRegisterSelector, !Square0Offset
-..Start:
+..Start:  ; Cycles: 8 -> ..sweepCheck from high byte; 14 -> ..sweepCheck from low byte;
+          ;         16 -> ..muted.
     ;  if (_realPeriod < 8 || (!_sweepNegate && _sweepTargetPeriod > 0x7FF))
     mov a, sq0RealPeriodHi+x
     bne ..sweepCheck
     mov a, sq0RealPeriodLo+x
     cmp a, #$09
     !blt ..muted     ; if real period < 8, muted
-..sweepCheck:
+..sweepCheck:  ; Cycles: 10 -> ..notMuted from sweep negate; 18 -> ..muted; 20 -> ..notMuted.
     mov a, sq0StateFlags+x
     and a, #!SweepNegate
     bne ..notMuted  ; if sweepNegate, not muted
@@ -141,16 +142,16 @@ Pulse:
     bpl ..muted     ; if target period > 0x7ff, muted
     bra ..notMuted
 
-..muted:
+..muted:  ; Cycles: 10 -> +; 14 -> ++.
     ; KOFF voice
     push x
     cmp x, !Square0Offset
     bne +
     mov x, !Square0Flag
     bra ++
-+
++  ; Cycles: 2.
     mov x, !Square1Flag
-++
+++  ; Cycles: 27.
     call stopVoiceInX
     pop x
 
@@ -159,7 +160,7 @@ Pulse:
     mov sq0StateFlags+x, a      ;  Track that output has stopped so we can KON the next note
     bra ..end
 
-..notMuted:
+..notMuted:  ; Cycles: 8 -> ..muted; 16 -> ..notConstant; 22 -> volume path.
     mov a, sq0LengthCounter+x
     beq ..muted
     mov a, sq0StateFlags+x
@@ -167,9 +168,9 @@ Pulse:
     beq ..notConstant
     mov a, sq0Volume+x
     bra +
-..notConstant:
+..notConstant:  ; Cycles: 4.
     mov a, sq0EnvelopeCounter+x
-+
++  ; Cycles: 135 -> ..end; 143 -> +; 147 -> ++.
     push x
     mov x, a
     mov a, .volumeTable+x
@@ -217,16 +218,16 @@ Pulse:
     bne +
     mov x, !Square0Flag
     bra ++
-+
++  ; Cycles: 2.
     mov x, !Square1Flag
-++
+++  ; Cycles: 23.
     call playVoiceInX
     pop x
 
     mov a, sq0StateFlags+x
     and a, #~!WasMuted
     mov sq0StateFlags+x, a
-..end:
+..end:  ; Cycles: 5.
 ret
 
 
@@ -467,34 +468,6 @@ ret
     mov sq0Srcn+x, a             ; store result
 ret
 
-
-
-;  Returns frequency-appropriate SRCN in [A]
-;  Modifies PitchHi and PitchLo to account for the sample chosen
-._CalcSRCN_dep:
-    mov     a, #$00              ; SRCN = 0
-
-    cmp     PitchHi, #$20
-    bcs     ..done              ; >= $2000 → SRCN 0
-
-    inc     a                  ; SRCN = 1
-    asl     PitchLo
-    rol     PitchHi
-    cmp     PitchHi, #$20
-    bcs     ..done
-
-    inc     a                  ; SRCN = 2
-    asl     PitchLo
-    rol     PitchHi
-    cmp     PitchHi, #$20
-    bcs     ..done
-
-    inc     a                  ; SRCN = 3
-    asl     PitchLo
-    rol     PitchHi
-..done:  ; A = SRCN (0–3)
-    mov sq0Srcn+x, a             ; store result
-ret
 
 ._UpdateTargetPeriod:
     ;  Load period heap memory

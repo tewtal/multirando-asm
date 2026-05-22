@@ -16,7 +16,7 @@
 ;           License:  CC BY 4.0
 
 
-print "spc init driver start = ", pc
+print "apu init driver start = ", pc
 spc_init_driver:
     pha : phx : phy : phb : php
     
@@ -30,7 +30,7 @@ spc_init_driver:
 
 incsrc "./apu-send.asm"
 
-print "spc-driver = ", pc
+print "apu-driver = ", pc
 spc_driver:
 arch spc700-inline
 org $1000
@@ -627,10 +627,14 @@ ret
 
 ;  TODO: rewrite / rename vars and DOCUMENT
 set_directory_lut:
-		dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
-		dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
-		dw	pulse2,pulse2, pulse2d,pulse2d, pulse2c,pulse2c, pulse2b,pulse2b
-		dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
+		; dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
+		; dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
+		; dw	pulse2,pulse2, pulse2d,pulse2d, pulse2c,pulse2c, pulse2b,pulse2b
+		; dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
+		dw	pulse0,pulse0, pulse0,pulse0, pulse0b,pulse0b, pulse0b,pulse0b
+		dw	pulse1,pulse1, pulse1,pulse1, pulse1b,pulse1b, pulse1b,pulse1b
+		dw	pulse2,pulse2, pulse2,pulse2, pulse2b,pulse2b, pulse2b,pulse2b
+		dw	pulse3,pulse3, pulse3,pulse3, pulse3b,pulse3b, pulse3b,pulse3b
                 dw      tri_samp0,tri_samp0, tri_samp0, tri_samp0, tri_samp3, tri_samp3, tri_samp3, tri_samp3
                 ; dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
                 dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
@@ -646,7 +650,7 @@ lengthCounterTable:
 PitchTable_Index0d: incsrc "apu-pitch-table.asm"
 
 spc_driver_end:
-print "spc driver end = ", pc
+print "apu driver end = ", pc
 dw $0000
 dw $1000
 arch 65816

@@ -80,10 +80,10 @@ Noise:
 ;.GetState(?)
 
 ;  Sends current noise channel state to spc control registers
-.UpdateOutput
+.UpdateOutput  ; Cycles: 7.
     mov x, !NoiseOffset
     mov SpcRegisterSelector, !NoiseOffset
-..Start:
+..Start:  ; Cycles: 8 -> ..muted; 16 -> ..notConstant; 22 -> volume path.
     ;  Noise output is only conditionally muted by a zeroed length counter;
     ;  its output is otherwise controlled by its envelope.
     mov a, sq0LengthCounter+x
@@ -94,7 +94,7 @@ Noise:
     mov a, sq0Volume+x
     bra +
 
-..muted:
+..muted:  ; Cycles: 46.
     ;  then set channel vol -> 0
     mov a, #$00
 
@@ -111,9 +111,9 @@ Noise:
     mov $F3, a
     bra ..end
 
-..notConstant:
+..notConstant:  ; Cycles: 4.
     mov a, sq0EnvelopeCounter+x
-+
++  ; Cycles: 142.
 
     push a  ; preserve volume to set
 
@@ -170,7 +170,7 @@ Noise:
     mov a, Noise_frequencyTable+x
     mov $F3, a
     pop x
-..end:
+..end:  ; Cycles: 5.
 ret
 
 

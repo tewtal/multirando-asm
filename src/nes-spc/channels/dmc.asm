@@ -63,7 +63,7 @@ DMC:
 ;.GetOutput(?)
 ;.GetState(?)
 
-.Run:
+.Run:  ; Cycles: 8 -> ..prevLength0; 14 -> ..turnOff; 16 -> ..end.
     ; $4015 write check; here we respond to SetEnabled(yes|no)
     ; if not lengthenabledflag
     mov1 c, !dmcPreviousLengthEnabledFlag
@@ -72,12 +72,12 @@ DMC:
     bcc ..turnOff   ;  if LengthEnabled has done 1->0
     bra ..end       ; no change in state
 
-..prevLength0:
+..prevLength0:  ; Cycles: 8 -> ..initSample; 10 -> ..end.
     mov1 c, !dmcLengthEnabledFlag
     bcs ..initSample   ; ask if LengthEnabled has done 0->1
     bra ..end       ; no change in state
 
-..turnOff:
+..turnOff:  ; Cycles: 28.
     ;   disabledelay -> nonzero
     ;   needtorun -> true
     mov dmcBytesRemainingLo, #$00
@@ -88,7 +88,8 @@ DMC:
     bra ..updateState
 
     ; else if sample not currently playing
-..initSample:
+..initSample:  ; Cycles: 10 -> ..updateState while active; 18 -> ..updateState with no length;
+               ;         28 -> ..turnOn; 34 -> ..updateState when sample missing.
     mov a, dmcBytesRemainingLo
     or  a, dmcBytesRemainingHi
     bne ..updateState          ; Mesen: enable while active does not restart
@@ -103,7 +104,7 @@ DMC:
     set1 !dmcSilenceFlag
     bra ..updateState
 
-..turnOn:
+..turnOn:  ; Cycles: 14.
     ;   startdelay -> nonzero
     ;   needtorun -> true
     clr1 !dmcSilenceFlag
@@ -113,18 +114,18 @@ DMC:
     ; else (implied)
     ;   game tried to start a sample when one was already playing; IGNORE IT
 
-..updateState:
+..updateState:  ; Cycles: 14.
     ;  Manage state after acting on it above
     mov1 c, !dmcLengthEnabledFlag
     mov1 !dmcPreviousLengthEnabledFlag, c
     bra ..bye
 
-..end:
+..end:  ; Cycles: 10 -> ..bye; 12 if length flag is cleared.
     mov a, dmcBytesRemainingLo
     or a, dmcBytesRemainingHi
     bne ..bye
     clr1 !dmcLengthEnabledFlag
-..bye:
+..bye:  ; Cycles: 5.
 ret
 
 

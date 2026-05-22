@@ -64,17 +64,17 @@ Triangle:
 ;.GetState(?)
 
 ;  Sends current triangle channel state to spc control registers
-.UpdateOutput
+.UpdateOutput  ; Cycles: 7.
     mov x, !TriangleOffset
     mov SpcRegisterSelector, !TriangleOffset
-..Start:
+..Start:  ; Cycles: 7 -> ..muted from length; 10 -> ..muted from linear; 12 -> ..notMuted.
     ; if(_lengthCounter.GetStatus() && _linearCounter > 0), -> mute output
     mov a, triLengthCounter
     beq ..muted
     mov a, triLinearCounter
     bne ..notMuted
 
-..muted:
+..muted:  ; Cycles: 22.
     ; KOFF voice
     mov $F2, !KOFF
     mov $F3, !TriangleFlag
@@ -83,7 +83,7 @@ Triangle:
     set1 !triWasMutedFlag   ;  Track that output has stopped so we can KON the next note
     bra ..end
 
-..notMuted:
+..notMuted:  ; Cycles: 83 -> ..end; 95 if KON path runs.
     ; Prepare spc pitch
     mov a, triRealPeriodLo
     mov PeriodLo, a
@@ -112,7 +112,7 @@ Triangle:
     mov x,!TriangleFlag
     call playVoiceInX
     clr1 !triWasMutedFlag
-..end:
+..end:  ; Cycles: 5.
 ret
 
 
