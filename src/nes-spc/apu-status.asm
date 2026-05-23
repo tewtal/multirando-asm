@@ -9,30 +9,33 @@ Status:
 
     mov BitwiseScratch, a
 
-    ;  72 cycles
     mov a, #$00
     mov1 c, BitwiseScratch.0
     mov1 !sq0LengthEnabledFlag, c
     bcs +
     mov sq0LengthCounter, a
+    mov sq0LengthReloadValue, a
 +
 
     mov1 c, BitwiseScratch.1
     mov1 !sq1LengthEnabledFlag, c
     bcs +
     mov sq1LengthCounter, a
+    mov sq1LengthReloadValue, a
 +
 
     mov1 c, BitwiseScratch.2
     mov1 !triLengthEnabledFlag, c
     bcs +
     mov triLengthCounter, a
+    mov triLengthReloadValue, a
 +
 
     mov1 c, BitwiseScratch.3
     mov1 !noiseLengthEnabledFlag, c
     bcs +
     mov noiseLengthCounter, a
+    mov noiseLengthReloadValue, a
 +
 
     mov1 c, BitwiseScratch.4
