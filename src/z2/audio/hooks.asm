@@ -1,6 +1,7 @@
 optimize address ram
 
 !B0 = ((!BASE_BANK)<<16)
+!B5 = ((!BASE_BANK+$5)<<16)
 !B6 = ((!BASE_BANK+$6)<<16)
 !B7 = ((!BASE_BANK+$7)<<16)
 
@@ -8,7 +9,12 @@ optimize address ram
 org !B6+$8010 : jsr AudioRoutine1 : rts
 org !B6+$9022 : jsr AudioRoutine2 : rts
 
+;  Hooks for short-circuited status writes that skip AudioRoutineX hooks
+org !B6+$9006 : jsr AudioShortCircuitedStatus_WriteA
+
 ;  APU control calls
+org !B5+$A6B3 : jsr Apu_Control_WriteA
+org !B5+$b3ed : jsr Apu_Control_WriteA
 org !B6+$8007 : jsr Apu_Control_WriteA
 org !B6+$9261 : jsr Apu_Control_WriteA
 org !B6+$9292 : jsr Apu_Control_WriteA

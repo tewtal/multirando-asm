@@ -77,6 +77,7 @@ NMIEnd_Code1:
     plp : plb : ply : plx : pla
     rti
 
+;  After z2 sound routine 1, sends the register writes batch to the apu for processing
 AudioRoutine1:
     jsl SnesUpdateAudio
 
@@ -86,6 +87,7 @@ AudioRoutine1:
     STA      $EA                       ; 0x18024 $8014 85 EA
 rts
 
+;  After z2 sound routine 2, sends the register writes batch to the apu for processing
 AudioRoutine2:
     jsl SnesUpdateAudio
 
@@ -99,6 +101,11 @@ AudioRoutine2:
     STA      $E9                       ; 0x1903e $902E 85 E9
 rts
 
+;  Handles one-off $4015 writes that do not call the main sound routines (e.g., when game is paused)
+AudioShortCircuitedStatus_WriteA:
+    jsr Apu_Control_WriteA
+    jsl SnesUpdateAudio
+rts
 
 ; Emulate MMC1 PRG bank switch, bank number in A
 ; This instead uses the SNES banks to simulate NES PRG banking
