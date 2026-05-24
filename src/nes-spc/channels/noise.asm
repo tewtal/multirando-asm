@@ -12,16 +12,12 @@ noiseComplementSampleIndex = $c0
 noiseComplementLfsr        = $c1
 
 noisePeriod = $c4
-; noiseRealPeriodHi = $c5
 noiseVolume     = $c6
 noiseEnvelopeDivider = $c7
 noiseEnvelopeCounter = $c8
 noiseLengthCounter   = $c9
 noiseLengthReloadValue = $ca
 noiseLengthPreviousValue = $cb
-; noiseTargetPeriodLo = $cc
-; noiseTargetPeriodHi = $cd
-; noiseSrcn           = $ce
 
 noiseStateFlags = $cf  ;  Channel state boolean flags:
 ;  d--- ---- :
@@ -53,19 +49,11 @@ Noise:
     db $3f, $3f, $3f, $3f, $3f, $3e, $3e, $3d
     db $3c, $3b, $3a, $38, $36, $35, $32, $2f 
 
-; Amount in dB to decrease complement channel output
-; based on current noise frequency $00 -> $0f
+; Q7 gain to apply to complement channel output
+; based on current noise period $00 -> $0f
 .complementAttenuationTable:
-    db $20, $06, $03, $01, $00, $06, $05, $0A
-    db $0D, $0D, $0F, $13, $17, $19, $1C, $20
-
-; round(128 * 10^(-dB / 20))
-; for dB 0..32
-.complementAttenuationGainTable:
-    db $80,$72,$66,$5B,$51,$48,$40,$39
-    db $33,$2D,$29,$24,$20,$1D,$1A,$17
-    db $14,$12,$10,$0E,$0D,$0B,$0A,$09
-    db $08,$07,$06,$06,$05,$05,$04,$04,$03
+    db $03, $40, $5B, $72, $80, $40, $48, $29
+    db $1D, $1D, $17, $0E, $09, $07, $05, $03
 
 ; Base volumes for noise channels
 .volumeTable:
@@ -113,7 +101,7 @@ Noise:
 
 ..notConstant:  ; Cycles: 4.
     mov a, sq0EnvelopeCounter+x
-+  ; Cycles: 142.
++  ; Cycles: 135.
 
     push a  ; preserve volume to set
 
@@ -144,11 +132,9 @@ Noise:
     mov a, Noise_complementVolumeTable+x
     mov GainComputeResult, a    ; base volume
 
-    ;  Lookup attenuation value for the current noise period
+    ;  Lookup attenuation gain for the current noise period
     mov x, noisePeriod
     mov a, Noise_complementAttenuationTable+x
-    mov x, a
-    mov a, Noise_complementAttenuationGainTable+x
     mov y, a
 
     mov a, GainComputeResult
