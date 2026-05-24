@@ -427,6 +427,18 @@ Dmc:
     plp
     rts
 
+.Counter
+
+!apuReg = #$11 ;$4011
+
+..WriteA:
+    php
+    xba
+    lda !apuReg
+    jsr EnqueueApuWrite
+    plp
+    rts
+
 .Address
 
 !apuReg = #$12 ;$4012

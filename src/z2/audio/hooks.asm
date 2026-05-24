@@ -46,6 +46,7 @@ org !B6+$98f5 : jsr Sq0_Duty_WriteA
 org !B6+$99c8 : jsr Sq0_Duty_WriteA
 org !B6+$9acb : jsr Sq0_Duty_WriteA
 org !B6+$9b45 : jsr Sq0_Duty_WriteA
+org !B7+$CF83 : jsr Sq0_Duty_WriteY
 
 org !B6+$8112 : jsr Sq0_Sweep_WriteY
 org !B6+$8243 : jsr Sq0_Sweep_WriteA
@@ -80,8 +81,6 @@ org !B6+$946a : jsr Sq0_Length_WriteA
 org !B6+$98b2 : jsr Sq0_Length_WriteA
 org !B6+$9a0a : jsr Sq0_Length_WriteA
 org !B6+$9abf : jsr Sq0_Length_WriteA
-
-org !B7+$cf83 : jsr Sq0_Duty_WriteY
 
 ; sta $40[$00 -> $15] : 8d [00] 40  ; vary [] param up to $15
 ; sta $40[$00 -> $15],x : 9d [00] 40
@@ -160,5 +159,6 @@ org !B6+$9B0F : jsr Noise_Length_WriteA
 
 ;  DMC calls
 org !B6+$925C : jsr Dmc_Frequency_WriteA
+org !B5+$A6AE : jsr Dmc_Counter_WriteA
 org !B6+$9251 : jsr Dmc_Address_WriteA
 org !B6+$9257 : jsr Dmc_Length_WriteA
