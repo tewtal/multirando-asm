@@ -64,16 +64,13 @@ Noise:
 
 ;  Methods
 
-;.GetOutput(?)
-;.GetState(?)
-
 ;  Sends current noise channel state to spc control registers
 .UpdateOutput  ; Cycles: 7.
     mov x, !NoiseOffset
     mov SpcRegisterSelector, !NoiseOffset
 ..Start:  ; Cycles: 8 -> ..muted; 16 -> ..notConstant; 22 -> volume path.
     ;  Noise output is only conditionally muted by a zeroed length counter;
-    ;  its output is otherwise controlled by its envelope.
+    ;  its output is otherwise controlled by its envelope
     mov a, sq0LengthCounter+x
     beq ..muted
     mov a, sq0StateFlags+x
@@ -119,12 +116,6 @@ Noise:
 
     pop a   ; restore volume to set
 
-    ; ; ; push x
-    ; ; ; mov x, a
-    ; ; ; mov a, Noise_complementVolumeTable+x
-    ; ; ; pop x
-
-    ;  Testing genned replacement:
     GainComputeResult = $0a
 
     push x
@@ -219,7 +210,6 @@ ret
     mov sq0EnvelopeDivider+x, a     ;  divider = volume
 
     mov a, sq0EnvelopeCounter+x
-    ; bmi ...counterNotPositive   ;  should not be needed
     beq ...counterNotPositive
     dec sq0EnvelopeCounter+x        ;  counter--
     bra ...end
@@ -245,10 +235,6 @@ ret
 
 .Volume:
 
-..Get:
-    ;  Just returns the length counter OR the volume if constantvolume==true (TODO:)
-ret
-
 .LengthCounter:
 
 ;  Tick the noise channel's length counter
@@ -256,15 +242,11 @@ ret
     mov x, !NoiseOffset
 ...Start:
     mov a, sq0LengthCounter+x
-    ; bmi ...end  ; should not be needed
     beq ...end
     mov a, sq0StateFlags+x
     and a, #!LengthHalt
     bne ...end                      ;  if counter > 0 && !halt, then
     dec sq0LengthCounter+x
-
-    ; call ._updateComplementLoopPoint    ;  Randomly cycle the noise complement
-    ;                                     ;  channel loop point on every length tick
 ...end:
 ret
 
@@ -316,14 +298,8 @@ ret
     mov a, #$00
     mov sq0LengthReloadValue+x, a   ; reload value = 0
 ...end:
-    ;  TODO: 
-    ; _halt = _newHaltValue;
 ret
 
-
-
-;..SetEnabled(?)
-;..GetStatus(?)
 
 .Period:
 

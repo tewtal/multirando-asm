@@ -9,10 +9,12 @@
 ;           Cycle accurate detailed reference on the NES APU
 ;    -  https://github.com/SourMesen/Mesen2/blob/master/Core/NES/APU
 ;           A good implementation of the above spec in a high-level language
+;           License:  GPL-3.0
 ;    -  https://github.com/Myself086/Project-Nested/tree/master/Assembly/Project/Spc700
 ;           Earlier implementation of NES APU functionality on the spc-700
+;           License:  MIT
 ;    -  https://github.com/bbbradsmith/NESertGolfing/blob/snes/spc/
-;           Noise channel sample mixin from Brad Smith's NESertGolfing snes up-port
+;           Noise channel mixin complement idea from Brad Smith's NESertGolfing snes up-port
 ;           License:  CC BY 4.0
 
 
@@ -143,10 +145,12 @@ TimerLatchIndex = $80       ;  Cyclic latch_table lookup providing constant 240H
 WritesJumpPointer = $83     ;  2-byte address storing the pointer to the write handler
 ShiftResult       = $85     ;  2-byte heap variable used by pulse channels
 TickStepOccurring = $87
+; $88: unused
 ; $89 reserved by Pulse
 NeedToRun         = $8a
 ; $8b, $8c  reserved by Frame Counter
 voicesPlaying   = $8d ; Voice bit flags tracking which are currently playing
+; $8e: unused
 ; $8f reserved by Frame Counter
 
 start:
@@ -211,8 +215,6 @@ start:
         ;  Init triangle voice
         mov $F2, !TriangleSRCN            ; sample # for triangle
         mov $F3, #triangle_sample_num
-
-        ;  Init triangle fixed volume
         mov a, !TriangleVolume
         mov $F2, !TriangleVolumeL     ; channel volume L
         mov $F3, a
@@ -235,7 +237,6 @@ start:
 
         mov $F2,!KON
         mov $F3,#%00101111      ;  KON sq0, sq1, tri, noise, and noise complement
-        ; mov $F3,#%00001111      ;  DEBUG: remove noise complement for now
 
         mov $F2,#$0C            ; main vol L
         mov $F3,#$7F
@@ -253,15 +254,6 @@ start:
 
         ; Zero port 4 for CPU-side optimization
         mov $F7,#0
-
-        ;  Clear internal state [not needed; zp is zeroed out already]
-;         mov x, #$60
-; ..clearState:
-;         mov a, #$00
-;         mov (x+), a
-;         cmp x, #$c0
-;         bne ..clearState
-;         bra ..done
 ..done:
         bra Start240
 
@@ -317,10 +309,10 @@ WaitTick:
         bne TimerExpired
 
 cpucheck:
-        ; --- Check and process cpu sends
+        ; --- Check and process cpu sends ---
         mov a,$F4
-        cmp a,#$d7              ; wait for port 0 to be $d7 (CPU ready)    --  this seems to take the bulk of the cycles, which makes sense
-        beq apurecv  ;  New cpu data waiting to send
+        cmp a,#$d7  ; wait for port 0 to be $d7 (CPU ready)
+        beq apurecv ; new cpu data waiting to send
         bra WaitTick
 
 TimerExpired:
@@ -391,7 +383,8 @@ ProcessWrites:
     call CheckInterimTick   ;  Ensure all of the prior frames ticks have been processed before processing new writes
 
     ;  Run call precedes all register writes.  
-    ;  Instead of calling it for each queued write, try doing it once at the start.
+    ;  Instead of calling it for each queued write which would
+    ;  take too long, we do it once at the start
     call Run
 
     mov y, #$00
@@ -412,7 +405,7 @@ ProcessWrites:
     mov a, ValuesQueue+y    ;  Load param in [A]
     mov x, #$00
     ;jmp [WritesJumpPointer+x]  ;  Handler specified in jump table
-    db $1f, WritesJumpPointer, $00
+    db $1f, WritesJumpPointer, $00  ;  ASAR doesn't handle this spc syntax correctly; db the opcode directly
 
 .handlerReturn:
     inc y
@@ -456,19 +449,6 @@ ret
 ; Frame tick routine (runs at 240 Hz)
 ;------------------------------------
 TickHandler:
-    ;  General structure:
-    ;  1.  Housekeeping:
-    ;       DONE:  increment frame counter cycle number (0->3 or 4)
-    ;       DONE:  use current $4017 mode value and fccn index above to select a lookup table value:
-    ;           - l - l    OR    - l - - l 
-    ;           e e e e          e e e - e
-    ;       - call subroutines (in large beq case statement?) for all 4 channels:
-    ;           tickenvelope, ticklinearcounter, ticklengthcounter, ticksweep
-
-    ;  DONE: Find out why Mesen2 clocks length counters on frame numbers 0 and 2 (and not 1, 3, or 4)
-        ;  because $4017 mode $80 performs immediate half-frame tick, then blocks FC tick for 2 cycles (0th and 1st)
-        ;  just implement frameCounter->Run as mesen2 does and verify results
-
     ;  Zero page memory allocations
     ;  $00->$1e: Reserved for immediate heap access for subroutines (if needed)
     ;  $1f:      Register writes queue length
@@ -491,12 +471,16 @@ TickHandler:
 ret
 
 
+;==========~ Subroutines ~========
+;  Subroutines to support the main
+;  processing loop
+;=================================
 
-;-------------------------------------------------
+;---------------------------------
 ; CalcPitch
-; Input : PeriodLo/PeriodHi
-; Output: PitchLo/PitchHi
-;-------------------------------------------------
+; Input : PeriodLo / PeriodHi
+; Output: PitchLo  / PitchHi
+;---------------------------------
 CalcPitch:
     !pitchtable = PitchTable_Index0d-$1a
     PeriodLo = $02
@@ -525,12 +509,9 @@ CalcPitch:
     ret
 
 
-;==========~ Subroutines ~========
-;  Subroutines to support the main
-;  processing loop
-;=================================
+;  Used on game transitions to silence audio and reset the spc
 to_reset:
-    pop a : pop a  ;  Remove call stack entry [check]
+    pop a : pop a  ;  Remove call stack entry
     mov     $F2,!KOFF
     mov     $F3,#$FF        ;  KOFF all notes
 
@@ -573,6 +554,8 @@ stopVoiceInX:
     mov $F3,x      ;  Update selected voice only
 ret
 
+
+;  Clears internal state at driver initialization
 reset_dsp:
     mov y,#0
     mov x,#0
@@ -630,49 +613,44 @@ clear5:
 ret
 
 
-;======================================
+;  Initializes the SRCN sample lookup directory table
 set_directory:
-        mov x, #(end_directory_lut-set_directory_lut-1)
+    mov x, #(end_directory_lut-set_directory_lut-1)
 
 set_directory_loop:
-        mov	a,set_directory_lut+x
-        mov	$0200+x,a
-        dec	x
-        bpl	set_directory_loop
+    mov	a,set_directory_lut+x
+    mov	$0200+x,a
+    dec	x
+    bpl	set_directory_loop
 
-        ;  Append dynamic dmc entries from $4020 (see spc.asm:270)
-        mov x, #0
+    ;  Append dynamic dmc entries from $4020
+    mov x, #0
 
 add_dynamic_entries:
-        mov a,$4020+x
-        mov ($200+end_directory_lut-set_directory_lut)+x,a
-        inc x
-        cmp x,#$40
-        bne add_dynamic_entries
-ret
+    mov a,$4020+x
+    mov ($200+end_directory_lut-set_directory_lut)+x,a
+    inc x
+    cmp x,#$40
+    bne add_dynamic_entries
+    ret
 
 
 ;  TODO: rewrite / rename vars and DOCUMENT
 set_directory_lut:
-		; dw	pulse0,pulse0, pulse0d,pulse0d, pulse0c,pulse0c, pulse0b,pulse0b
-		; dw	pulse1,pulse1, pulse1d,pulse1d, pulse1c,pulse1c, pulse1b,pulse1b
-		; dw	pulse2,pulse2, pulse2d,pulse2d, pulse2c,pulse2c, pulse2b,pulse2b
-		; dw	pulse3,pulse3, pulse3d,pulse3d, pulse3c,pulse3c, pulse3b,pulse3b
-		dw	pulse0,pulse0, pulse0,pulse0, pulse0b,pulse0b, pulse0b,pulse0b
-		dw	pulse1,pulse1, pulse1,pulse1, pulse1b,pulse1b, pulse1b,pulse1b
-		dw	pulse2,pulse2, pulse2,pulse2, pulse2b,pulse2b, pulse2b,pulse2b
-		dw	pulse3,pulse3, pulse3,pulse3, pulse3b,pulse3b, pulse3b,pulse3b
-                dw      tri_samp0,tri_samp0, tri_samp0, tri_samp0, tri_samp3, tri_samp3, tri_samp3, tri_samp3
-                ; dw      tri_samp4,tri_samp4, tri_samp5, tri_samp5, tri_samp6, tri_samp6, tri_samp7, tri_samp7
-                dw      noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
+    dw	pulse0,pulse0, pulse0,pulse0, pulse0b,pulse0b, pulse0b,pulse0b
+    dw	pulse1,pulse1, pulse1,pulse1, pulse1b,pulse1b, pulse1b,pulse1b
+    dw	pulse2,pulse2, pulse2,pulse2, pulse2b,pulse2b, pulse2b,pulse2b
+    dw	pulse3,pulse3, pulse3,pulse3, pulse3b,pulse3b, pulse3b,pulse3b
+    dw  tri_samp0,tri_samp0, tri_samp0, tri_samp0, tri_samp3, tri_samp3, tri_samp3, tri_samp3
+    dw  noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement,noise_complement
 end_directory_lut:
-
 
     triangle_sample_num = $10
     srcn_base           = $18
 
+;  NES apu length counter lookup
 lengthCounterTable:
-        db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
+    db 10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 
 PitchTable_Index0d: incsrc "apu-pitch-table.asm"
 

@@ -2,25 +2,13 @@
 ;  Zero-page variables used by these channels are also declared here
 SpcRegisterSelector = $89
 
-;  Sample data (TODO: rename / inline and add descriptions)
+;  Sample data
 
 ; 1 sample - SRCN 0
 pulse0: incsrc "../samples/pl1a-0.asm"  ;  f = 2kHz
 pulse1: incsrc "../samples/pl1a-1.asm"  ;  f = 2kHz
 pulse2: incsrc "../samples/pl1a-2.asm"  ;  f = 2kHz
 pulse3: incsrc "../samples/pl1a-3.asm"  ;  f = 2kHz
-
-; ; 2 samples - SRCN 1
-; pulse0d: incsrc "../samples/pl1-0.asm"  ;  f = 1kHz
-; pulse1d: incsrc "../samples/pl1-1.asm"  ;  f = 1kHz
-; pulse2d: incsrc "../samples/pl1-2.asm"  ;  f = 1kHz
-; pulse3d: incsrc "../samples/pl1-3.asm"  ;  f = 1kHz
-
-; ; 4 samples - SRCN 2
-; pulse0c: incsrc "../samples/pl2-0.asm"  ;  f = 500Hz
-; pulse1c: incsrc "../samples/pl2-1.asm"  ;  f = 500Hz
-; pulse2c: incsrc "../samples/pl2-2.asm"  ;  f = 500Hz
-; pulse3c: incsrc "../samples/pl2-3.asm"  ;  f = 500Hz
 
 ; 8 samples - SRCN 3
 pulse0b: incsrc "../samples/pl3-0.asm"  ;  f = 250Hz
@@ -113,9 +101,6 @@ Pulse:
 
 
 ;  Methods
-
-;.GetOutput(?)
-;.GetState(?)
 
 ;  Sends current pulse channel state to spc control registers
 .UpdateOutput2
@@ -485,7 +470,7 @@ ret
 
 ...loop:
     lsr ShiftResultHi           ; shift high byte right
-    ror ShiftResultLo             ; rotate carry into low byte
+    ror ShiftResultLo           ; rotate carry into low byte
     dec a
     bne ...loop
 ...done:
@@ -507,7 +492,6 @@ ret
     cmp x, #$00
     beq +
     dec sq0TargetPeriodLo+x     ;  sweep target period -1
-    ;  TODO: check above dec for underflow
     bra +
 
 ...add:
@@ -526,10 +510,6 @@ ret
 
 .Volume:
 
-..Get:
-    ;  Just returns the length counter OR the volume if constantvolume==true (TODO:)
-ret
-
 .LengthCounter:
 
 ;  Tick the pulse channel's length counter
@@ -540,7 +520,6 @@ ret
     mov x, !Square0Offset
 ...Start:
     mov a, sq0LengthCounter+x
-    ; bmi ...end  ; should not be needed
     beq ...end
     mov a, sq0StateFlags+x
     and a, #!LengthHalt
@@ -585,13 +564,12 @@ ret
     call ._UpdateTargetPeriod
 
     ; Emulate pulse sequencer restart by stopping now, then letting
-    ; UpdateOutput recalc SRCN/pitch and KON after the DSP regs are current.
+    ; UpdateOutput recalc SRCN/pitch and KON after the DSP regs are current
     push x
     mov x, SpcRegisterSelector
     call stopVoiceInX
     pop x
 
-    ; //The envelope is also restarted.
     ; _envelope.ResetEnvelope();
     ;  Set reloadSweep = true
     cmp x, !Square0Offset
@@ -628,14 +606,8 @@ ret
     mov a, #$00
     mov sq0LengthReloadValue+x, a   ; reload value = 0
 ...end:
-    ;  TODO: 
-    ; _halt = _newHaltValue;
 ret
 
-
-
-;..SetEnabled(?)
-;..GetStatus(?)
 
 .Period:
 
@@ -650,9 +622,3 @@ ret
     call ._UpdateTargetPeriod
 
     jmp ProcessWrites_handlerReturn
-
-;  TODO: unused?
-; ..SetHigh:
-;     mov x, !Square0Offset
-; ...Start:
-    ; ret

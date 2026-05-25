@@ -5,20 +5,19 @@
 ;  Variables
 ;  $d0->$df: DMC internal state
 
-; dmcNeedToRun = $d3
-dmcRealPeriodLo = $d4
-dmcRealPeriodHi = $d5
-dmcOutputLevel     = $d6
+dmcRealPeriodLo   = $d4
+dmcRealPeriodHi   = $d5
+dmcOutputLevel    = $d6
 dmcSampleLengthLo = $d7
 dmcSampleLengthHi = $d8
 
-dmcBytesRemainingLo  = $d9
+dmcBytesRemainingLo = $d9
 dmcBytesRemainingHi = $da
-dmcReadBuffer = $db
+dmcReadBuffer       = $db
 
 dmcCurrentIndex = $dc
-dmcCurrentAddr = $dd
-dmcSrcn           = $de
+dmcCurrentAddr  = $dd
+dmcSrcn         = $de
 
 dmcStateFlags = $df  ;  Channel state boolean flags:
 
@@ -35,8 +34,6 @@ dmcStateFlags = $df  ;  Channel state boolean flags:
 !PreviousSilence = %00010000
 !dmcPreviousSilenceFlag   = "dmcStateFlags.4"
 ; ;  ---- d--- :  Unused
-; !SweepNegate = %00001000
-; !sq0SweepNegateFlag   = "sq0StateFlags.3"
 ; ;  ---- -d-- :
 !Loop = %00000100
 !dmcLoopFlag   = "dmcStateFlags.2"
@@ -59,9 +56,6 @@ DMC:
     db $27, $2F, $35, $3A, $46, $59, $68, $8A
 
 ;  Methods
-
-;.GetOutput(?)
-;.GetState(?)
 
 .Run:  ; Cycles: 8 -> ..prevLength0; 14 -> ..turnOff; 16 -> ..end.
     ; $4015 write check; here we respond to SetEnabled(yes|no)
@@ -92,7 +86,7 @@ DMC:
                ;         28 -> ..turnOn; 34 -> ..updateState when sample missing.
     mov a, dmcBytesRemainingLo
     or  a, dmcBytesRemainingHi
-    bne ..updateState          ; Mesen: enable while active does not restart
+    bne ..updateState
 
     mov a, dmcSampleLengthLo
     or  a, dmcSampleLengthHi
@@ -112,7 +106,7 @@ DMC:
     call playVoiceInX
 
     ; else (implied)
-    ;   game tried to start a sample when one was already playing; IGNORE IT
+    ;   game tried to start a sample when one was already playing; ignore
 
 ..updateState:  ; Cycles: 14.
     ;  Manage state after acting on it above
@@ -230,7 +224,6 @@ ret
     mov dmcBytesRemainingLo, #$00
     mov dmcBytesRemainingHi, #$00
     clr1 !dmcLengthEnabledFlag
-    ; set1 !dmcSilenceFlag
     mov x, !DmcFlag
     call stopVoiceInX
 ...end:
