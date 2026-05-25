@@ -56,6 +56,7 @@ incbin "audio/boss2.brr"
 .doorunlock:
 incbin "audio/door-unlock.brr"
 .doorunlockend:
+
 db $00
 warnpc $8bffff
 

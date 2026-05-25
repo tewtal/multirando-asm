@@ -1,3 +1,4 @@
+;  TODO: Deduplicate this and move to /common/nes
 
 incsrc "../../common/nes/macros.asm"
 
@@ -60,7 +61,15 @@ waitUploadByteAck:
 rts
 
 ;  Constant
-dmc_lookup_start_pos = $4060
+dmc_lookup_aram = $4060
+
+
+;  Example dmc table (for Zelda 2):
+;  $4000-$400f:  $cc,$cf,$dc,$e1,$e7,$ea
+;  $4010-$401f:  $0f,$0f,$0f,$0f,$0f,$0f
+;  $4020-$405f:  $4014,$4014,$5631,$5631,$58b0,$58b0,$7cc2,$7cc2,$9e28,$9e28
+;                (little endian, as it appears in aram: 14 40 14 40 31 56 31 56 B0 58 B0 58 C2 7C C2 7C 28 9E 28 9E)
+;========================================
 
 spc_init_dpcm:
     pha : phx : phy : phb : php
@@ -73,17 +82,17 @@ spc_init_dpcm:
     ldy #$4000  ;  Start an upload at $4000 aram
     jsr spc_begin_upload
 
-    lda #$00
+    lda #$cc
     jsr spc_upload_byte
-    lda #$1d
+    lda #$cf
     jsr spc_upload_byte
-    lda #$20
+    lda #$dc
     jsr spc_upload_byte
-    lda #$4c
+    lda #$e1
     jsr spc_upload_byte
-    lda #$80
+    lda #$e7
     jsr spc_upload_byte
-    lda #$28
+    lda #$ea
     jsr spc_upload_byte
 
     ;  $4010-$401f:  frequency cutoff values (see ../nes-spc/spc.asm:268)
@@ -98,7 +107,7 @@ spc_init_dpcm:
     jsr spc_upload_byte
     lda #$0f
     jsr spc_upload_byte
-    lda #$0d
+    lda #$0f
     jsr spc_upload_byte
     lda #$0f
     jsr spc_upload_byte
@@ -108,62 +117,70 @@ spc_init_dpcm:
     jsr spc_begin_upload
 
     ;  Send scrn lookup entries to aram
-    %uploadDirectoryEntry(dmc_lookup_start_pos)    ;  Initial position after the dmc lookup entries
-    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam)
-    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt)
-    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2)
-    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+brr_boss2end-brr_boss2+brr_boss1end-brr_boss1)
-    ;  The filter0 block ~22% into boss2.brr sample for dodongo roar
-    %uploadDirectoryEntry(dmc_lookup_start_pos+brr_swordbeamend-brr_swordbeam+brr_linkhurtend-brr_linkhurt+$7d7)
+    %uploadDirectoryEntry(dmc_lookup_aram)    ;  Initial position after the dmc lookup entries
+    %uploadDirectoryEntry(dmc_lookup_aram+brr_linkhurtend-brr_linkhurt)
+    %uploadDirectoryEntry(dmc_lookup_aram+brr_linkhurtend-brr_linkhurt+brr_ganonlaugh1end-brr_ganonlaugh1)
+    %uploadDirectoryEntry(dmc_lookup_aram+brr_linkhurtend-brr_linkhurt+brr_ganonlaugh1end-brr_ganonlaugh1+brr_ganonlaugh2end-brr_ganonlaugh2)
+    %uploadDirectoryEntry(dmc_lookup_aram+brr_linkhurtend-brr_linkhurt+brr_ganonlaugh1end-brr_ganonlaugh1+brr_ganonlaugh2end-brr_ganonlaugh2+brr_ganonlaugh3end-brr_ganonlaugh3)
+    %uploadDirectoryEntry(dmc_lookup_aram+brr_linkhurtend-brr_linkhurt+brr_ganonlaugh1end-brr_ganonlaugh1+brr_ganonlaugh2end-brr_ganonlaugh2+brr_ganonlaugh3end-brr_ganonlaugh3+brr_ganonlaugh4end-brr_ganonlaugh4)
 
     ldy #$4060  ;  Start an upload at $4060 aram
     jsr spc_begin_upload
 
-    ;  Send brr_swordbeam to aram
+    ;  Send brr_linkhurt to aram
     ldx #$0000
 
 .nextbyte:
-    lda brr_swordbeam,x
-    jsr spc_upload_byte
-    inx
-    cpx #(brr_swordbeamend-brr_swordbeam)
-    bne .nextbyte
-
-    ;  Send brr_linkhurt to aram
-    ldx #$0000
-.nextbyte2:
     lda brr_linkhurt,x
     jsr spc_upload_byte
     inx
     cpx #(brr_linkhurtend-brr_linkhurt)
+    bne .nextbyte
+
+    ;  Send brr_ganonlaugh1 to aram
+    ldx #$0000
+.nextbyte2:
+    lda brr_ganonlaugh1,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_ganonlaugh1end-brr_ganonlaugh1)
     bne .nextbyte2
 
-    ;  Send brr_boss2 to aram
+    ;  Send brr_ganonlaugh2 to aram
     ldx #$0000
 .nextbyte3:
-    lda brr_boss2,x
+    lda brr_ganonlaugh2,x
     jsr spc_upload_byte
     inx
-    cpx #(brr_boss2end-brr_boss2)
+    cpx #(brr_ganonlaugh2end-brr_ganonlaugh2)
     bne .nextbyte3
 
-    ;  Send brr_boss1 to aram
+    ;  Send brr_ganonlaugh3 to aram
     ldx #$0000
 .nextbyte4:
-    lda brr_boss1,x
+    lda brr_ganonlaugh3,x
     jsr spc_upload_byte
     inx
-    cpx #(brr_boss1end-brr_boss1)
+    cpx #(brr_ganonlaugh3end-brr_ganonlaugh3)
     bne .nextbyte4
 
-    ;  Send brr_doorunlock to aram
+    ;  Send brr_ganonlaugh4 to aram
     ldx #$0000
 .nextbyte5:
-    lda brr_doorunlock,x
+    lda brr_ganonlaugh4,x
     jsr spc_upload_byte
     inx
-    cpx #(brr_doorunlockend-brr_doorunlock)
+    cpx #(brr_ganonlaugh4end-brr_ganonlaugh4)
     bne .nextbyte5
+
+    ;  Send brr_ganonlaugh5 to aram
+    ldx #$0000
+.nextbyte6:
+    lda brr_ganonlaugh5,x
+    jsr spc_upload_byte
+    inx
+    cpx #(brr_ganonlaugh5end-brr_ganonlaugh5)
+    bne .nextbyte6
 
     ;  Set bit 0x80 in F1 control register (already set; not needed)
     ; ldx #$80f1    ;  prep to read IPL ROM
@@ -175,12 +192,12 @@ spc_init_dpcm:
     plp : plb : ply : plx : pla
 rtl
 
-;  Execute spc starting at location in Destination (the IPC rom at $ffc0)
+;  Execute spc starting at location in aramDestination (the IPC rom at $ffc0)
 reset_to_ipc_rom:
-  Destination = $ffc0 ; Program's address in SPC700 RAM
-  lda.b #Destination&$00ff
+  aramDestination = $ffc0 ; Program's address in SPC700 RAM
+  lda.b #aramDestination&$00ff
   sta $2142
-  lda.b #Destination>>8
+  lda.b #aramDestination>>8
   sta $2143
 
   stz $2141          ; Zero = start the program that was sent over
@@ -195,4 +212,3 @@ reset_to_ipc_rom:
 rts
 
 spc_dpcm_end:
-print "spc dpcm end = ", pc

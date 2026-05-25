@@ -17,6 +17,7 @@ org $BF8000
 base $7E1000
 incsrc "common.asm"
 incsrc "audio/common.asm"
+incsrc "audio/dpcm.asm"
 warnpc $BFC000
 
 ; Include SNES port functions that doesn't have to be in the common code area
@@ -24,8 +25,37 @@ org $9D8000
 incsrc "labels.asm"
 incsrc "init.asm"
 incsrc "snes.asm"
+
 ; Include randomizer additions
 ; incsrc "randomizer/main.asm"
 
+;  DPCM audio
+brr:
+.linkhurt:
+incbin "audio/link-hurt.brr"
+.linkhurtend:
+
+.ganonlaugh1:
+incbin "audio/ganon-laugh-1.brr"
+.ganonlaugh1end:
+
+.ganonlaugh2:
+incbin "audio/ganon-laugh-2.brr"
+.ganonlaugh2end:
+
+.ganonlaugh3:
+incbin "audio/ganon-laugh-3.brr"
+.ganonlaugh3end:
+
+.ganonlaugh4:
+incbin "audio/ganon-laugh-4.brr"
+.ganonlaugh4end:
+
+.ganonlaugh5:
+incbin "audio/ganon-laugh-5.brr"
+.ganonlaugh5end:
+
+db $00
+warnpc $9d9fff  ;  Can expand if needed
 
 namespace off

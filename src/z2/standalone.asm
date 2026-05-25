@@ -1,5 +1,5 @@
 ;
-; Build the Zelda 1 port as a standalone HiROM game
+; Build the Zelda 2 port as a standalone HiROM game
 ;
 
 !BASE_BANK = $A0
@@ -57,7 +57,7 @@ incbin "../data/z2chr_3.bin"
 
 
 org $80ffc0
-    db "ZELDA 1 SNES   "
+    db "ZELDA 2 SNES   "
 
 org $80ffd5
     db $31, $02, $0C, $03, $00, $33, $00
@@ -112,9 +112,10 @@ org $A78000
 base $7E1000
 incsrc "common.asm"
 incsrc "audio/common.asm"
+incsrc "audio/dpcm.asm"
 warnpc $A7C000
 
-; Include SNES port functions that doesn't have to be in the common code area
+; Include SNES port functions that don't have to be in the common code area
 org $AC8000
 incsrc "init.asm"
 incsrc "snes.asm"
@@ -130,4 +131,32 @@ namespace off
 
 ; Include randomizer additions
 org $AD9000
-incsrc "../nes-spc/spc.asm"
+incsrc "../nes-spc/apu.asm"
+
+;  DPCM audio
+brr:
+.linkhurt:
+incbin "audio/link-hurt.brr"
+.linkhurtend:
+
+.ganonlaugh1:
+incbin "audio/ganon-laugh-1.brr"
+.ganonlaugh1end:
+
+.ganonlaugh2:
+incbin "audio/ganon-laugh-2.brr"
+.ganonlaugh2end:
+
+.ganonlaugh3:
+incbin "audio/ganon-laugh-3.brr"
+.ganonlaugh3end:
+
+.ganonlaugh4:
+incbin "audio/ganon-laugh-4.brr"
+.ganonlaugh4end:
+
+.ganonlaugh5:
+incbin "audio/ganon-laugh-5.brr"
+.ganonlaugh5end:
+
+db $00
