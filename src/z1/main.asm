@@ -8,6 +8,10 @@ incsrc "rom.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
+incsrc "audio/hooks.asm"
+
+;  Rom patches
+incsrc "patches.asm"
 
 ; Include common code (will be copied to WRAM $1000-$1FFF when switching to M1)
 ; The reason for this is that the main "common" MMC1 bank at $C000-$FFFF is more or less full
@@ -15,6 +19,8 @@ incsrc "hooks.asm"
 org $878000
 base $7E1000
 incsrc "common.asm"
+incsrc "audio/common.asm"
+CommonBankEnd:
 warnpc $879000
 
 ; Include SNES port functions that doesn't have to be in the common code area
@@ -25,7 +31,7 @@ incsrc "snes.asm"
 
 ; Include randomizer additions
 incsrc "randomizer/main.asm"
-incsrc "dpcm.asm"
+incsrc "audio/dpcm.asm"
 warnpc $888fff
 
 ;  DPCM audio
@@ -50,6 +56,7 @@ incbin "audio/boss2.brr"
 .doorunlock:
 incbin "audio/door-unlock.brr"
 .doorunlockend:
+
 db $00
 warnpc $8bffff
 

@@ -46,7 +46,7 @@ LoadSRAMExtra: LDA $400000,X : STA $FE00,Y : INX : INX : DEY : DEY : BPL LoadSRA
 	LDY #$00FE : LDX #$1E10					;How much extra data to load globally (affects all saves)
 LoadSRAMExtraA: LDA $400000,X : STA $FF00,Y : INX : INX : DEY : DEY : BPL LoadSRAMExtraA
 LoadCheckSum: LDX $12 : LDA $400000,X : CMP $14 : BNE $0B : EOR #$FFFF : CMP $14 : BNE $02 : BRA LoadSRAM
-	LDA $14 : CMP $401FF0,X : BNE SetupClearSRAM : EOR #$FFFF : CMP $401FF8,X : BNE SetupClearSRAM : BRA LoadSRAM
+	LDA $14 : CMP $401FF0,X : BNE SetupClearSRAM : EOR #$FFFF : CMP $401FF8,X : BRA LoadSRAM ; We ignore bad checksums for now  ;BNE SetupClearSRAM : BRA LoadSRAM
 LoadSRAM: PEA $7E7E : PLB : PLB : LDY #$005E
 LoadItems: LDA $D7C0,Y : STA $09A2,Y : DEY : DEY : BPL LoadItems		;Loads current equipment	
 	LDA $D916 : STA $078B		;Current save for the area

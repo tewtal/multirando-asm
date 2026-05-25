@@ -24,7 +24,7 @@ check_and_set_ending:
 +   lda.l config_z3
     beq +
         lda.l !SRAM_ALTTP_COMPLETED : and.w !IRAM_ENDING_TEMP : sta.w !IRAM_ENDING_TEMP
-+   lda.l config_z1        
++   lda.l config_z1
     beq +
         lda.l !SRAM_Z1_COMPLETED : and.w !IRAM_ENDING_TEMP : sta.w !IRAM_ENDING_TEMP
 +   lda.l config_m1

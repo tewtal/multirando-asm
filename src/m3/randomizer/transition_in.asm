@@ -59,10 +59,6 @@ transition_to_sm:
     lda #$0000
     jsl $818085                 ; Load SRAM contents back into RAM
 
-    ; jsl $80858c                 ; Update map
-    ; removing this call because the region is not set correctly at this point
-    ; we will be moving it to another location
-
     jsl $809a79                 ; Redraw HUD
 
     jsr sm_spc_load             ; Load SM's music engine
@@ -71,6 +67,8 @@ transition_to_sm:
     sta $078d                   ; Store the selected door index
 
     jsl sm_setup_door
+
+    jsr update_save_station     ; Update save station to portal room and autosave
 
     %ai16()
 
@@ -102,6 +100,43 @@ transition_to_sm:
     plb
     plb
     jml $82897a                 ; Put game directly into "Wait for IRQ" in the main game loop
+
+print "update save: ", pc
+update_save_station:    
+    ; Get door pointer
+    ldx $078d
+    
+    ; Get room ptr
+    lda.l $830000,x : tax : tay
+
+    ; Get area index
+    lda.l $8F0001,x : and #$00ff
+    sta $079f
+    asl : tax
+
+    ; Get load station pointer index
+    lda.l $80C4B5,x : tax : tya
+
+    ldy #$0006
+-
+    cmp.l $800054,x
+    beq .found_station
+    pha : txa : clc : adc #$000e : tax : pla
+    iny
+    cpy #$0012
+    bne -
+    bra .not_found
+
+.found_station:
+    tya
+    sta.w $078b
+    sta.l $7ed916
+    lda #$0000
+    ; Autosave game to the portal station
+    jsl $818000
+
+.not_found
+    rts
 
 sm_spc_load:
     jsl $80800a                 ; Call the SM SPC upload routine with the parameter set to

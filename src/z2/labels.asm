@@ -30,6 +30,25 @@ z2_ChrBank0Request = $A14
 z2_ChrBankSource = $A20
 z2_ChrBankTarget = $A24
 
+z2_Sq0Duty_4000 = $900
+z2_Sq0Sweep_4001 = $901
+z2_Sq0Timer_4002 = $902
+z2_Sq0Length_4003 = $903
+z2_Sq1Duty_4004 = $904
+z2_Sq1Sweep_4005 = $905
+z2_Sq1Timer_4006 = $906
+z2_Sq1Length_4007 = $907
+z2_TrgLinear_4008 = $908
+z2_TrgTimer_400A = $90A
+z2_TrgLength_400B = $90B
+z2_NoiseVolume_400C = $90C
+z2_NoisePeriod_400E = $90E
+z2_NoiseLength_400F = $90F
+z2_DmcFreq_4010 = $910
+z2_DmcCounter_4011 = $911
+z2_DmcAddress_4012 = $912
+z2_DmcLength_4013 = $913
+z2_ApuStatus_4015 = $915
 
 z2_APUBase = $0900
 z2_APUExtraControl = $0916

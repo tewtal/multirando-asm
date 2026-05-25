@@ -124,11 +124,24 @@ SnesOamPrepare:
     STA.w OAM.Attr, Y
 
     LDA.w OAMNES.Attr, X
-    AND.b #$04
+    AND.b #$04  ;  Extended item check: bit 3
     BEQ .noExtended
 
+    LDA.w OAMNES.Attr, X
+    and.b #$40  ;  Ultra extended palette check: bit 6
+    beq .extPalette
+
+.ultraExtPalette
     LDA.w OAM.Attr, Y
-    ORA.b #$09
+    and.b #$0f
+    ora.b #$01  ;  Add the OAM2 selector bit only
+    bra .continue
+
+.extPalette
+    LDA.w OAM.Attr, Y
+    ORA.b #$09  ;  Add OAM2 select and palettes #4->#7
+
+.continue
     STA.w OAM.Attr, Y
 
 .noExtended
@@ -155,10 +168,10 @@ SnesOamDMA:
     LDA #$0400
     STA $4300
     LDA #$2000
-    STA $4302
-    LDA #$007E
+    STA $4302   
+    LDA #$007E  ;  source address $7e2000
     STA $4304
-    LDA #$0220
+    LDA #$0220  ;  transfer 544 bytes (full OAM table)
     STA $4305
     STZ $2102
 
@@ -1025,23 +1038,250 @@ print "uploadstart = ", pc
 UploadStartTilemap:
     lda #$00
     sta $2115
-    lda #$00
-    sta $2116
-    lda #$20
+    lda #$00    ;
+    sta $2116   ;
+    lda #$20    ;  Start at vram $2000
     sta $2117
 
     rep #$10
     ldx #$03C0
     ldy #$0000
+
 -
+    ; Calculate tile attribute byte to load into VMDATAH
+    ; TODO: Proper implementation (see notes below)
+    lda m1_RoomPalette  ;  The palette number that applies to the vast majority of tiles in the current room
+    asl #2      ;  Shift the palette into the VMDATAH palette bits
+    sta $2119   ;  Attribute data to VMDATAH
     lda ($00), y
-    sta $2118
+    sta $2118   ;  Tile data to VMDATAL
+
     iny
     dex
     bne -    
 
-    ; TODO: Properly copy attribute data here as well
+    ;  Handle non-room palette tiles
+    ;  This section is a hack which hardcodes the handful of bytes
+    ;  in each of the 5 respawn screens that require different palette numbers
+    ;  than the room palette stored in m1 zero page at $68.
+    ;  The proper way to handle this is to find out why SnesProcessPPUString
+    ;  is not called after up+A/death restart sequences even though the NES ppu string data
+    ;  is being populated at $7a0-$7ff.  Perhaps one or more hook locations is missing in hooks.asm.
 
+    ;  Load Current level from m1 zero page ($10 = Brinstar, $11 = Norfair, $12 = Kraid, $13 = Tourian, $14 = Ridley)
+    ldy #$0000  ;  Reset indexes; [X] is already #$0000
+    lda m1_CurrentArea
+    ;  No .brinstar label needed.  The wrong palette $00 is being used, but as a happy coincidence,
+    ;  the bg tile colors in palette $00 and $03 are identical in brinstar.
+    cmp #$11
+    beq .norfair
+    cmp #$12
+    beq .gokraidslair
+    cmp #$13
+    beq .gotourian
+    cmp #$14
+    beq .goridleyslair
+
+    ldx #$0000
+    sep #$30
+    rtl
+
+.gokraidslair:
+    jmp .kraidslair
+.gotourian:
+    jmp .tourian
+.goridleyslair:
+    jmp .ridleyslair
+
+.norfairHorizSequenceLengths: db $08
+.norfairHorizSequencePalette: db $00
+.norfairHorizSequenceAddrs:
+    dw $224c
+    dw $226c
+..end
+.norfairVertSequenceLengths: db $04
+.norfairVertSequencePalette: db $04
+.norfairVertSequenceAddrs:
+    dw $21cc
+    dw $21cd
+    dw $21d2
+    dw $21d3
+..end
+.norfair:
+..horizSequences
+    ;  First set VMAIN and vram write location:
+    lda #$80    ;  For horizontal sequences
+    sta $2115
+
+..loop:
+    lda.l .norfairHorizSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .norfairHorizSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .norfairHorizSequenceLengths
+    rep #$20 : and.w #$00ff  ;  
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .norfairHorizSequencePalette
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.norfairHorizSequenceAddrs_end-.norfairHorizSequenceAddrs)
+    beq ..vertSequences
+    jmp ..loop
+
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .norfairVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .norfairVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .norfairVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .norfairVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.norfairVertSequenceAddrs_end-.norfairVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
+    ldx #$0000
+    sep #$30
+    rtl
+
+
+.kraidsVertSequenceLengths: db $04
+.kraidsVertSequencePalette: db $04
+.kraidsVertSequenceAddrs:
+    dw $2104
+    dw $219b
+..end
+.kraidslair:
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .kraidsVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .kraidsVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .kraidsVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .kraidsVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.kraidsVertSequenceAddrs_end-.kraidsVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
+    ldx #$0000
+    sep #$30
+    rtl
+
+.tourianHorizSequenceLengths: db $04
+.tourianHorizSequencePalette: db $04
+.tourianHorizSequenceAddrs:
+    dw $2306
+    dw $22d6
+..end
+.tourian:
+..horizSequences
+    ;  First set VMAIN and vram write location:
+    lda #$80    ;  For horizontal sequences
+    sta $2115
+
+..loop:
+    lda.l .tourianHorizSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .tourianHorizSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .tourianHorizSequenceLengths
+    rep #$20 : and.w #$00ff  ;  
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .tourianHorizSequencePalette
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.tourianHorizSequenceAddrs_end-.tourianHorizSequenceAddrs)
+    beq ..done
+    jmp ..loop
+
+..done:
+    ldx #$0000
+    sep #$30
+    rtl
+
+.ridleysVertSequenceLengths: db $0a
+.ridleysVertSequencePalette: db $00
+.ridleysVertSequenceAddrs:
+    dw $2246
+    dw $2247
+    dw $2258
+    dw $2259
+..end
+.ridleyslair:
+..vertSequences:
+    ;  First set VMAIN and vram write location:
+    lda #$81    ;  For vertical sequences
+    sta $2115
+    ldx #$0000
+
+..vloop:
+    lda.l .ridleysVertSequenceAddrs, x
+    sta $2116 : inx
+    lda.l .ridleysVertSequenceAddrs, x
+    sta $2117 : inx
+
+    lda.l .ridleysVertSequenceLengths
+    rep #$20 : and.w #$00ff  ;
+    tay : sep #$20           ;  Clear junk in [B]
+    lda.l .ridleysVertSequencePalette;, x
+
+-
+    sta $2119   ;  Attribute data to VMDATAH
+    dey
+    bne -
+
+    ;  End-of-loop test
+    cpx.w #(.ridleysVertSequenceAddrs_end-.ridleysVertSequenceAddrs)
+    beq ..done
+    jmp ..vloop
+
+..done:
+    ldx #$0000
     sep #$30
     rtl
 
@@ -1136,147 +1376,6 @@ ClearNameTable:
 
     PLP : PLY : PLX
     RTL
-
-SoundEmulateLengthCounters:
-    sep #$30
-    lda $0915
-    ora #$04
-    tay
-
-    bit #$01
-    beq .sq1
-
-        lda $0900
-        and #$20
-        bne ++
-            ldx.w APUSq0Length
-            bne +
-                tya
-                and #$fe
-                tay
-                bra .sq1
-+
-                dex
-                stx.w APUSq0Length
-++
-        tya
-
-.sq1
-
-    bit #$02
-    beq .noise
-        lda $0904
-        and #$20
-        bne ++
-            ldx.w APUSq1Length
-            bne +
-                tya
-                and #$fd
-                tay
-                bra .sq1
-+
-                dex
-                stx.w APUSq1Length
-++
-        tya
-
-.noise
-    bit #$08
-    beq .tri
-        lda $090c
-        and #$20
-        bne ++
-            ldx.w APUNoiLength
-            bne +
-                tya
-                and #$f7
-                tay
-                bra .sq1
-+
-                dex
-                stx.w APUNoiLength
-++
-        tya
-
-.tri
-    ldx $0908
-    bmi ++
-        ldx.w APUTriLength
-        bne +
-            and #$fb
-            bra .end
-+
-            dex
-            stx.w APUTriLength
-++
-.end
-
-    sta $0915
-    rts
-
-SnesUpdateAudio:
-    PHX : PHY : PHA : PHP
-    SEP #$30
-
-    ; This isn't great but fixes some SFX
-    ; but makes the triangle channel never stop
-    ; LDA $908
-    ; ORA #$80
-    ; STA $908
-
-    JSR SoundEmulateLengthCounters
-
-    LDA $915
-    BNE +
-    ; Silence everything
-    LDX #$00
--
-    STZ $900, x
-    INX
-    CPX #$17
-    BNE -
-
-+
-
-
-    LDA $2140
-    CMP #$7D
-    BEQ +
-    JMP .End
-+
-    
-    LDA #$D7
-    STA $2140
-
--
-    LDA $2140
-    CMP #$D7
-    BNE -
-
-    LDX #$00
-
---
-    LDA $0900, X
-    STA $2141
-    STX $2140
-
-    INX
-
--   CPX $2141
-    BNE -
-
-    CPX #$17
-    BNE --
-
-    ; LDA #$0F
-    ; STA $915
-
-    stz $0916
-
-.End
-    PLP : PLA : PLY : PLX
-    RTL
-
 
 NesPalTable:
 dw $294A, $2860, $3021, $3004, $2406, $1008, $0027, $0046, $0083, $00A1, $00A0, $04A0, $1480, $0000, $0000, $0000, $5294, $4D23, $5CC7, $5CAB, $488E, $2C90, $10B0, $00ED, $014A, $0186, $01A3, $15A1, $3562, $0000, $0000, $0000, $7FFF, $7E6D, $7E11, $7DD5, $79B9, $59DC, $39FB, $1E59, $1294, $16F0, $230C, $3F0A, $62CA, $1CE7, $0000, $0000, $7FFF, $7F57, $7F39, $7F1B, $7F1D, $6F1E, $631E, $575D, $4F7B, $4F99, $5797, $6396, $7376, $56B5, $0000, $0000

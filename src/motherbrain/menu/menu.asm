@@ -2,10 +2,10 @@ print pc, " menu start"
 
 table ../../../resources/header.tbl
 cm_title_header:
-db $28, "Quad Combo - 0.1.0        ", $ff
+db $28, "Quad Combo - 0.2.0        ", $ff
 
 cm_title_footer:
-db $28, "2024-06-23 - #cbf1b9abcdef", $ff
+db $28, "2025-04-28 - #18a7a3b0e67c", $ff
 table ../../../resources/normal.tbl
 
 cm_start:
