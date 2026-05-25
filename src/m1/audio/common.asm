@@ -90,41 +90,6 @@ SnesUpdateAudio:
     rtl
 
 
-SendOneAudioRecord:
-    phx : pha
-    ;  cpu<->apu handshake
-    lda !ApuIo0
-    cmp !SpcReadyValue    ;  Check for spc readiness
-    beq +
-    jmp .end
-+
-
-    lda #$01
-    sta !ApuIo2            ;  Send transfer length
-    lda !CpuReadyValue     ;  Indicate cpu readiness
-    sta !ApuIo0
-
--   lda !ApuIo0            ;  Wait for SPC to ack CPU ready
-    cmp !CpuReadyValue
-    bne -
-
-    ldx #$00
-    stz !ApuPacketSeq
-
-    lda !ApuValueWrites, x
-    sta !ApuIo1
-
-    lda !ApuPacketSeq
-    ora !ApuNumberWrites, x
-    sta !ApuIo0
-.finishedTransfer:
-    stz !ApuWritesIndex
-
-.end:
-    pla : plx
-    rts
-
-
 LoadSFXRegisters:
     lda $e0
     cmp #$00
@@ -138,8 +103,6 @@ LoadSFXRegisters:
     jsr WriteAPUNoiseCtrl0
     iny
     ;  Don't write to unused register $400d (sloppy m1 devs)
-    ;lda ($e2), y
-    ;jsr WriteAPUNoiseCtrl1
     iny
     lda ($e2), y
     jsr WriteAPUNoiseCtrl2
@@ -225,7 +188,6 @@ WriteAPUSq0Ctrl0_I_Y:
     xba
     tya     ;  [Y] has the apu BASE reg.
     jsr EnqueueApuWrite
-    ; sta.w APUBase, y
     plp    
     rts
 
@@ -236,7 +198,6 @@ WriteAPUSq0Ctrl0_Y:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sty.w APUBase
     pla
     plp
     rts
@@ -248,7 +209,6 @@ WriteAPUSq0Ctrl0_X:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; stx.w APUBase
     pla
     plp
     rts
@@ -260,11 +220,6 @@ WriteAPUSq0Ctrl1:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; xba
-    ; lda #$40
-    ; tsb.w APUBase+$16
-    ; xba
-    ; sta.w APUBase+$01
     plp
     rts
 
@@ -275,11 +230,6 @@ WriteAPUSq0Ctrl1_Y:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; xba
-    ; lda #$40
-    ; tsb.w APUBase+$16
-    ; xba
-    ; sty.w APUBase+$01
     pla
     plp
     rts    
@@ -290,17 +240,6 @@ WriteAPUSq0Ctrl1_I_Y:
     tya     ;  [Y] has the apu BASE reg.
     inc
     jsr EnqueueApuWrite
-;     cpy #$00
-;     bne +
-;     jsr WriteAPUSq0Ctrl1
-;     rts
-; +
-;     cpy #$04
-;     bne +
-;     jsr WriteAPUSq1Ctrl1
-;     rts
-; +
-;     sta $0901, y
     plp
     rts
 
@@ -311,7 +250,6 @@ WriteAPUSq0Ctrl2:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$02
     plp
     rts
 
@@ -322,7 +260,6 @@ WriteAPUSq0Ctrl2_X:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; stx.w APUBase+$02
     pla
     plp
     rts
@@ -333,7 +270,6 @@ WriteAPUSq0Ctrl2_I_Y:
     tya     ;  [Y] has the apu BASE reg.
     inc : inc
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$02, y
     plp
     rts
 
@@ -344,17 +280,6 @@ WriteAPUSq0Ctrl3:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; phx
-    ; sta.w APUBase+$03
-    ; tax
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUSq0Length
-    ; xba
-    ; lda #$01
-    ; tsb.w APUBase+$15
-    ; tsb.w APUExtraControl
-    ; plx
-    ; xba
     plp
     rts
 
@@ -365,14 +290,6 @@ WriteAPUSq0Ctrl3_X:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; pha
-    ; stx.w APUBase+$03
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUSq0Length
-    ; lda #$01
-    ; tsb.w APUBase+$15
-    ; tsb.w APUExtraControl   
-    ; pla
     pla
     plp
     rts
@@ -383,22 +300,6 @@ WriteAPUSq0Ctrl3_I_Y:
     tya     ;  [Y] has the apu BASE reg.
     clc : adc #$03
     jsr EnqueueApuWrite
-;     cpy #$00
-;     bne +
-;     jsr WriteAPUSq0Ctrl3
-;     rts
-; +
-;     cpy #$04
-;     bne +
-;     jsr WriteAPUSq1Ctrl3
-;     rts
-; +
-;     cpy #$08
-;     bne +
-;     jsr WriteAPUTriCtrl3
-;     rts
-; +
-;     jsr WriteAPUNoiseCtrl3    
     plp
     rts
 
@@ -409,7 +310,6 @@ WriteAPUSq1Ctrl0:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$04
     plp
     rts
 
@@ -421,7 +321,6 @@ WriteAPUSq1Ctrl0_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; stx.w APUBase+$04
     plp
     rts
 
@@ -433,7 +332,6 @@ WriteAPUSq1Ctrl0_Y:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; sty.w APUBase+$04
     plp
     rts
 
@@ -444,11 +342,6 @@ WriteAPUSq1Ctrl1:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; xba
-    ; lda #$80
-    ; tsb.w APUBase+$16
-    ; xba
-    ; sta.w APUBase+$05
     plp
     rts
 
@@ -460,11 +353,6 @@ WriteAPUSq1Ctrl1_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; xba
-    ; lda #$80
-    ; tsb.w APUBase+$16
-    ; xba
-    ; stx.w APUBase+$05
     plp
     rts   
 
@@ -476,11 +364,6 @@ WriteAPUSq1Ctrl1_Y:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; xba
-    ; lda #$80
-    ; tsb.w APUBase+$16
-    ; xba
-    ; sty.w APUBase+$05
     plp
     rts   
 
@@ -491,7 +374,6 @@ WriteAPUSq1Ctrl2:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$06
     plp
     rts
 
@@ -503,7 +385,6 @@ WriteAPUSq1Ctrl2_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; stx.w APUBase+$06
     plp
     rts
 
@@ -514,17 +395,6 @@ WriteAPUSq1Ctrl3:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; phx
-    ; sta.w APUBase+$07
-    ; tax
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUSq1Length
-    ; xba
-    ; lda #$02
-    ; tsb.w APUBase+$15
-    ; tsb.w APUExtraControl
-    ; plx
-    ; xba
     plp
     rts
 
@@ -536,14 +406,6 @@ WriteAPUSq1Ctrl3_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; pha
-    ; stx.w APUBase+$07
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUSq1Length
-    ; lda #$02
-    ; tsb.w APUBase+$15
-    ; tsb.w APUExtraControl   
-    ; pla
     plp
     rts
 
@@ -554,7 +416,6 @@ WriteAPUTriCtrl0:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$08
     plp
     rts
 
@@ -565,7 +426,6 @@ WriteAPUTriCtrl1:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$09
     plp
     rts
 
@@ -576,7 +436,6 @@ WriteAPUTriCtrl2:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$0A
     plp
     rts
 
@@ -588,7 +447,6 @@ WriteAPUTriCtrl2_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; stx.w APUBase+$0A
     plp
     rts
 
@@ -599,16 +457,6 @@ WriteAPUTriCtrl3:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; phx
-    ; sta.w APUBase+$0B
-    ; tax
-    ; lda #$04
-    ; tsb.w APUExtraControl
-    ; tsb.w APUBase+$15
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUTriLength
-    ; txa
-    ; plx
     plp
     rts
 
@@ -619,20 +467,8 @@ WriteAPUNoiseCtrl0:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$0C
     plp
     rts
-
-; !apuReg = #$0d ;$400d
-
-; WriteAPUNoiseCtrl1:
-;     php
-;     xba
-;     lda !apuReg
-;     jsr EnqueueApuWrite
-;     ; sta.w APUBase+$0D
-;     plp
-;     rts
 
 !apuReg = #$0e ;$400e
 
@@ -641,7 +477,6 @@ WriteAPUNoiseCtrl2:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta.w APUBase+$0E
     plp
     rts
 
@@ -653,7 +488,6 @@ WriteAPUNoiseCtrl2_X:
     lda !apuReg
     jsr EnqueueApuWrite
     pla
-    ; stx.w APUBase+$0E
     plp
     rts
 
@@ -664,16 +498,6 @@ WriteAPUNoiseCtrl3:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; phx
-    ; sta.w APUBase+$0F
-    ; tax
-    ; lda #$08
-    ; tsb.w APUExtraControl
-    ; tsb.w APUBase+$15
-    ; lda.w Sound__EmulateLengthCounter_length_d3_mixed, x
-    ; sta.w APUNoiLength
-    ; txa
-    ; plx
     plp
     rts
 
@@ -684,41 +508,6 @@ WriteAPUControl:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-;     sta.w APUIOTemp
-;     xba
-;     lda.w APUIOTemp
-;     eor.b #$ff
-;     and.b #$1f
-;     trb.w APUBase+$15
-;     trb.w APUExtraControl
-;     lsr.w APUIOTemp
-;     bcs +
-;         stz.w APUBase+$03
-;         stz.w APUSq0Length
-; +
-;     lsr.w APUIOTemp
-;     bcs +
-;         stz.w APUBase+$07
-;         stz.w APUSq1Length
-; +
-;     lsr.w APUIOTemp
-;     bcs +
-;         stz.w APUBase+$0B
-;         stz.w APUTriLength
-; +
-;     lsr.w APUIOTemp
-;     bcs +
-;         stz.w APUBase+$0F
-;         stz.w APUNoiLength
-; +
-;     lsr.w APUIOTemp
-;     bcc +
-;         lda.b #$10
-;         tsb.w APUBase+$15
-;         bne +
-;             tsb.w APUExtraControl
-; +
-;     xba
     plp
     rts
 
@@ -729,8 +518,5 @@ WriteApuFrameCounter:
     xba
     lda !apuReg
     jsr EnqueueApuWrite
-    ; sta ApuFrameCounter
-    ; lda #$20
-    ; tsb.w APUExtraControl
     plp
     rts

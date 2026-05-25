@@ -23,8 +23,10 @@ FrameCount:
 
 ;  Represents which objects get Tick methods called for each FrameCounterCycle
 ;  Bytes are ---- --Le, where L is length counters/sweeps and e is envelopes/linear counter.
-;  Note that the added 0th indexes account for the difference between the SPC timer counter
-;  and the "step" as documented in the NES APU.  APU's first step occurs 3,728 cycles after the start (index 1 here)
+;  APU's first step occurs 3,728 cycles after the start (index 1 here)
+;           4-step           5-step
+;           - l - l    OR    - l - - l 
+;           e e e e          e e e - e
 .tickUnit4StepTable:
     db %00000001, %00000011, %00000001, %00000011
 .tickUnit5StepTable:

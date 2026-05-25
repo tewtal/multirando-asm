@@ -2,23 +2,16 @@
 ;  Zero-page variables used by the channel are also declared here
 
 
-;  Sample data (TODO: rename / inline and add descriptions)
+;  Sample data
 
 tri_samp0: incsrc "../samples/tri6_sl3.asm"     ; 125 Hz
-; tri_samp1: incsrc "../samples/tri6_sl2.asm"     ; 250 Hz
-; tri_samp2: incsrc "../samples/tri6_sl1.asm"     ; 500 Hz - used 56
 tri_samp3: incsrc "../samples/tri6.asm"         ; 1 kHz - used 28
-; tri_samp4: incsrc "../samples/tri6_sr1.asm"     ; 2 kHz - used 14
-; tri_samp5: incsrc "../samples/tri6_sr2.asm"     ; 4 kHz - used 7
-; tri_samp6: incsrc "../samples/tri6_sr3.asm"     ; 8 kHz - used 3
-; tri_samp7: incsrc "../samples/tri6_sr4.asm"     ; broken(?) constant output - used 1 (TODO: REMOVE)
 
 
 ;  Variables
 ;  $b0->$bf: Triangle internal state
 triRealPeriodLo = $b4
 triRealPeriodHi = $b5
-; triVolume     = $b6
 triLinearReloadValue = $b7
 triLinearCounter = $b8
 
@@ -45,8 +38,6 @@ triStateFlags = $bf  ;  Channel state boolean flags:
 !LengthPostReloadHalt = %00010000
 !triLengthPostReloadHaltFlag   = "triStateFlags.4"
 ; ;  ---- d--- :  Unused
-; !SweepNegate = %00001000
-; !sq0SweepNegateFlag   = "sq0StateFlags.3"
 ; ;  ---- -d-- :  Unused
 ;  ---- --d- :
 !LinearReload = %00000010
@@ -59,9 +50,6 @@ triStateFlags = $bf  ;  Channel state boolean flags:
 Triangle:
 
 ;  Methods
-
-;.GetOutput(?)
-;.GetState(?)
 
 ;  Sends current triangle channel state to spc control registers
 .UpdateOutput  ; Cycles: 7.
@@ -136,16 +124,11 @@ ret
 ..1kHzRange:
     mov a, #$13
 ..done
-    mov sq0Srcn+x, a             ; store result
+    mov sq0Srcn+x, a
 ret
 
 
 .Volume:
-
-..Get:
-    ;  Just returns the length counter OR the volume if constantvolume==true (TODO:)
-ret
-
 
 .LinearCounter:
 
@@ -283,9 +266,6 @@ ret
 ret
 
 
-;..SetEnabled(?)
-;..GetStatus(?)
-
 .Period:
 
 ;  Set the period low byte in [A]
@@ -315,7 +295,6 @@ ret
     and a, #$07
     mov triRealPeriodHi, a
 
-    ; //Side effects 	Sets the linear counter reload flag 
     ; _linearReloadFlag = true;
     set1 !triLinearReloadFlag
 
