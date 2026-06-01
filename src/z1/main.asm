@@ -8,6 +8,7 @@ incsrc "rom.asm"
 
 ; Include hooks
 incsrc "hooks.asm"
+incsrc "audio/hooks.asm"
 
 ;  Rom patches
 incsrc "patches.asm"
@@ -18,6 +19,8 @@ incsrc "patches.asm"
 org $878000
 base $7E1000
 incsrc "common.asm"
+incsrc "audio/common.asm"
+CommonBankEnd:
 warnpc $879000
 
 ; Include SNES port functions that doesn't have to be in the common code area
@@ -28,7 +31,7 @@ incsrc "snes.asm"
 
 ; Include randomizer additions
 incsrc "randomizer/main.asm"
-incsrc "dpcm.asm"
+incsrc "audio/dpcm.asm"
 warnpc $888fff
 
 ;  DPCM audio
