@@ -162,3 +162,22 @@ org $829035
 ; Go to submode 1 of menu 
 org $82A596
     dw $a5df
+
+; =============================================
+; Expanded dungeons support
+; =============================================
+
+; Hook CopyBlock to use expanded version
+org $86806C
+    jsr CopyBlock_Common
+
+; =============================================
+; Sprite pattern swap for generated dungeons
+; =============================================
+
+; Hook InitMode_EnterRoom - JSR $EA3D at $87C6
+; This runs when a room has scrolled into view and is loaded,
+; but before sprites are shown.
+org $8587C6
+    jsr InitMode_EnterRoom_SpriteHook
+

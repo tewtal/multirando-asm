@@ -33,3 +33,20 @@ InitMode8_SaveItems:
     jsl SaveItems
     jsr $E625
     rts
+
+; =============================================
+; Expanded dungeons support
+; =============================================
+
+CopyBlock_Common:
+    jsl CopyBlock_LevelData
+    rts
+
+; =============================================
+; Sprite pattern swap hook for room transitions
+; =============================================
+
+InitMode_EnterRoom_SpriteHook:
+    jsr $EA3D                   ; Call original subroutine
+    jsl HandleRoomSpriteSwap    ; Check if sprite tiles need swapping
+    rts

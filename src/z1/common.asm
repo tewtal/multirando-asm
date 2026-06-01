@@ -273,6 +273,30 @@ SnesTransferPatternBlock_Indexed:
 .Exit
     PLP
     INC.w PatternBlockIndex       ; Mark this block finished, and we're ready for the next one.
+
+    ; When the UW boss block (index 3) finishes, PatternBlockIndex
+    ; becomes 4. At that point TransferLevelPatternBlocks has loaded
+    ; the level-native sprite set ($09E0) and boss set ($0C00) into
+    ; VRAM. Sync the per-room swap tracking vars to match, so a room
+    ; whose enemy needs a different block actually re-triggers a swap.
+    ; Without this, CurrentSpriteSet/CurrentBossSet can be left over
+    ; from the previous level and HandleRoomSpriteSwap would wrongly
+    ; skip the DMA, showing the wrong enemy graphics (e.g. darknuts
+    ; rendered with another set's tiles).
+if not(defined("STANDALONE"))
+    php : sep #$30
+    lda.w PatternBlockIndex
+    cmp #$04
+    bne .NoSync
+    ldx.b CurLevel
+    lda.l LevelToSpriteSet, x
+    sta.w CurrentSpriteSet
+    lda.l LevelToBossSet, x
+    sta.w CurrentBossSet
+.NoSync
+    plp
+endif
+
     PLY : PLX
     lda PPUCNT1ZP : jsr WritePPUCTRL1
     RTS

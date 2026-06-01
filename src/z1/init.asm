@@ -10,7 +10,7 @@ SnesBoot:
     LDA.l ((!BASE_BANK+7)<<16)+$8000, x
     STA.l (!BASE_BANK<<16)+$1000, x
     INX #2
-    CPX #$1000
+    CPX #$0C00
     BNE -
 
     jsl spc_init_dpcm
@@ -31,6 +31,11 @@ if not(defined("STANDALONE"))
     jsl UploadItemPalettes
 endif
     jsl nes_overlay_init
+
+if not(defined("STANDALONE"))
+    jsl PreConvertSpritePatterns
+endif
+
     JML (!BASE_BANK<<16)+$FF76 ; Startup
 
 SnesInit:

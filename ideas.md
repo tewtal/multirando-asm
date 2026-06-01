@@ -80,7 +80,10 @@ Mapping:
         $408000-$409FFF -> $6000-$7FFF  (Regular M1 Work RAM)
     
     Mother Brain
-        $40A000-$40C7FF -> Randomizer   (12kb of extra SRAM for Mother Brain use: stats, timers, temporary item buffers etc)
+        $40A000-$40B7FF -> Randomizer   (6kb of extra SRAM for Mother Brain use: stats, timers)
+        $40B800-$40BC7F -> Z1 Exp RAM   (1kb backup of Z1 Expandanded dungeon state)
+        $40BC80-$40BFFF -> Randomizer   (1kb extra randomizer SRAM)
+        $40C000-$40C7FF -> Randomizer   (2kb of item buffers)
         $40C800-$40CFFF -> Z1 NES RAM   (2kb backup of Z1 NES RAM State)
         $40D000-$40D7FF -> M1 NES RAM   (2kb backup of M1 NES RAM State)
         $40D800-$40DFFF -> SA-1 WRAM    (Used by menu code and more)

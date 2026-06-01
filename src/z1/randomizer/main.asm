@@ -9,6 +9,8 @@ incsrc "caves.asm"
 incsrc "ending.asm"
 incsrc "quickswap.asm"
 incsrc "goals.asm"
+incsrc "dungeons.asm"
+incsrc "spritepatterns.asm"
 
 org $8A8000
 incsrc "tables.asm"

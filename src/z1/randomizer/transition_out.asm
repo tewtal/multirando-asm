@@ -144,6 +144,14 @@ backup_wram:
     inx #2
     cpx.w #$0800
     bne -
+
+    ldx #$0000
+-
+    lda.w ExpandedDungeonState, x
+    sta.l !SRAM_Z1_EXPANDED_DUNGEONS, x
+    inx #2
+    cpx.w #$0480
+    bne -
     plp
     rtl
 
