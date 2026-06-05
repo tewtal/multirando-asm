@@ -10,7 +10,9 @@ transition_to_m1:
     %ai16()
     sei
     phk : plb
-    ldx.w #$1FFF : txs
+    ; Scratch stack in IRAM to avoid corrupting WRAM during transition-in
+    ; (reset to the NES stack $01f4 further down before the game loop runs).
+    ldx.w #!IRAM_TRANSITION_STACK : txs
 
     jsl spc_init_driver
 

@@ -144,8 +144,10 @@ z1_transition_table:
     dw $0003, $C800, $0040, $0000, $0000, $0800
     dw $0003, !SRAM_Z1_EXPANDED_DUNGEONS&$ffff, !SRAM_Z1_EXPANDED_DUNGEONS>>16, $1B80, $0000, $0480
 
-    ; Copy common routines from ROM -> RAM
-    dw $0003, $8000, $0087, $1000, $0000, $0C00
+    ; Copy common routines from ROM -> RAM. Length is $0B80 (not $0C00) so the copy
+    ; ends at $1B80 and doesn't overwrite the expanded dungeon state region above it;
+    ; the routines only reach $145E, the rest of a $0C00 copy is padding.
+    dw $0003, $8000, $0087, $1000, $0000, $0B80
 
     ; Set up IRQ/NMI handlers
     dw $0004, $105c, !IRAM_NMI
