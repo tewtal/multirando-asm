@@ -1,3 +1,11 @@
+;  Relocate FramePtrTable and SpriteCntrlData pointers
+;  to unused zeropage range $d9->$db
+struct FrameData $00d9
+    .ptrLo: skip 1
+    .ptrHi: skip 1
+    .placePtr: skip 1
+endstruct
+
 UploadItemPalettes:
     lda #$80 : sta $2100
     
@@ -54,11 +62,11 @@ GetFramePtrTable_extended:
     bne +
     clc : adc.w #$0010
 +
-    sta.b $cc
+    sta.b FrameData.ptrLo
 
     sep #$30
     lda.b #(FrameDataTable_extended>>16)
-    sta.b $ce
+    sta.b FrameData.placePtr
     plx
     bra .end
 
@@ -66,11 +74,11 @@ GetFramePtrTable_extended:
     sep #$30
     plx
     lda $860B, x
-    sta $cc
+    sta FrameData.ptrLo
     lda $860C, x
-    sta $cd
+    sta FrameData.ptrHi
     phb : pla
-    sta $ce
+    sta FrameData.placePtr
 .end
     rtl
 
@@ -78,14 +86,14 @@ GetEnemyFramePtrTable_extended:
     lda ($41), y
     bcc +
     lda ($43), y
-+   sta $cc
++   sta FrameData.ptrLo
     iny
     lda ($41), y
     bcc +
     lda ($43), y
-+   sta $cd
++   sta FrameData.ptrHi
     phb : pla
-    sta $ce
+    sta FrameData.placePtr
     rtl
 
 StorePowerUpYCoord_extended:
@@ -107,7 +115,7 @@ StoreSpriteAttributes_extended:
 
     ; Check if this is a sprite that has loaded data from
     ; our extended table
-    lda.b $ce
+    lda.b FrameData.placePtr
     cmp.b #(FrameDataTable_extended>>16)
     bne .end
 
