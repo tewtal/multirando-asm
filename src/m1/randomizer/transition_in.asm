@@ -62,7 +62,7 @@ transition_to_m1:
     ; D = Direction (1 = left, 0 = right)
     ; S = Scrolling (1 = vertical, 0 = horizontal)
     ; AAA = Area (0-4)
-    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS   ;  loads #$0000 (which is wrong according to the spec above)
     and #$0007
     beq +
     ora #$0010
@@ -76,18 +76,24 @@ transition_to_m1:
     lda.l !IRAM_TRANSITION_DESTINATION_ARGS
     and.w #$4000    ; check scrolling direction
     bne +
-    lda.w #$0482 : sta $56
+    lda.w #$0482 : sta $56  ;  Main door transition state.  $82 == just entered left door
+                            ;  DoorScrollStatus.  $04 == vertical room / already-centered door
     bra ++
 +
-    lda.w #$0282 : sta $56
+    lda.w #$0282 : sta $56  ;  Main door transition state.  $82 == just entered left door
+                            ;  DoorScrollStatus.  $02 == Entered a left-hand door from a horizontal area.
 ++
 
-    lda.w #$0101 : sta $49
-    lda.w #$0101 : sta $4D
-    lda.w #$7112 : sta $51
-    lda.w #$0171 : sta $30D
+    lda.w #$0101 : sta $49  ;  Current scroll axis/direction: $01 == down
+                            ;  MapPosX = $01
+    lda.w #$0101 : sta $4D  ;  Samus facing direction: $01 == left
+                            ;  Direction Samus passed through the door: $01 == left
+    lda.w #$7112 : sta $51  ;  Samus X position on screen, computed from ObjectX - ScrollX.
+                            ;  Samus Y position on screen, computed from ObjectY - ScrollY.
+    lda.w #$0171 : sta $30D ;  Samus/object Y position in room space, not screen space.
+                            ;  Samus/object X position in room space, not screen space.
     
-    lda.l !IRAM_TRANSITION_DESTINATION_ID
+    lda.l !IRAM_TRANSITION_DESTINATION_ID   ;  loads #$0c0c
     ; Change the room to the room left of where we are
     xba : inc : xba
     bra .set_room
@@ -111,7 +117,7 @@ transition_to_m1:
     xba : dec : xba
 
 .set_room
-    sta.b $4F
+    sta.b $4F   ;  MapPosY.  Current world-map Y coordinate.
     
 
     ; Get what bank we need to switch to and put in A
