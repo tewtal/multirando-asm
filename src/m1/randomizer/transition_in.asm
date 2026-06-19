@@ -11,10 +11,11 @@ print "transition to m1 = ", pc
 !M1_ENTRY_DOOR_Y = $68
 !M1_ENTRY_SAMUS_Y = $70
 !M1_ENTRY_DOOR_HI = $00
-!M1_ENTRY_DOOR_OPEN_FRAME = $33
+!M1_ENTRY_DOOR_OPEN_FRAME = $F7
 !M1_ENTRY_DOOR_CLOSE_RESET = $30
 !M1_ENTRY_DOOR_CLOSE_START = $2E
 !M1_ENTRY_DOOR_HOLD_DELAY = $FF
+!M1_ENTRY_DOOR_EXIT_DELAY = $0F
 !M1_ENTRY_SCROLL_DIR = $00
 !M1_ENTRY_MIRROR_CNTRL = $4F
 
@@ -374,7 +375,7 @@ m1_entry_seed_right_door:
     lda.b #$06
     sta $0300+!M1_ENTRY_DOOR_SLOT   ; Door exit/close state.
     lda.b #!M1_ENTRY_DOOR_OPEN_FRAME
-    sta $0303+!M1_ENTRY_DOOR_SLOT   ; Door starts visually open.
+    sta $0303+!M1_ENTRY_DOOR_SLOT   ; Door starts fully open/no bubble sprite.
     lda.b #!M1_ENTRY_DOOR_HOLD_DELAY
     sta $0304+!M1_ENTRY_DOOR_SLOT   ; Hold open until DoorStatus clears.
     lda.b #!M1_ENTRY_DOOR_CLOSE_RESET
@@ -390,8 +391,8 @@ m1_entry_seed_right_door:
     sta $57                         ; DoorScrollStatus = vertical room centered.
     lda.b #$11
     sta $58                         ; Restore running when door exit finishes.
-    lda.b #$20
-    sta $59                         ; Vanilla door-exit distance.
+    lda.b #!M1_ENTRY_DOOR_EXIT_DELAY
+    sta $59                         ; Door-exit distance.
     lda.b #$01
     sta $4D                         ; SamusDir = left.
     sta $4E                         ; SamusDoorDir = left.
