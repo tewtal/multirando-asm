@@ -1,23 +1,22 @@
 print "transition to m1 = ", pc
 
-!M1_ENTRY_BANK = $91
-!M1_ENTRY_BANK_INDEX = $01
-!M1_ENTRY_BANK_SWITCH = $02
-!M1_ENTRY_AREA = $10
-!M1_ENTRY_MAP_X = $0B
-!M1_ENTRY_MAP_Y = $0C
-!M1_ENTRY_DOOR_SLOT = $A0
-!M1_ENTRY_DOOR_X = $F0
+!M1_ENTRY_BASE_BANK = $90
+!M1_ENTRY_ARGS_DIRECTION = $80
+!M1_ENTRY_ARGS_SCROLLING = $40
+!M1_ENTRY_ARGS_AREA = $07
 !M1_ENTRY_DOOR_Y = $68
 !M1_ENTRY_SAMUS_Y = $70
 !M1_ENTRY_DOOR_HI = $00
+!M1_ENTRY_DOOR_TYPE = $01
 !M1_ENTRY_DOOR_OPEN_FRAME = $F7
 !M1_ENTRY_DOOR_CLOSE_RESET = $30
 !M1_ENTRY_DOOR_CLOSE_START = $2E
 !M1_ENTRY_DOOR_HOLD_DELAY = $FF
 !M1_ENTRY_DOOR_EXIT_DELAY = $0F
-!M1_ENTRY_SCROLL_DIR = $00
-!M1_ENTRY_MIRROR_CNTRL = $4F
+!M1_ENTRY_VERTICAL_SCROLL_DIR = $00
+!M1_ENTRY_HORIZONTAL_SCROLL_DIR = $02
+!M1_ENTRY_VERTICAL_MIRROR_CNTRL = $4F
+!M1_ENTRY_HORIZONTAL_MIRROR_CNTRL = $47
 !M1_ATTR_TABLE_ROW_TOP = $F2
 !M1_ATTR_TABLE_ROW_BOTTOM = $F4
 
@@ -83,23 +82,7 @@ transition_to_m1:
     sta $1D                         ; GameMode = gameplay.
     lda #$03
     sta $1E                         ; MainRoutine = GameEngine.
-    lda #!M1_ENTRY_BANK_INDEX
-    sta $23                         ; CurrentBank = Brinstar.
-    stz $24                         ; No deferred bank switch.
-    lda #!M1_ENTRY_AREA
-    sta $74                         ; InArea = Brinstar.
-    lda #!M1_ENTRY_MAP_Y
-    sta $4F                         ; MapPosY.
-    lda #!M1_ENTRY_MAP_X
-    sta $50                         ; MapPosX.
-    lda #!M1_ENTRY_SCROLL_DIR
-    sta $49                         ; ScrollDir = vertical.
-    sta $4A                         ; TempScrollDir.
-    stz $FC                         ; ScrollY.
-    stz $FD                         ; ScrollX.
-    lda #!M1_ENTRY_MIRROR_CNTRL
-    sta $FA                         ; Bit 3 set = vertical scrolling mirroring.
-    jsl SetPPUMirror
+    jsr m1_entry_apply_destination
     stz $6C                         ; DoorOnNameTable3.
     stz $6D                         ; DoorOnNameTable0.
     stz $1B                         ; PPUDataPending.
@@ -125,29 +108,15 @@ transition_to_m1:
     lda PPUCNT0ZP : ora #$80 : sta PPUCNT0ZP
 
     ; Get bank and perform a bank switch 
-    ldy #!M1_ENTRY_BANK_SWITCH
-    lda #!M1_ENTRY_BANK_INDEX : sta $23
+    jsr m1_entry_prepare_bank_switch
     jsl $900000|(InitTransitionData&$ffff)
 
     %ai8()
-    lda #!M1_ENTRY_AREA
-    sta $74
-    lda #!M1_ENTRY_MAP_Y
-    sta $4F
-    lda #!M1_ENTRY_MAP_X
-    sta $50
-    lda #!M1_ENTRY_SCROLL_DIR
-    sta $49
-    sta $4A
-    stz $FC
-    stz $FD
-    lda #!M1_ENTRY_MIRROR_CNTRL
-    sta $FA
-    jsl SetPPUMirror
+    jsr m1_entry_apply_destination
 
     jsr m1_entry_clear_object_ram
     jsr m1_entry_load_room
-    jsr m1_entry_seed_right_door
+    jsr m1_entry_seed_entry_door
 
     lda $3A                         ; CartRAMPtrUB from SetupRoom.
     sta $01
@@ -168,15 +137,108 @@ transition_to_m1:
     sta.l $004200
     lda #$01
     sta $1A
-    lda #!M1_ENTRY_BANK
+    jsr m1_entry_get_program_bank
     pha : plb
 
     %ai16()
 ;   Restore gameplay
     ldx.w #$01F4 : txs
+    lda.w #$C0BC
+    sta.w m1_BankSwitchAddr
     %ai8()
 
-    jml $91C0BC
+    jsr m1_entry_get_program_bank
+    sta.w m1_BankSwitchBank
+    jml.w [m1_BankSwitchAddr]
+
+m1_entry_apply_destination:
+    lda.l !IRAM_TRANSITION_DESTINATION_ID
+    sta $4F                         ; MapPosY = low byte of XXYY room id.
+    lda.l !IRAM_TRANSITION_DESTINATION_ID+$1
+    sta $50                         ; MapPosX = high byte of XXYY room id.
+    jsr m1_entry_apply_destination_area
+
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_SCROLLING
+    beq .horizontal
+    lda.b #!M1_ENTRY_VERTICAL_SCROLL_DIR
+    sta $49                         ; ScrollDir = vertical.
+    sta $4A                         ; TempScrollDir.
+    lda.b #!M1_ENTRY_VERTICAL_MIRROR_CNTRL
+    bra .store_mirror
+
+.horizontal
+    lda.b #!M1_ENTRY_HORIZONTAL_SCROLL_DIR
+    sta $49                         ; ScrollDir = horizontal.
+    sta $4A                         ; TempScrollDir.
+    lda.b #!M1_ENTRY_HORIZONTAL_MIRROR_CNTRL
+
+.store_mirror
+    sta $FA
+    stz $FC                         ; ScrollY.
+    stz $FD                         ; ScrollX.
+    jsl SetPPUMirror
+    rts
+
+m1_entry_apply_destination_area:
+    jsr m1_entry_get_area_index
+    tax
+    lda.l m1_entry_area_table,x
+    sta $74                         ; InArea.
+    lda.l m1_entry_current_bank_table,x
+    sta $23                         ; CurrentBank.
+    stz $24                         ; No deferred bank switch.
+    rts
+
+m1_entry_prepare_bank_switch:
+    jsr m1_entry_get_area_index
+    tax
+    lda.l m1_entry_current_bank_table,x
+    sta $23
+    lda.l m1_entry_bank_switch_table,x
+    tay
+    rts
+
+m1_entry_get_area_index:
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_AREA
+    cmp.b #$05
+    bcc +
+    lda.b #$00
++
+    rts
+
+m1_entry_get_program_bank:
+    lda $23
+    clc
+    adc.b #!M1_ENTRY_BASE_BANK
+    rts
+
+m1_entry_get_door_side:
+    ; Returns A = door side (0=right, 1=left).
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_DIRECTION
+    beq +
+    lda.b #$01
+    rts
++
+    lda.b #$00
+    rts
+
+m1_entry_get_door_slot:
+    lda $50
+    clc
+    adc $4F
+    pha
+    jsr m1_entry_get_door_side
+    lsr                             ; Carry = door side, matching vanilla LoadDoor.
+    pla
+    rol
+    and.b #$03
+    tax
+    lda.l m1_entry_door_slot_table,x
+    tax
+    rts
 
 m1_entry_clear_object_ram:
     ldx.b #$00
@@ -190,9 +252,9 @@ m1_entry_clear_object_ram:
 m1_entry_load_room:
     lda.b #$ff
     sta $5A                         ; RoomNumber = undefined before GetRoomNum.
-    jsl $911000 : dw $E720          ; GetRoomNum.
+    jsr m1_entry_call_area_get_room_num
 -
-    jsl $911000 : dw $EA2B          ; SetupRoom.
+    jsr m1_entry_call_area_setup_room
     ldy $5A
     iny
     bne -
@@ -222,10 +284,10 @@ m1_entry_upload_room_attributes:
 
     lda.b #!M1_ATTR_TABLE_ROW_TOP
     sta $5A                         ; RoomNumber selector for vanilla attrib row $C0.
-    jsl $911000 : dw $E5E2          ; WritePPUAttribTbl.
+    jsr m1_entry_call_area_write_ppu_attrib_tbl
     lda.b #!M1_ATTR_TABLE_ROW_BOTTOM
     sta $5A                         ; RoomNumber selector for vanilla attrib row $E0.
-    jsl $911000 : dw $E5E2          ; WritePPUAttribTbl.
+    jsr m1_entry_call_area_write_ppu_attrib_tbl
     lda.b #$FF
     sta $5A
 
@@ -262,55 +324,67 @@ m1_entry_upload_initial_palettes:
     sep #$20
     lda.b #$01
     sta $1C                         ; Full room palette.
-    jsl $911000 : dw $C1E0          ; CheckPalWrite.
-    jsl $911000 : dw $CB73          ; SelectSamusPal.
-    jsl $911000 : dw $C1E0          ; CheckPalWrite.
+    jsr m1_entry_call_area_check_pal_write
+    jsr m1_entry_call_area_select_samus_pal
+    jsr m1_entry_call_area_check_pal_write
     rts
 
-m1_entry_seed_right_door:
-    ldx.b #!M1_ENTRY_DOOR_SLOT
+m1_entry_seed_entry_door:
+    jsr m1_entry_get_door_slot
     stx $4B                         ; PageIndex.
     lda.b #!M1_ENTRY_DOOR_HI
-    sta $030C+!M1_ENTRY_DOOR_SLOT   ; Door ObjectHi.
+    sta $030C,x                     ; Door ObjectHi.
     sta $030C                       ; Samus ObjectHi.
-    lda.b #!M1_ENTRY_DOOR_X
-    sta $030E+!M1_ENTRY_DOOR_SLOT   ; Door ObjectX.
+    jsr m1_entry_get_door_side
+    beq .right_door
+    lda.b #$10
+    bra .store_door_x
+
+.right_door
+    lda.b #$F0
+
+.store_door_x
+    sta $030E,x                     ; Door ObjectX.
     sta $030E                       ; Samus ObjectX.
     sta $51                         ; SamusScrX.
     lda.b #!M1_ENTRY_DOOR_Y
-    sta $030D+!M1_ENTRY_DOOR_SLOT   ; Door ObjectY.
+    sta $030D,x                     ; Door ObjectY.
     lda.b #!M1_ENTRY_SAMUS_Y
     sta $030D                       ; Samus ObjectY.
     sta $52                         ; SamusScrY.
     lda.b #$01
-    sta $030B+!M1_ENTRY_DOOR_SLOT   ; Door on screen.
+    sta $030B,x                     ; Door on screen.
     sta $030B                       ; Samus on screen.
-    jsl $911000 : dw $8CFB          ; Open right-door tiles in RoomRAM.
+    lda.b #!M1_ENTRY_DOOR_TYPE
+    sta $0307,x                     ; Standard blue door, even when no room door exists.
+    jsr m1_entry_call_area_open_door_tiles
 
+    ldx $4B                         ; Door tile routine uses X; restore door slot.
     lda.b #$06
-    sta $0300+!M1_ENTRY_DOOR_SLOT   ; Door exit/close state.
+    sta $0300,x                     ; Door exit/close state.
     lda.b #!M1_ENTRY_DOOR_OPEN_FRAME
-    sta $0303+!M1_ENTRY_DOOR_SLOT   ; Door starts fully open/no bubble sprite.
+    sta $0303,x                     ; Door starts fully open/no bubble sprite.
     lda.b #!M1_ENTRY_DOOR_HOLD_DELAY
-    sta $0304+!M1_ENTRY_DOOR_SLOT   ; Hold open until DoorStatus clears.
+    sta $0304,x                     ; Hold open until DoorStatus clears.
     lda.b #!M1_ENTRY_DOOR_CLOSE_RESET
-    sta $0305+!M1_ENTRY_DOOR_SLOT
+    sta $0305,x
     lda.b #!M1_ENTRY_DOOR_CLOSE_START
-    sta $0306+!M1_ENTRY_DOOR_SLOT
-    stz $030A+!M1_ENTRY_DOOR_SLOT
+    sta $0306,x
+    stz $030A,x
 
     lda.b #$05
     sta $56                         ; DoorStatus = exit door, no scrolling.
     sta $0300                       ; Samus ObjAction = sa_Door.
     lda.b #$04
-    sta $57                         ; DoorScrollStatus = vertical room centered.
+    sta $57                         ; DoorScrollStatus = skip post-load scroll toggle.
     lda.b #$11
     sta $58                         ; Restore running when door exit finishes.
     lda.b #!M1_ENTRY_DOOR_EXIT_DELAY
     sta $59                         ; Door-exit distance.
-    lda.b #$01
-    sta $4D                         ; SamusDir = left.
-    sta $4E                         ; SamusDoorDir = left.
+    jsr m1_entry_get_door_side
+    eor.b #$01
+    sta $4D                         ; SamusDir faces into the loaded room.
+    sta $4E                         ; SamusDoorDir moves out of the door.
     stz $0308
     stz $0309
     stz $0310
@@ -319,3 +393,67 @@ m1_entry_seed_right_door:
     stz $0313
     stz $0314
     rts
+
+m1_entry_area_table:
+    db $10, $11, $12, $13, $14
+
+m1_entry_current_bank_table:
+    db $01, $02, $04, $03, $05
+
+m1_entry_bank_switch_table:
+    db $02, $03, $05, $04, $06
+
+m1_entry_door_slot_table:
+    db $80, $B0, $A0, $90
+
+m1_entry_call_area_get_room_num:
+    jsl m1_entry_call_area_routine
+    dw $E720                        ; GetRoomNum.
+    rts
+
+m1_entry_call_area_setup_room:
+    jsl m1_entry_call_area_routine
+    dw $EA2B                        ; SetupRoom.
+    rts
+
+m1_entry_call_area_write_ppu_attrib_tbl:
+    jsl m1_entry_call_area_routine
+    dw $E5E2                        ; WritePPUAttribTbl.
+    rts
+
+m1_entry_call_area_check_pal_write:
+    jsl m1_entry_call_area_routine
+    dw $C1E0                        ; CheckPalWrite.
+    rts
+
+m1_entry_call_area_select_samus_pal:
+    jsl m1_entry_call_area_routine
+    dw $CB73                        ; SelectSamusPal.
+    rts
+
+m1_entry_call_area_open_door_tiles:
+    jsl m1_entry_call_area_routine
+    dw $8CFB                        ; Open entry-door tiles.
+    rts
+
+m1_entry_call_area_routine:
+    php
+    rep #$20
+    sta.w m1_TableBankTemp
+    sep #$30
+    phx
+    jsr m1_entry_get_area_index
+    tax
+    lda.l m1_entry_current_bank_table,x
+    clc
+    adc.b #!M1_ENTRY_BASE_BANK
+    sta.w m1_BankSwitchBank
+    rep #$20
+    lda.w #$1000
+    sta.w m1_BankSwitchAddr
+    sep #$20
+    plx
+    rep #$20
+    lda.w m1_TableBankTemp
+    plp
+    jml.w [m1_BankSwitchAddr]
