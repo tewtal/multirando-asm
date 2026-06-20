@@ -459,6 +459,7 @@ print "tm = ", pc
     rep #$30
     lda #$0000
     sta.l SnesPPUDataStringPtr
+    sta.l SnesPPUDataString
 
     plp
     plb
@@ -472,10 +473,10 @@ PreparePPUProcess:
     stx $00
     sty $01
     phb : pla : sta $02
-    lda #$01
-    sta.b PPUDataPending
-    lda #$01
+    rep #$20
+    lda #$0001
     sta.w TransferSourceSet
+    sep #$20
     jsl SnesPPUPrepare
     ply : plx
     stx $00
@@ -487,6 +488,10 @@ SnesPPUPrepare:
     phb : php
     pea $7e7e : plb : plb
 
+    rep #$20
+    lda.w TransferSourceSet
+    bne +
+    sep #$20
     lda.b PPUDataPending
     bne +
     jmp .exit
@@ -1026,8 +1031,15 @@ PreparePalette:
 
 ; Takes a PPU-data string, parses it and converts it into SNES PPU commands
 ProcessPPUString:
+    sep #$20
     lda #$00 : sta $4200
     lda #$8F : sta $2100
+    rep #$20
+    lda.l SnesPPUDataStringPtr
+    sep #$20
+    bne +
+    jsl SnesPPUPrepare
++
     jsl SnesProcessPPUString
     lda PPUCNT0ZP : jsr WritePPUCTRL
     lda PPUCNT1ZP : jsr WritePPUCTRL1

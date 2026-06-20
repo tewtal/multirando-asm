@@ -18,6 +18,8 @@ print "transition to m1 = ", pc
 !M1_ENTRY_DOOR_EXIT_DELAY = $0F
 !M1_ENTRY_SCROLL_DIR = $00
 !M1_ENTRY_MIRROR_CNTRL = $4F
+!M1_ATTR_TABLE_ROW_TOP = $F2
+!M1_ATTR_TABLE_ROW_BOTTOM = $F4
 
 transition_to_m1:
     ; At this point, we have WRAM restored from backup
@@ -198,137 +200,50 @@ m1_entry_load_room:
 
 m1_entry_upload_room_attributes:
     php
-    sep #$20
-    rep #$10
+    sep #$30
     lda.b #$00
-    sta.l $004200                   ; Keep NMI from racing the direct VRAM upload.
+    sta.l $004200                   ; Keep NMI from racing the attribute upload.
     lda PPUCNT0ZP
     and.b #$7F
     sta PPUCNT0ZP
     lda.b #$8F
     sta.l $002100
-
-    lda.b #$80
-    sta.l $002115                   ; Increment after VMDATAH writes.
-    lda $3A                         ; CartRAMPtrUB from SetupRoom.
-    clc
-    adc.b #$03
-    sta $01
-    lda.b #$C0                      ; RoomRAM attribute table starts at +$03C0.
-    sta $00
-
-    rep #$20
-    lda.w #$2000
-    sta $02                         ; Current SNES tilemap block address.
-    lda.w #$0000
-    sta.l m1_SnesPPUDataStringPtr
-    sep #$20
-
-    ldy.w #$0000
-    lda.b #$08
-    sta $09                         ; NES attribute rows.
-.row
-    lda.b #$08
-    sta $0A                         ; NES attribute columns.
-.column
-    lda ($00), y
-    jsr m1_entry_write_attr_block
-    iny
-
-    rep #$20
-    lda $02
-    clc
-    adc.w #$0004
-    sta $02
-    sep #$20
-
-    dec $0A
-    bne .column
-
-    rep #$20
-    lda $02
-    clc
-    adc.w #$0060
-    sta $02
-    sep #$20
-
-    dec $09
-    bne .row
-
+    lda.b #%00000010
+    sta PPUCNT1ZP
     stz $1B
     stz $07A0
+    stz $07A1
+    rep #$20
+    lda.w #$0000
+    sta.w m1_TransferSourceSet
+    sta.l m1_SnesPPUDataStringPtr
+    sta.l m1_SnesPPUDataString
+    sep #$20
+
+    lda.b #!M1_ATTR_TABLE_ROW_TOP
+    sta $5A                         ; RoomNumber selector for vanilla attrib row $C0.
+    jsl $911000 : dw $E5E2          ; WritePPUAttribTbl.
+    lda.b #!M1_ATTR_TABLE_ROW_BOTTOM
+    sta $5A                         ; RoomNumber selector for vanilla attrib row $E0.
+    jsl $911000 : dw $E5E2          ; WritePPUAttribTbl.
+    lda.b #$FF
+    sta $5A
+
+    lda $1B                         ; PPUDataPending.
+    beq +
+    jsl SnesPPUPrepare
+    jsl SnesProcessPPUString
++
+    stz $1B
+    stz $07A0
+    stz $07A1
+    rep #$20
+    lda.w #$0000
+    sta.w m1_TransferSourceSet
+    sta.l m1_SnesPPUDataStringPtr
+    sta.l m1_SnesPPUDataString
+    sep #$20
     plp
-    rts
-
-m1_entry_write_attr_block:
-    sta $04
-    and.b #$03
-    asl #2
-    sta $05                         ; Top-left quadrant.
-    lda $04
-    lsr #2
-    and.b #$03
-    asl #2
-    sta $06                         ; Top-right quadrant.
-    lda $04
-    lsr #4
-    and.b #$03
-    asl #2
-    sta $07                         ; Bottom-left quadrant.
-    lda $04
-    lsr #6
-    asl #2
-    sta $08                         ; Bottom-right quadrant.
-
-    rep #$20
-    lda $02
-    sta.l $002116
-    sep #$20
-    lda $05
-    sta.l $002119
-    sta.l $002119
-    lda $06
-    sta.l $002119
-    sta.l $002119
-
-    rep #$20
-    lda $02
-    clc
-    adc.w #$0020
-    sta.l $002116
-    sep #$20
-    lda $05
-    sta.l $002119
-    sta.l $002119
-    lda $06
-    sta.l $002119
-    sta.l $002119
-
-    rep #$20
-    lda $02
-    clc
-    adc.w #$0040
-    sta.l $002116
-    sep #$20
-    lda $07
-    sta.l $002119
-    sta.l $002119
-    lda $08
-    sta.l $002119
-    sta.l $002119
-
-    rep #$20
-    lda $02
-    clc
-    adc.w #$0060
-    sta.l $002116
-    sep #$20
-    lda $07
-    sta.l $002119
-    sta.l $002119
-    lda $08
-    sta.l $002119
-    sta.l $002119
     rts
 
 m1_entry_upload_initial_palettes:
