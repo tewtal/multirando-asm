@@ -19,6 +19,8 @@ print "transition to m1 = ", pc
 !M1_ENTRY_HORIZONTAL_MIRROR_CNTRL = $47
 !M1_ATTR_TABLE_ROW_TOP = $F2
 !M1_ATTR_TABLE_ROW_BOTTOM = $F4
+!M1_BOSS_MUSIC_FLAG = $40
+!M1_NO_BOSS_ROOM = $FF
 
 transition_to_m1:
     ; At this point, we have WRAM restored from backup
@@ -115,8 +117,10 @@ transition_to_m1:
     jsr m1_entry_apply_destination
 
     jsr m1_entry_clear_object_ram
+    jsr m1_entry_call_area_destroy_enemies
     jsr m1_entry_load_room
     jsr m1_entry_seed_entry_door
+    jsr m1_entry_apply_room_music
 
     lda $3A                         ; CartRAMPtrUB from SetupRoom.
     sta $01
@@ -394,6 +398,49 @@ m1_entry_seed_entry_door:
     stz $0314
     rts
 
+m1_entry_apply_room_music:
+    lda $6987                       ; KrdRdlyPresent from SetupRoom.
+    bne .queue_boss_music
+    jsr m1_entry_destination_is_live_boss_room
+    bcc .exit
+
+.queue_boss_music
+    lda.b #!M1_BOSS_MUSIC_FLAG
+    sta $0685                       ; Replace area music queued by StartMusic.
+    stz $6987                       ; Music is queued; do not restart it after door exit.
+
+.exit
+    rts
+
+m1_entry_destination_is_live_boss_room:
+    jsr m1_entry_get_area_index
+    tax
+    lda.l m1_entry_boss_room_table,x
+    cmp.b #!M1_NO_BOSS_ROOM
+    beq .no_match
+    pha
+    jsr m1_entry_call_area_get_room_num
+    pla
+    cmp $5A
+    php
+    lda.b #$FF
+    sta $5A
+    plp
+    bne .no_match
+
+    lda $74                         ; Match GetEnemyType's live Kraid/Ridley check.
+    and.b #$06
+    lsr
+    tay
+    lda $687A,y
+    bne .no_match
+    sec
+    rts
+
+.no_match
+    clc
+    rts
+
 m1_entry_area_table:
     db $10, $11, $12, $13, $14
 
@@ -402,6 +449,9 @@ m1_entry_current_bank_table:
 
 m1_entry_bank_switch_table:
     db $02, $03, $05, $04, $06
+
+m1_entry_boss_room_table:
+    db $FF, $FF, $1D, $FF, $12
 
 m1_entry_door_slot_table:
     db $80, $B0, $A0, $90
@@ -414,6 +464,11 @@ m1_entry_call_area_get_room_num:
 m1_entry_call_area_setup_room:
     jsl m1_entry_call_area_routine
     dw $EA2B                        ; SetupRoom.
+    rts
+
+m1_entry_call_area_destroy_enemies:
+    jsl m1_entry_call_area_routine
+    dw $C8BB                        ; DestroyEnemies.
     rts
 
 m1_entry_call_area_write_ppu_attrib_tbl:
