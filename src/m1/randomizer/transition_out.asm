@@ -39,33 +39,43 @@ transition_from_m1:
     jml mb_snes_transition    ; Jump the SNES CPU into BW-RAM routines that let the SA-1 control it
 
 
-print "samusindoor = ", pc
-SamusInDoor_extended:
-    phx
-    sta $56
+print "samusenterdoor = ", pc
+SamusEnterDoor_extended:
+    jsl m1_transition_out_call_current_bank_routine
+    dw $8B13                        ; Vanilla SamusEnterDoor.
 
+    lda.b $56                       ; DoorStatus has bit 7 set only after vanilla accepts entry.
+    bpl .no_transition
+    lda.b $59                       ; DoorDelay is set to $12 on the entry frame.
+    cmp.b #$12                      ; This check isn't strictly necessary, but avoids
+                                    ; possible churn during vanilla door processing.
+                                    ; I would like to find a less brittle check
+                                    ; than door delay timer, since we may choose
+                                    ; to patch that value in the future.
+    bne .no_transition
+
+    phx
     rep #$30
-    and #$00ff
     ldx #$0000
 .loop
     lda.l transition_table, x
     cmp.w #$0000
     beq .end
 
-    cmp.b $4f
-    bne .next
-    
-    lda.b $56 : and #$00ff
-    cmp.l transition_table+$2, x
-    bne .next
+    jsr m1_transition_out_room_matches
+    bcc .next
 
-    ; We found a cross-game door, takes us out!
+    lda.l transition_table+$2, x
+    jsr m1_transition_out_door_matches
+    bcc .next
+
+    ; We found a cross-game door, take us out
     lda.l transition_table+$4, x
-    sta !IRAM_TRANSITION_GAME_ID
+    sta.l !IRAM_TRANSITION_GAME_ID
     lda.l transition_table+$6, x
-    sta !IRAM_TRANSITION_DESTINATION_ID
+    sta.l !IRAM_TRANSITION_DESTINATION_ID
     lda.l transition_table+$8, x
-    sta !IRAM_TRANSITION_DESTINATION_ARGS
+    sta.l !IRAM_TRANSITION_DESTINATION_ARGS
     jml transition_from_m1
 
 .next
@@ -74,10 +84,140 @@ SamusInDoor_extended:
 .end
     sep #$30
     plx
-    lda.b $56
-    ora.b #$80
-    sta.b $56 
-    rtl
+
+.no_transition
+    jsl m1_transition_out_call_current_bank_routine
+    dw $8B79                        ; Vanilla door object update/display.
+    jmp m1_transition_out_return_to_update_world
+
+m1_transition_out_room_matches:
+    sta.w m1_TableBankTemp
+    lda.w $004F                     ; Current room as XXYY.
+    cmp.w m1_TableBankTemp
+    beq .match
+
+    jsr m1_transition_out_centered_room
+    cmp.w m1_TableBankTemp
+    beq .match
+
+    clc
+    rts
+
+.match
+    sec
+    rts
+
+m1_transition_out_centered_room:
+    lda.w $0056                     ; DoorStatus low bits select the centering scroll.
+    and.w #$007F
+    cmp.w #$0003
+    beq .scroll_down
+    cmp.w #$0004
+    beq .scroll_up
+
+.current
+    lda.w $004F
+    rts
+
+.scroll_down
+    lda.w $0049                     ; Duplicate only ScrollDown's MapPosY effect.
+    and.w #$00FF
+    beq .increment_y
+    cmp.w #$0001
+    bne .current
+    lda.w $00FC
+    and.w #$00FF
+    bne .current
+
+.increment_y
+    lda.w $004F
+    inc
+    rts
+
+.scroll_up
+    lda.w $0049                     ; Duplicate only ScrollUp's MapPosY effect.
+    and.w #$00FF
+    cmp.w #$0001
+    beq .decrement_y
+    cmp.w #$0000
+    bne .current
+    lda.w $00FC
+    and.w #$00FF
+    bne .current
+
+.decrement_y
+    lda.w $004F
+    dec
+    rts
+
+m1_transition_out_door_matches:
+    and.w #$00FF
+    cmp.w #$0003
+    bcs .match_vertical_entry
+
+    sta.w m1_TableBankTemp          ; Table values 1/2 match vanilla door side.
+    lda.w $0057
+    and.w #$00FF
+    cmp.w #$0003
+    bcc .compare_side
+
+    lda.w $030E                     ; In vertical shafts, infer side the way vanilla does.
+    and.w #$00FF
+    cmp.w #$0080
+    bcc .left_side
+    lda.w #$0001                    ; ObjectX negative/high = right-hand door.
+    bra .compare_side
+
+.left_side
+    lda.w #$0002
+
+.compare_side
+    cmp.w m1_TableBankTemp
+    beq .match
+    clc
+    rts
+
+.match_vertical_entry
+    lda.w $0057                     ; Legacy table values 3/4 match either vertical entry state.
+    and.w #$00FF
+    cmp.w #$0003
+    bcc .no_match
+
+.match
+    sec
+    rts
+
+.no_match
+    clc
+    rts
+
+m1_transition_out_call_current_bank_routine:
+    php
+    rep #$20
+    sta.w m1_TableBankTemp
+    sep #$30
+    lda.b $23
+    clc
+    adc.b #$90
+    sta.w m1_BankSwitchBank
+    rep #$20
+    lda.w #$1000
+    sta.w m1_BankSwitchAddr
+    lda.w m1_TableBankTemp
+    plp
+    jml.w [m1_BankSwitchAddr]
+
+m1_transition_out_return_to_update_world:
+    sep #$30
+    lda.b $23
+    clc
+    adc.b #$90
+    sta.w m1_BankSwitchBank
+    rep #$20
+    lda.w #$CB51
+    sta.w m1_BankSwitchAddr
+    sep #$30
+    jml.w [m1_BankSwitchAddr]
 
 backup_wram:
     php
