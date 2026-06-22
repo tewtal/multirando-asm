@@ -80,6 +80,7 @@ SamusEnterDoor_extended:
 
 .next
     txa : clc : adc #$000A : tax
+    bra .loop
 
 .end
     sep #$30
