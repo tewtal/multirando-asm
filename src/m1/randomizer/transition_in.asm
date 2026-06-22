@@ -14,11 +14,15 @@ print "transition to m1 = ", pc
 !M1_ENTRY_DOOR_HOLD_DELAY = $FF
 !M1_ENTRY_DOOR_EXIT_DELAY = $0F
 !M1_ENTRY_VERTICAL_SCROLL_DIR = $00
+!M1_ENTRY_VERTICAL_DOWN_SCROLL_DIR = $01
 !M1_ENTRY_HORIZONTAL_SCROLL_DIR = $02
+!M1_ENTRY_HORIZONTAL_RIGHT_SCROLL_DIR = $03
 !M1_ENTRY_VERTICAL_MIRROR_CNTRL = $4F
 !M1_ENTRY_HORIZONTAL_MIRROR_CNTRL = $47
-!M1_ATTR_TABLE_ROW_TOP = $F2
-!M1_ATTR_TABLE_ROW_BOTTOM = $F4
+!M1_ATTR_UPLOAD_ADDR_HIGH = $23
+!M1_ATTR_UPLOAD_ROW_TOP = $C0
+!M1_ATTR_UPLOAD_ROW_BOTTOM = $E0
+!M1_ATTR_UPLOAD_ROW_LENGTH = $20
 !M1_BOSS_MUSIC_FLAG = $40
 !M1_NO_BOSS_ROOM = $FF
 
@@ -117,8 +121,9 @@ transition_to_m1:
     jsr m1_entry_apply_destination
 
     jsr m1_entry_clear_object_ram
-    jsr m1_entry_call_area_destroy_enemies
+    jsr m1_entry_prepare_room_load_scroll
     jsr m1_entry_load_room
+    jsr m1_entry_finalize_entry_scroll
     jsr m1_entry_seed_entry_door
     jsr m1_entry_apply_room_music
 
@@ -253,6 +258,38 @@ m1_entry_clear_object_ram:
     bne -
     rts
 
+m1_entry_prepare_room_load_scroll:
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_SCROLLING
+    beq .exit
+
+    jsr m1_entry_get_door_side
+    beq .right_door
+    lda.b #!M1_ENTRY_HORIZONTAL_RIGHT_SCROLL_DIR
+    bra .store
+
+.right_door
+    lda.b #!M1_ENTRY_HORIZONTAL_SCROLL_DIR
+
+.store
+    sta $49                         ; Match vanilla side-door load before scroll toggle.
+    sta $4A
+
+.exit
+    rts
+
+m1_entry_finalize_entry_scroll:
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_SCROLLING
+    beq .exit
+
+    jsr m1_entry_get_door_side
+    eor.b #$01                      ; Right door -> down, left door -> up.
+    sta $49
+
+.exit
+    rts
+
 m1_entry_load_room:
     lda.b #$ff
     sta $5A                         ; RoomNumber = undefined before GetRoomNum.
@@ -286,20 +323,18 @@ m1_entry_upload_room_attributes:
     sta.l m1_SnesPPUDataString
     sep #$20
 
-    lda.b #!M1_ATTR_TABLE_ROW_TOP
-    sta $5A                         ; RoomNumber selector for vanilla attrib row $C0.
-    jsr m1_entry_call_area_write_ppu_attrib_tbl
-    lda.b #!M1_ATTR_TABLE_ROW_BOTTOM
-    sta $5A                         ; RoomNumber selector for vanilla attrib row $E0.
-    jsr m1_entry_call_area_write_ppu_attrib_tbl
-    lda.b #$FF
-    sta $5A
-
-    lda $1B                         ; PPUDataPending.
-    beq +
+    lda.b #$01
+    sta $1B                         ; PPUDataPending.
+    ldx.b #$00
+    lda.b #!M1_ATTR_UPLOAD_ROW_TOP
+    jsr m1_entry_queue_attribute_row
+    lda.b #!M1_ATTR_UPLOAD_ROW_BOTTOM
+    jsr m1_entry_queue_attribute_row
+    stz $07A1,x
+    stx $07A0                       ; PPUStrIndex.
     jsl SnesPPUPrepare
     jsl SnesProcessPPUString
-+
+
     stz $1B
     stz $07A0
     stz $07A1
@@ -310,6 +345,33 @@ m1_entry_upload_room_attributes:
     sta.l m1_SnesPPUDataString
     sep #$20
     plp
+    rts
+
+m1_entry_queue_attribute_row:
+    sta $02                         ; Source low byte and PPU destination row.
+    lda.b #!M1_ATTR_UPLOAD_ADDR_HIGH
+    sta $07A1,x
+    inx
+    lda $02
+    sta $07A1,x
+    inx
+    lda.b #!M1_ATTR_UPLOAD_ROW_LENGTH
+    sta $07A1,x
+    inx
+
+    lda $02
+    sta $00
+    lda $3A                         ; CartRAMPtrUB from SetupRoom.
+    ora.b #$03                      ; Attribute table page for $6000/$6400 room RAM.
+    sta $01
+    ldy.b #$00
+-
+    lda ($00),y
+    sta $07A1,x
+    inx
+    iny
+    cpy.b #!M1_ATTR_UPLOAD_ROW_LENGTH
+    bne -
     rts
 
 m1_entry_upload_initial_palettes:
@@ -464,11 +526,6 @@ m1_entry_call_area_get_room_num:
 m1_entry_call_area_setup_room:
     jsl m1_entry_call_area_routine
     dw $EA2B                        ; SetupRoom.
-    rts
-
-m1_entry_call_area_destroy_enemies:
-    jsl m1_entry_call_area_routine
-    dw $C8BB                        ; DestroyEnemies.
     rts
 
 m1_entry_call_area_write_ppu_attrib_tbl:
