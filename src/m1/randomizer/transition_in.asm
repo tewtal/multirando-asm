@@ -6,7 +6,6 @@ print "transition to m1 = ", pc
 !M1_ENTRY_ARGS_AREA = $07
 !M1_ENTRY_DOOR_Y = $68
 !M1_ENTRY_SAMUS_Y = $70
-!M1_ENTRY_DOOR_HI = $00
 !M1_ENTRY_DOOR_TYPE = $01
 !M1_ENTRY_DOOR_OPEN_FRAME = $F7
 !M1_ENTRY_DOOR_CLOSE_RESET = $30
@@ -19,6 +18,7 @@ print "transition to m1 = ", pc
 !M1_ENTRY_HORIZONTAL_RIGHT_SCROLL_DIR = $03
 !M1_ENTRY_VERTICAL_MIRROR_CNTRL = $4F
 !M1_ENTRY_HORIZONTAL_MIRROR_CNTRL = $47
+!M1_TILEMAP_UPLOAD_ADDR_HIGH = $20
 !M1_ATTR_UPLOAD_ADDR_HIGH = $23
 !M1_ATTR_UPLOAD_ROW_TOP = $C0
 !M1_ATTR_UPLOAD_ROW_BOTTOM = $E0
@@ -124,6 +124,7 @@ transition_to_m1:
     jsr m1_entry_prepare_room_load_scroll
     jsr m1_entry_load_room
     jsr m1_entry_finalize_entry_scroll
+    jsr m1_entry_activate_loaded_name_table
     jsr m1_entry_seed_entry_door
     jsr m1_entry_apply_room_music
 
@@ -131,7 +132,7 @@ transition_to_m1:
     sta $01
     lda $39                         ; CartRAMPtrLB from SetupRoom.
     sta $00
-    jsl UploadStartTilemap
+    jsr m1_entry_upload_start_tilemap
     jsr m1_entry_upload_room_attributes
     jsr m1_entry_upload_initial_palettes
 
@@ -166,6 +167,7 @@ m1_entry_apply_destination:
     lda.l !IRAM_TRANSITION_DESTINATION_ID+$1
     sta $50                         ; MapPosX = high byte of XXYY room id.
     jsr m1_entry_apply_destination_area
+    jsr m1_entry_apply_area_palette_toggle
 
     lda.l !IRAM_TRANSITION_DESTINATION_ARGS
     and.b #!M1_ENTRY_ARGS_SCROLLING
@@ -197,6 +199,16 @@ m1_entry_apply_destination_area:
     lda.l m1_entry_current_bank_table,x
     sta $23                         ; CurrentBank.
     stz $24                         ; No deferred bank switch.
+    rts
+
+m1_entry_apply_area_palette_toggle:
+    phb
+    jsr m1_entry_get_program_bank
+    pha
+    plb
+    lda.w $95DA                     ; Vanilla startup seeds PalToggle from area data.
+    sta $76
+    plb
     rts
 
 m1_entry_prepare_bank_switch:
@@ -290,6 +302,21 @@ m1_entry_finalize_entry_scroll:
 .exit
     rts
 
+m1_entry_get_loaded_name_table:
+    lda $3A                         ; CartRAMPtrUB from SetupRoom.
+    and.b #$04
+    lsr #2
+    rts
+
+m1_entry_activate_loaded_name_table:
+    lda PPUCNT0ZP
+    and.b #$FE
+    sta PPUCNT0ZP
+    jsr m1_entry_get_loaded_name_table
+    ora PPUCNT0ZP
+    sta PPUCNT0ZP
+    rts
+
 m1_entry_load_room:
     lda.b #$ff
     sta $5A                         ; RoomNumber = undefined before GetRoomNum.
@@ -299,6 +326,31 @@ m1_entry_load_room:
     ldy $5A
     iny
     bne -
+    rts
+
+m1_entry_upload_start_tilemap:
+    lda.b #$00
+    sta.l $002115
+    sta.l $002116
+    jsr m1_entry_get_loaded_name_table
+    asl #2
+    clc
+    adc.b #!M1_TILEMAP_UPLOAD_ADDR_HIGH
+    sta.l $002117
+
+    rep #$10
+    ldx.w #$03C0
+    ldy.w #$0000
+-
+    lda m1_RoomPalette              ; Default palette; full attributes are uploaded next.
+    asl #2
+    sta.l $002119
+    lda ($00), y
+    sta.l $002118
+    iny
+    dex
+    bne -
+    sep #$10
     rts
 
 m1_entry_upload_room_attributes:
@@ -349,7 +401,10 @@ m1_entry_upload_room_attributes:
 
 m1_entry_queue_attribute_row:
     sta $02                         ; Source low byte and PPU destination row.
-    lda.b #!M1_ATTR_UPLOAD_ADDR_HIGH
+    jsr m1_entry_get_loaded_name_table
+    asl #2
+    clc
+    adc.b #!M1_ATTR_UPLOAD_ADDR_HIGH
     sta $07A1,x
     inx
     lda $02
@@ -398,7 +453,7 @@ m1_entry_upload_initial_palettes:
 m1_entry_seed_entry_door:
     jsr m1_entry_get_door_slot
     stx $4B                         ; PageIndex.
-    lda.b #!M1_ENTRY_DOOR_HI
+    jsr m1_entry_get_loaded_name_table
     sta $030C,x                     ; Door ObjectHi.
     sta $030C                       ; Samus ObjectHi.
     jsr m1_entry_get_door_side
