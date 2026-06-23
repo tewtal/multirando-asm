@@ -244,6 +244,60 @@ FixALTTPChecksum:
     sta.l $4033fe
     rtl
 
+; Writes the Z1 item buffer's Items block ($28 bytes) into the Z1 save file in SRAM and
+; repairs its stored checksum, so a cold boot of Z1 (debug-menu boot, or Z1 as the first
+; game) picks the items up. The cross-game transition path restores Z1 items straight
+; into WRAM instead (see RestoreItemBuffer .z1Buffer). Only save slot 0 is used.
+;
+; Z1 SRAM is mapped at $406000 (NES $6000). Save-file format (from the Z1 disassembly):
+; an Items block at $40601A, and a 16-bit checksum at $406524 stored big-endian
+; ([high, low]) that is a plain additive byte sum over name + Items + WorldFlags + a few
+; counters. Only the Items block changes, so the stored checksum is updated by the delta
+; between the new and old item bytes.
+;
+; Runs with A/X 16-bit on entry/exit. TEMP_1 = running 16-bit delta, TEMP_2 =
+; zero-extended byte scratch.
+Z1WriteSramFile:
+    php
+    %ai16()
+    stz.w !IRAM_INVENTORY_TEMP_1         ; running 16-bit checksum delta
+    ldx.w #$0000
+-
+    ; delta += new
+    lda.l !Z1_BUFFER_START, x : and.w #$00ff
+    clc : adc.w !IRAM_INVENTORY_TEMP_1 : sta.w !IRAM_INVENTORY_TEMP_1
+    ; delta -= old
+    lda.l $40601A, x : and.w #$00ff
+    sta.w !IRAM_INVENTORY_TEMP_2
+    lda.w !IRAM_INVENTORY_TEMP_1 : sec : sbc.w !IRAM_INVENTORY_TEMP_2
+    sta.w !IRAM_INVENTORY_TEMP_1
+    ; write new item byte into the save file (only the low byte)
+    sep #$20
+    lda.l !Z1_BUFFER_START, x
+    sta.l $40601A, x
+    rep #$20
+    inx
+    cpx.w #$0028
+    bne -
+
+    ; stored checksum is big-endian: [high]=$406524, [low]=$406525. Read as a 16-bit
+    ; value, add the delta, write back, byte by byte to respect the byte order.
+    sep #$20
+    lda.l $406525                        ; low byte
+    sta.w !IRAM_INVENTORY_TEMP_2
+    lda.l $406524                        ; high byte
+    xba
+    lda.w !IRAM_INVENTORY_TEMP_2         ; A(low)=low, B(high)=high
+    rep #$20
+    clc : adc.w !IRAM_INVENTORY_TEMP_1
+    sep #$20
+    sta.l $406525                        ; new low byte
+    xba
+    sta.l $406524                        ; new high byte
+    rep #$20
+    plp
+    rtl
+
 ;
 ; Writes the item to the correct SRAM buffer and handles anything extra that needs to be done
 ; for items that are not in the active game

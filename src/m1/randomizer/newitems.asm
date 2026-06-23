@@ -276,9 +276,18 @@ M1ItemIdMap:
     db $6E      ; ETank
     db $6F      ; Missiles
 
-SetItemBit:
-    pha : phx
-    
+; ============================================================================
+; Collected-object bit planes (items + doors). See labels.asm for the plane layout.
+; Mother Brain and Zebetites use the linear history instead; only items and doors
+; are tracked here.
+;
+; ComputeBitIndex turns a corrected (X in $07, Y in $06) world-map cell into a
+; byte offset (X reg, the cell index >> 3) and an 8-bit mask (A).
+; ============================================================================
+
+; Adjust $06 (Y) / $07 (X) for the active scroll, exactly like vanilla GetItemXYPos.
+; Used on the WRITE path (mid-scroll). The READ path uses $4F/$50 directly.
+CorrectScrollCoords:
     lda $50                         ;
     sta $07                         ;Temp storage of Samus map position x and y in $07-->
     lda $4F                         ;and $06 respectively.
@@ -305,30 +314,34 @@ SetItemBit:
     clc                             ;
     beq +++                         ;If Scrolling up/down, branch to adjust item y position.
     adc $07                         ;Scrolling left/right. Make any necessary adjustments to-->
-    sta $07                         ;item x position before writing to unique item history.
-    bra .add_to_history             ;($DC51)Add unique item to unique item history.
+    sta $07                         ;item x position.
+    rts
 +++ adc $06                         ;Scrolling up/down. Make any necessary adjustments to-->
-    sta $06                         ;item y position before writing to unique item history.
+    sta $06                         ;item y position.
+    rts
 
-.add_to_history
-    lda.b $06                         ; Load item Y coordinate
+; In:  $06 = Y cell, $07 = X cell (entered in sep #$30).
+; Out: X = byte offset (cell index >> 3), A (8-bit) = bit mask. Leaves the CPU in
+;      sep #$30. Clobbers only A/X (and uses the PPU multiply registers $211b-$2134).
+ComputeBitIndex:
+    lda.b $06                         ; Load Y coordinate
     sta.w $211b
     stz.w $211b
-    lda.b #$20
+    lda.b #$20                        ; Multiply by #$20 (32 cells per row)
     sta.w $211c
 
     rep #$30
 
     lda.w $07 : and #$00ff
-    clc : adc.w $2134                       ; X * Y (for room coordinates)
-    lsr #3 : tax                      ; X = item array offset
+    clc : adc.w $2134                       ; cell index = Y*32 + X
+    lsr #3 : tax                      ; X = byte offset (cell >> 3)
     phx
 
     lda.w $07 : and #$00ff
     clc : adc.w $2134
-    and.w #$0007
+    and.w #$0007                      ; bit position within the byte
     tax
-    
+
     lda.w #$0000
     sec
 -
@@ -336,58 +349,169 @@ SetItemBit:
     dex
     bpl -
 
-    plx
-
-    sep #$20
-    ora.w m1_ItemBitArray, x
-    sta.w m1_ItemBitArray, x
+    plx                               ; X = byte offset
 
     sep #$30
+    rts                               ; A (8-bit) = bit mask, X = byte offset
+
+; Set the collected bit for the current item cell (used by the cross-game item path).
+SetItemBit:
+    pha : phx
+    jsr CorrectScrollCoords
+    jsr ComputeBitIndex
+    ora.w m1_ItemBitArray, x
+    sta.w m1_ItemBitArray, x
     plx : pla
     rts
 
+; Check the collected bit for the current item cell (cross-game item path).
+; Returns carry set if already collected. Uses $4F/$50 directly (read-time coords).
 CheckItemBit:
     pha : phx
-    lda.b $4F                         ; Load item Y coordinate
-    sta.w $211b
-    stz.w $211b
-    lda.b #$20                        ; Multiply by #$20
-    sta.w $211c
-    rep #$30
-
-    lda.w $50 : and #$00ff
-    clc : adc.w $2134                       ; X * Y (for room coordinates)
-    lsr #3 : tax                      ; X = item array offset
-    phx
-
-    lda.w $50 : and #$00ff
-    clc : adc.w $2134
-    and.w #$0007
-    tax
-    
-    lda.w #$0000
-    sec
--
-    rol
-    dex
-    bpl -
-
-    plx
-
-    sep #$20
+    lda.b $50 : sta.b $07
+    lda.b $4F : sta.b $06
+    jsr ComputeBitIndex
     and.w m1_ItemBitArray, x
     beq .not_set
-    
-    sep #$30
-    pla : plx
+
+    plx : pla
     sec
     rts
 
 .not_set
-    sep #$30
-    pla : plx
+    plx : pla
     clc
-    rts    
+    rts
+
+; ----------------------------------------------------------------------------
+; AddItemToHistory_plane replaces the vanilla AddItemToHistory body ($DC51),
+; reached by item pickups and door opens. $09 = object type: $0A is a missile/red
+; door -> door plane, anything else -> item plane. Returns via RTL.
+; ----------------------------------------------------------------------------
+AddItemToHistory_plane:
+    pha : phx : phy
+    php
+    sep #$30
+
+    ; $06 = corrected Y, $07 = corrected X (set up by GetItemXYPos, including the
+    ; door's left/right cell adjustment).
+    jsr ComputeBitIndex               ; A = mask, X = byte offset
+
+    ldy.b $09
+    cpy.b #$0A                         ; missile/red door?
+    bne +
+    ora.w m1_DoorBitArray, x
+    sta.w m1_DoorBitArray, x
+    bra ++
++   ora.w m1_ItemBitArray, x
+    sta.w m1_ItemBitArray, x
+++
+    plp
+    ply : plx : pla
+    rtl
+
+; The vanilla raw linear-history writer (formerly $DC54), relocated here for Mother
+; Brain / Zebetites. $06/$07 hold the synthetic item ID. Reached via JSL. Returns RTL.
+AddItemToHistory_raw:
+    php
+    sep #$30
+    ldy.w NumUniqueItems
+    lda.b $06
+    sta.w UnqItmHist, y
+    lda.b $07
+    sta.w UnqItmHist+1, y
+    iny
+    iny
+    sty.w NumUniqueItems
+    plp
+    rtl
+
+; CheckForItem replacement ($EE4A). Items/doors are answered from the bit planes;
+; Mother Brain / Zebetites fall through to the linear scan. Callers set $06/$07 to the
+; packed ID; returns carry set if the object is already recorded. Returns via RTL.
+;
+; Packed ID layout from CreateItemID: $07 = tttttt XX (top 6 bits = type),
+; $06 = XXX YYYYY. Item types are 1-9 and $0C; doors are $0A; MB is $0E and Zebetites
+; are $0F-$13. So type = $07 >> 2 >= $0E selects MB/Zeb.
+CheckForItem_plane:
+    php
+    sep #$30
+    phx                               ; preserve caller's X (ComputeBitIndex clobbers it).
+                                      ; Pushed after sep #$30 so push/pull widths match.
+
+    lda.b $07
+    lsr : lsr                         ; A = type (top 6 bits of the 16-bit ID)
+    cmp.b #$0E                        ; Mother Brain / Zebetite?
+    bcs .linear                       ; if type >= $0E, use the linear scan
+
+    ; Item or door. Unpack X and Y from the packed ID and test the right plane bit;
+    ; the packed $06/$07 are stashed on the stack and restored after. Unpack mirrors
+    ; CreateItemID in reverse:
+    ;   X = (($07 & $03) << 3) | ($06 >> 5)   Y = $06 & $1F
+    lda.b $06 : pha                    ; [S+2] preserve packed $06
+    lda.b $07 : pha                    ; [S+1] preserve packed $07
+    lsr : lsr : pha                    ; [S+0] type (for plane select)
+
+    lda.b $07
+    and.b #$03
+    asl : asl : asl                   ; high 2 X bits << 3
+    sta.b $07
+    lda.b $06
+    lsr : lsr : lsr : lsr : lsr       ; low 3 X bits
+    ora.b $07
+    sta.b $07                         ; $07 = X
+    lda.b $06
+    and.b #$1F
+    sta.b $06                         ; $06 = Y
+
+    jsr ComputeBitIndex               ; A = mask, X = byte offset
+    ply                               ; Y = type
+    cpy.b #$0A
+    bne +
+    and.w m1_DoorBitArray, x
+    bra .test
++   and.w m1_ItemBitArray, x
+.test
+    tay                               ; Y = AND result (0 => not collected)
+    pla : sta.b $07                   ; restore packed $07
+    pla : sta.b $06                   ; restore packed $06
+    cpy.b #$00
+    beq .clear
+    plx                               ; restore caller's X
+    plp                               ; restore entry P
+    sec
+    rtl
+.clear
+    plx                               ; restore caller's X
+    plp                               ; restore entry P
+    clc
+    rtl
+
+.linear
+    ; Vanilla CheckForItem linear scan over the MB/Zeb history.
+    ldy.w NumUniqueItems
+    beq .clear_l
+-
+    lda.b $07
+    cmp.w NumUniqueItems, y
+    bne +
+    lda.b $06
+    cmp.w DataSlot, y
+    beq .set_l
++
+    dey
+    dey
+    bne -
+.clear_l
+    plx                               ; restore caller's X
+    plp
+    clc
+    rtl
+.set_l
+    plx                               ; restore caller's X
+    plp
+    sec
+    rtl
 
 ChooseHandlerTable_extended:
     dw $C45C                        ; rts.

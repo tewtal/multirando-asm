@@ -453,6 +453,9 @@ DebugMenu:
     dw #dm_boot_m1
     dw #dm_boot_sm
     dw $FFFF
+    dw #dm_grant_items
+    dw #dm_grant_progression
+    dw $FFFF
     dw #dm_boot_credits
     dw #$0000
     %cm_header("Z1Z3M1M3 - Debug")
@@ -516,7 +519,124 @@ dm_boot_credits:
     lda.w #mb_snes_run_credits>>16 : sta.l $000000, x : inx #2
     lda.w #$0000 : sta.l $000000, x
     txa : sta.l SNES_CMD_PTR
-    jml mb_main ; Return to main kernel loop      
+    jml mb_main ; Return to main kernel loop
+
+; Grant a full set of gear/items to every game (no pendants/crystals/triforces).
+; Drives the shared mb_WriteItemToInventory routine over a curated list of global
+; item ids, which writes each into the correct game's item buffer. Each game's
+; transition-in restores those buffers into its SRAM/WRAM, so the items are present
+; the next time a game is booted from this menu.
+dm_grant_items:
+    %cm_jsl("Grant All Items", .routine, #$0000)
+    .routine
+    php
+    rep #$30
+    ldx.w #$0000
+    .loop
+    lda.l DebugItemList, x
+    and.w #$00FF
+    cmp.w #$00FF                 ; $FF terminates the list
+    beq .done
+    phx                         ; WriteItemToInventory returns Game Id in X
+    jsl mb_WriteItemToInventory
+    plx
+    inx
+    bra .loop
+    .done
+    ; The grant only updated the shared item buffers. A cold boot reads each game's own
+    ; inventory store, so push the buffers out to those stores:
+    ;  - SM and ALTTP: copy buffer into SRAM + fix checksum (RestoreItemBuffer).
+    lda.w #$0000 : jsl mb_RestoreItemBuffer   ; SM    ($400010)
+    lda.w #$0001 : jsl mb_RestoreItemBuffer   ; ALTTP ($402300)
+    lda.w #$0003 : jsl mb_RestoreItemBuffer   ; M1
+    ;  - Z1: write the granted items into the on-cart SRAM save file + fix checksum.
+    jsl mb_Z1WriteSramFile
+    plp
+    JML cm_previous_menu
+
+; Grant progression rewards that the shared item routine can't deliver: ALTTP
+; pendants + crystals, Z1 triforce fragments, and the SM/M1 main boss kills (the
+; four SM Golden Four bosses and M1's Kraid + Ridley). Mother Brain and the final
+; escape are left untriggered so the endings stay testable.
+dm_grant_progression:
+    %cm_jsl("Grant Progression", .routine, #$0000)
+    .routine
+    php
+    sep #$20
+    rep #$10
+    ; --- ALTTP ---
+    ; pendants (SRAM $7EF374 -> buffer +$74) and crystals (SRAM $7EF37A -> +$7A)
+    lda.b #$07 : sta.l !ALTTP_BUFFER_START+$74     ; all three pendants
+    lda.b #$3F : sta.l !ALTTP_BUFFER_START+$7A     ; all six crystals
+
+    ; --- Zelda 1 ---
+    ; triforce fragments (InvTriforce $7E0671 -> Z1 buffer +$1A): set all 8 bits
+    lda.b #$FF : sta.l !Z1_BUFFER_START+$1A
+
+    ; --- Super Metroid main bosses ---
+    ; The SM item buffer mirrors WRAM $7ED7C0..; buffer offset = addr - $D7C0.
+    ; Vanilla boss "dead" event bits (so the rooms stay cleared):
+    lda.b #$01 : ora.l !SM_BUFFER_START+$68 : sta.l !SM_BUFFER_START+$68   ; Kraid  $7ED828.0
+    lda.b #$01 : ora.l !SM_BUFFER_START+$6A : sta.l !SM_BUFFER_START+$6A   ; Ridley $7ED82A.0 (Norfair)
+    lda.b #$01 : ora.l !SM_BUFFER_START+$6B : sta.l !SM_BUFFER_START+$6B   ; Phantoon $7ED82B.0
+    lda.b #$01 : ora.l !SM_BUFFER_START+$6C : sta.l !SM_BUFFER_START+$6C   ; Draygon  $7ED82C.0
+    ; Boss-token / credits bits at $7ED834 (+$74): counted toward the G4 gate and the
+    ; goal tracker. Set all four.
+    lda.b #$0F : ora.l !SM_BUFFER_START+$74 : sta.l !SM_BUFFER_START+$74
+    ; G4 grey-door open flag (keydoor event $7ED832.0, +$72) so Tourian is reachable.
+    lda.b #$01 : ora.l !SM_BUFFER_START+$72 : sta.l !SM_BUFFER_START+$72
+
+    ; --- Metroid 1 main bosses ---
+    ; The M1 item buffer mirrors WRAM $6876..; buffer offset = addr - $6876.
+    ; KraidStatueStat $687B (+$05): bit7 = statue up, bit0 = defeated.
+    ; RidlyStatueStat $687C (+$06): bit7 = statue up, bit1 = defeated.
+    lda.b #$81 : ora.l !M1_BUFFER_START+$05 : sta.l !M1_BUFFER_START+$05   ; Kraid up + dead
+    lda.b #$82 : ora.l !M1_BUFFER_START+$06 : sta.l !M1_BUFFER_START+$06   ; Ridley up + dead
+
+    rep #$30
+    ; Push the changed buffers into the stores each game reads on a cold boot.
+    jsl mb_Z1WriteSramFile          ; Z1 -> SRAM save file (+fix checksum)
+    lda.w #$0000 : jsl mb_RestoreItemBuffer   ; SM    -> SRAM ($400010) + checksum
+    lda.w #$0001 : jsl mb_RestoreItemBuffer   ; ALTTP -> SRAM ($402300) + checksum
+    lda.w #$0003 : jsl mb_RestoreItemBuffer   ; M1    -> SRAM ($408876)
+    plp
+    JML cm_previous_menu
+
+; Curated list of global item ids granted by "Grant All Items" (see itemmap.md).
+; Excludes pendants/crystals/triforces (progression) and consumables-only fillers.
+; Repeated ids stack (tanks/ammo/heart containers). Terminated by $FF.
+DebugItemList:
+    ; --- Super Metroid (gear) ---
+    db $B2, $B3, $B4, $B5, $B6, $B7, $B8, $B9, $BA   ; varia, spring, morph, screw, gravity, hijump, space, bombs, speed
+    db $B0, $B1, $BB, $BC, $BD, $BE, $BF             ; grapple, xray, charge, ice, wave, spazer, plasma
+    db $C0, $C0, $C0, $C0, $C0, $C0, $C0, $C0        ; energy tanks (14 total, across these two rows)
+    db $C0, $C0, $C0, $C0, $C0, $C0                  ;
+    db $C1, $C1, $C1, $C1                            ; 4 reserve tanks
+    db $C2, $C2, $C2, $C2, $C2, $C2                  ; missiles (5 each)
+    db $C3, $C3, $C3, $C3                            ; super missiles
+    db $C4, $C4, $C4, $C4                            ; power bombs
+    ; --- A Link to the Past (items) ---
+    db $02, $06                                      ; gold sword, mirror shield
+    db $0B, $0C, $2A, $0A, $0D                       ; bow, boomerangs, hookshot, powder
+    db $07, $08, $09, $0F, $10, $11, $12             ; rods, hammer, medallions, lamp
+    db $14, $21, $1D, $15, $18, $19, $1A             ; flute, net, book, somaria, byrna, cape, mirror
+    db $1B, $1C, $1E, $1F, $4B, $23                  ; glove, mitt, flippers, pearl, boots, red tunic
+    db $3B, $4F                                      ; bow & silver arrows, quarter magic
+    db $16, $16, $16, $16                            ; 4 bottles
+    db $52, $52, $52, $54, $54, $54                  ; +30 bombs, +30 arrows
+    db $26, $26, $26, $26, $26, $26, $26             ; 7 heart containers
+    db $40, $40                                      ; rupees
+    ; --- Zelda 1 (items) ---
+    db $D3, $EC, $DA, $D9, $D4, $D5, $D7             ; magic sword, shield, bow, silver arrows, bait, recorder, red candle
+    db $E0, $E1, $E3, $E4, $E5, $DB, $DC, $DD, $EE   ; rod, book, red ring, bracelet, letter, magic key, raft, ladder, magic boomerang
+    db $D0, $D0                                      ; bombs
+    db $EA, $EA, $EA, $EA, $EA, $EA, $EA             ; heart containers
+    db $DF, $DF                                      ; rupees
+    ; --- Metroid 1 (gear) ---
+    db $62, $63, $66, $67, $68, $69, $6C, $6D        ; bombs, hijump, long, screw, morph, varia, wave, ice
+    db $6E, $6E, $6E, $6E, $6E, $6E                  ; energy tanks
+    db $6F, $6F, $6F, $6F                            ; missiles (5 each)
+    db $FF                                           ; terminator
 
 init_wram_based_on_sram:
 {

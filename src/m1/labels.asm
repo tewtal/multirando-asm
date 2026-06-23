@@ -74,4 +74,16 @@ m1_PPUDataString = $07A1	; Thru $07F0. String of data bytes to be written to PPU
 ; Internal M1 Functions
 GetRoomNum = $E720
 
-m1_ItemBitArray = $7E00
+; Vanilla M1 "unique item history" RAM (NES cart RAM), used only by Mother Brain and the
+; 5 Zebetites. The scan indexes entries with y = count (even, descending): writes store
+; $06 at UnqItmHist,y and $07 at UnqItmHist+1,y; the scan reads them back as
+; NumUniqueItems,y ($07) and DataSlot,y ($06). The differing bases line up because the
+; scan starts at y = count (see CheckForItem_plane .linear).
+DataSlot       = $6885      ; $06 high-byte read base in the scan
+NumUniqueItems = $6886      ; entry count, increments by 2; also the $07 read base
+UnqItmHist     = $6887      ; thru $68FC: write base, 2 bytes per entry
+
+; Collected-object bit planes for items and doors, indexed by world-map cell (Y*32+X),
+; 1 bit/cell, 128 bytes each. 
+m1_ItemBitArray = $7E00     ; item plane  ($7E00-$7E7F)
+m1_DoorBitArray = $7E80     ; door plane  ($7E80-$7EFF)

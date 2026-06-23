@@ -94,6 +94,25 @@ org $818619
     jsl LoadCaveShopItems_extended
     bra $0A
 
+; Replace the vanilla OverworldPersonTextSelectors read (20 entries) with an
+; extended 48-entry table so cave IDs 0x24-0x3F have valid shopkeeper text and
+; PickItem/Shop flag bits. Original $8600-$860D (14 bytes) reads the table,
+; masks, and stores PersonTextSelector ($0415) and $03; the routine does all of
+; that, then we branch to $860E (the Y*3 setup).
+org $818600
+    jsl LoadCaveTextSelector_extended
+    bra $08
+
+; DrawCavePerson sprite fix. Original $8739-$873F:
+;   LDY $0350 (ObjType+1) : CPY #$7B : BCS $8743
+; Replace with a call that clamps extended cave types (>= 0x7E) to the moblin
+; shopkeeper (0x7B) before the mirror decision, then re-issue the BCS. The two
+; JMPs at $8740 (mirrored) / $8743 (not mirrored) are left intact.
+org $818739
+    jsl ClampCaveTypeAndCompare  ; sets Y (clamped) and carry; $8739-$873C
+    bcs $04                      ; carry set => not mirrored: branch to $8743; $873D-$873E
+    nop                          ; $873F: pad; carry clear falls through to mirrored JMP at $8740
+
 ; ========================================================================
 
 ; ========================================================================

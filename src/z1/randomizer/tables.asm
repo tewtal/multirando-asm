@@ -24,76 +24,6 @@ db $2F, $2F, $2F, $2F, $2F, $2F, $19, $19, $0F, $2F, $16, $2F, $19, $19, $19, $1
 db $2F, $19, $0F, $2F, $2F, $2F, $2F, $2F, $00, $00, $2F, $2F, $00, $19, $0F, $11
 db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $19, $2F, $00, $2F, $2F, $0F, $2F, $19
 
-;
-; Repointed cave data to support extended item id
-; ranges
-;
-print "CaveShopItems_extended = ", pc
-CaveShopItems_extended:
-    db $2F, $01, $2F
-    db $20, $2F, $1A
-    db $2F, $02, $2F
-    db $2F, $03, $2F
-    db $2F, $2F, $2F
-    db $2F, $2F, $2F
-    db $18, $18, $18
-    db $2F, $2F, $2F
-    db $2F, $15, $2F
-    db $2F, $2F, $2F
-    db $1F, $2F, $20
-    db $18, $18, $18
-    db $18, $18, $18
-    db $1C, $00, $08
-    db $1C, $19, $06
-    db $1C, $04, $22
-    db $19, $12, $04
-    db $2F, $18, $2F
-    db $2F, $18, $2F
-    db $2F, $18, $2F
-
-CaveShopFlags_extended:
-    db $00, $00, $40
-    db $00, $00, $40
-    db $40, $00, $40
-    db $40, $00, $40
-    db $00, $00, $00
-    db $00, $00, $00
-    db $80, $80, $C0
-    db $00, $00, $00
-    db $00, $00, $40
-    db $00, $00, $00
-    db $00, $00, $C0
-    db $80, $40, $C0
-    db $80, $40, $C0
-    db $00, $00, $C0
-    db $00, $00, $C0
-    db $00, $00, $C0
-    db $00, $00, $C0
-    db $00, $80, $40
-    db $00, $80, $40
-    db $00, $80, $40
-
-CaveShopPrices_extended:
-    db $00, $00, $00
-    db $00, $00, $00
-    db $00, $00, $00
-    db $00, $00, $00
-    db $00, $00, $00
-    db $00, $00, $00
-    db $0A, $0A, $0A
-    db $00, $00, $00
-    db $00, $00, $00
-    db $00, $00, $00
-    db $28, $00, $44
-    db $05, $0A, $14
-    db $0A, $1E, $32
-    db $82, $14, $50
-    db $A0, $64, $3C
-    db $5A, $64, $0A
-    db $50, $FA, $3C
-    db $00, $1E, $00
-    db $00, $64, $00
-    db $00, $0A, $00
 
 ; Repointed extended tables for item data
 ; Item descriptor class, high nibble = class, low nibble = upgrade level etc
@@ -519,3 +449,111 @@ RoomItemsUW_extended_custom:
     db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
     db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
 
+
+; ============================================================================
+; Extended cave/shop tables
+; ----------------------------------------------------------------------------
+; 48 entries each (cave indices 0-0x2F = cave IDs 0x10-0x3F), 3 bytes per cave
+; for items/flags/prices and 1 byte per cave for the text/flag selector.
+; Indices 0-19 hold the vanilla wares/flags/prices/text; 20-47 default to empty
+; and are written by the randomizer when shop shuffle assigns new cave IDs.
+; ============================================================================
+org $8A9600
+print "CaveShopItems_extended = ", pc
+CaveShopItems_extended:
+    db $2F, $01, $2F
+    db $20, $2F, $1A
+    db $2F, $02, $2F
+    db $2F, $03, $2F
+    db $2F, $2F, $2F
+    db $2F, $2F, $2F
+    db $18, $18, $18
+    db $2F, $2F, $2F
+    db $2F, $15, $2F
+    db $2F, $2F, $2F
+    db $1F, $2F, $20
+    db $18, $18, $18
+    db $18, $18, $18
+    db $1C, $00, $08
+    db $1C, $19, $06
+    db $1C, $04, $22
+    db $19, $12, $04
+    db $2F, $18, $2F
+    db $2F, $18, $2F
+    db $2F, $18, $2F
+    ; Indices 20-47 (cave IDs 0x24-0x3F): 28 entries * 3 = 84 bytes, empty.
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+    db $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F, $2F
+
+CaveShopFlags_extended:
+    db $00, $00, $40
+    db $00, $00, $40
+    db $40, $00, $40
+    db $40, $00, $40
+    db $00, $00, $00
+    db $00, $00, $00
+    db $80, $80, $C0
+    db $00, $00, $00
+    db $00, $00, $40
+    db $00, $00, $00
+    db $00, $00, $C0
+    db $80, $40, $C0
+    db $80, $40, $C0
+    db $00, $00, $C0
+    db $00, $00, $C0
+    db $00, $00, $C0
+    db $00, $00, $C0
+    db $00, $80, $40
+    db $00, $80, $40
+    db $00, $80, $40
+    ; Indices 20-47: 28 entries * 3 = 84 bytes, no flags.
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+CaveShopPrices_extended:
+    db $00, $00, $00
+    db $00, $00, $00
+    db $00, $00, $00
+    db $00, $00, $00
+    db $00, $00, $00
+    db $00, $00, $00
+    db $0A, $0A, $0A
+    db $00, $00, $00
+    db $00, $00, $00
+    db $00, $00, $00
+    db $28, $00, $44
+    db $05, $0A, $14
+    db $0A, $1E, $32
+    db $82, $14, $50
+    db $A0, $64, $3C
+    db $5A, $64, $0A
+    db $50, $FA, $3C
+    db $00, $1E, $00
+    db $00, $64, $00
+    db $00, $0A, $00
+    ; Indices 20-47: 28 entries * 3 = 84 bytes, no price.
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+; Per-cave text/flag byte (48 entries). Low 6 bits = shopkeeper text selector;
+; high 2 bits = PickItem/Shop flags. Indices 0-19 mirror the vanilla
+; OverworldPersonTextSelectors; 20-47 written by the randomizer.
+CaveShopText_extended:
+    db $40, $60, $42, $42, $04, $06, $48, $0A
+    db $4C, $0E, $D0, $D2, $D2, $DC, $DC, $DE
+    db $DE, $62, $62, $62
+    db $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62
+    db $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62, $62
+warnpc $8AB000

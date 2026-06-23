@@ -37,6 +37,32 @@ org $939D79 : lda [$00], y              ; Rinka
 
 
 ; ============================================================================
+; Route item/door collected-state tracking through the bit planes (see newitems.asm)
+; instead of the vanilla "unique item history". Mother Brain and the 5 Zebetites stay
+; on the linear history.
+;
+; AddItemToHistory body ($DC51) is diverted to the plane writer; the raw linear writer
+; ($DC54) is relocated to bank $99 and a JML trampoline left in the freed tail. The
+; bank-$99 handlers return via RTL, so each hook ends in RTS to match the vanilla
+; routine's RTS return. Freed $DC51-$DC66 tail layout:
+;   $DC51 jsl AddItemToHistory_plane   (4)
+;   $DC55 rts                          (1)  return to GetItemXYPos's caller
+;   $DC56 jml AddItemToHistory_raw     (4)  MB/Zeb trampoline
+%hook($DC51, "jsl AddItemToHistory_plane : rts")
+%hook($DC56, "jml AddItemToHistory_raw")
+%hook($EE4A, "jsl CheckForItem_plane : rts")
+
+; Repoint the two raw-history callers (MB at $FDF6, Zeb at $FE18) from $DC54 to the
+; $DC56 trampoline. Same opcode and length, so nothing shifts.
+%hook($FDF6, "jsr $DC56")
+%hook($FE18, "jmp $DC56")
+
+; Record beam weapons (Long/Wave/Ice) in the bit plane like any other item. Vanilla
+; skips the history write for beams ($DBB6 INY : BEQ +); NOP the skip so beams fall
+; through to GetItemXYPos -> AddItemToHistory_plane, preventing their orbs respawning.
+%hook($DBB7, "nop #2")
+
+; ============================================================================
 ; Allow new item types to support out-of-game items easily
 ; This extends the game with item type $0B, which can have 256 entries in an
 ; extended graphics data table

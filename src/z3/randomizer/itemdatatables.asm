@@ -1160,8 +1160,8 @@ ItemReceiptGraphicsOffsets:
 	dw $1DE0        				       ; 8B - Brinstar Boss Key      (SM)
 	dw BigDecompressionBuffer+$1140        ; 8C - Compass of Desert Palace
 	dw BigDecompressionBuffer+$1140        ; 8D - Compass of Eastern Palace
-	dw BigDecompressionBuffer+$1140        ; 8E - Wrecked Ship L1 Key    (SM)
-	dw BigDecompressionBuffer+$1140        ; 8F - Wrecked Ship Boss Key  (SM)
+	dw $1D60                               ; 8E - Wrecked Ship L1 Key    (SM)
+	dw $1DE0                               ; 8F - Wrecked Ship Boss Key  (SM)
 	
 	;dw $0                                 ; 90 - Skull key
 	;dw $0                                 ; 91 - Reserved	
