@@ -4,7 +4,7 @@
 ; Transition table when entering a dungeon/cave
 transition_table_in:
 ;  room_id, owscrl, game,  destination, args
-dw $011F, $0002, $0003, $0C0C, $0000       ; Hylia Fortune teller -> M1 Brinstar Shaft
+dw $011f, $0002, $0003, $0b0c, $0040       ; Z3 Lumberjack House -> M1 $0B0C, right-hand door, vertical Brinstar
 dw $0122, $0035, $0000, m3_CrateriaMapDoorData_in, $0000       ; Hylia Fortune teller -> M3 Parlor
 dw $0122, $0011, $0002, $0066, $0003       ; Kakariko Fortune teller -> Z1
 
