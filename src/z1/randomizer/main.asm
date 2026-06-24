@@ -10,6 +10,7 @@ incsrc "ending.asm"
 incsrc "quickswap.asm"
 incsrc "goals.asm"
 incsrc "dungeons.asm"
+incsrc "book.asm"
 incsrc "spritepatterns.asm"
 
 org $8A8000

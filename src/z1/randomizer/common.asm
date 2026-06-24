@@ -50,3 +50,11 @@ InitMode_EnterRoom_SpriteHook:
     jsr $EA3D                   ; Call original subroutine
     jsl HandleRoomSpriteSwap    ; Check if sprite tiles need swapping
     rts
+
+; =============================================
+; Trampolines for the book item checks
+; ============================================
+
+HandleShotBlocked_BookCheck_Common:
+    jsl HandleShotBlocked_BookCheck
+    rts

@@ -34,7 +34,7 @@ org $85EA11
 %zhook($E729, "jsr LoadItemIdToSlot_extended")
 %zhook($E73A, "jsr LoadItemSlotToPaletteOffsetsOrValues_extended")
 org $81AC02 : jsr LoadItemIdToSlot_extended
-org $81AC06 : jsr LoadItemIdToDescriptor_extended
+org $81AC05 : jsl LoadItemIdToDescriptor_BookCheck
 org $81B1A6 : jsr LoadAnim_ItemFrameOffsets_extended_y
 org $81B1AD : jsr LoadAnim_ItemFrameTiles_extended_y
 
@@ -200,3 +200,16 @@ org $86806C
 org $8587C6
     jsr InitMode_EnterRoom_SpriteHook
 
+
+; =============================================
+; Configurable Book item behavior
+; =============================================
+
+; Hook the check for whether the Book reveals maps, and if so, set the StatusBarMapTrigger flag when entering a dungeon
+; LDX #$11 : LDA $10
+org $85B5EF
+    jsl HasMap_BookCheck : bcc $12
+
+; Replace the Book check in blocked magic-shot handling so the Book can stop
+; creating fire when repurposed without moving the whole routine to common.
+%zhook($F3D9, "jsr HandleShotBlocked_BookCheck_Common")
