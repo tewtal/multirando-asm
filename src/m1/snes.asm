@@ -227,12 +227,7 @@ WriteScroll:
     and #$01
     sta $210d
 
-    ; Handled by H-DMA
-    ; lda ScrollY
-    ; sta $210e
-    ; lda PPUCNT0ZP
-    ; and #$01
-    ; sta $210e
+    jsl UpdateScrollHDMA
     rtl
 
 ; Converts NES PPU Strings to SNES PPU strings

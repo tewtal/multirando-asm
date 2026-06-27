@@ -31,7 +31,6 @@ NMIStart:
     phk : plb
     sep #$30
     lda $4210
-    jsl UpdateScrollHDMA
     jsl nes_overlay_handle
 
     lda.b m1_FrameCounter
