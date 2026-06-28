@@ -49,6 +49,10 @@ endmacro
 %hook($C454, "jsr WritePPUCTRL1")
 %hook($FFB7, "jsr WritePPUCTRL1")
 
+; Refresh the SNES OAM buffer after vanilla clears NES sprite RAM.
+%hook($C1A3, "jsl EraseAllSpritesHook : rts")
+%hook($C1BC, "jsl RemIntroSprtsHook : rts")
+
 ; Patch startup to not trash the stack
 %hook($C03E, "nop")
 

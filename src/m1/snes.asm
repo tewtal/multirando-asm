@@ -80,6 +80,10 @@ UpdateScrollHDMA:
 
 !VScrollOffset = $0F
 !VSpriteOffset = $00
+!GameMode = $1D
+!TitleRoutine = $1F
+!SpriteLoadPend = $C8
+!IntroStrSprt00 = $6E00
 
 SnesOamPrepare:
     PHP : PHB : PEA $7E7E : PLB : PLB
@@ -162,6 +166,64 @@ SnesOamPrepare:
     PLP
     RTS
 
+EraseAllSpritesHook:
+    SEP #$30
+    LDY #$02
+    STY $01
+    LDY #$00
+    STY $00
+    LDY #$00
+    LDA #$F0
+-
+    STA ($00), Y
+    INY
+    BNE -
+    JSR EraseAllSpritesHook_UpdateIntroSprites
+    JSR SnesOamPrepare
+    RTL
+
+RemIntroSprtsHook:
+    SEP #$30
+    LDY #$02
+    STY $01
+    LDY #$00
+    STY $00
+    LDY #$5F
+    LDA #$F4
+-
+    STA ($00), Y
+    DEY
+    BPL -
+    JSR EraseAllSpritesHook_UpdateIntroSprites
+    JSR SnesOamPrepare
+    RTL
+
+EraseAllSpritesHook_UpdateIntroSprites:
+    LDA !GameMode
+    BEQ .Exit
+    LDA !TitleRoutine
+    CMP #$1D
+    BCS .Exit
+    LDA !SpriteLoadPend
+    BEQ .Exit
+    LDA m1_FrameCounter
+    LSR
+    BCS .Exit
+    LDX #$9F
+-
+    DEC !IntroStrSprt00, X
+    DEC $0260, X
+    DEX
+    DEX
+    DEX
+    DEX
+    CPX #$FF
+    BNE -
+    LDA #$00
+    STA !SpriteLoadPend
+.Exit
+    RTS
+
 SnesOamDMA:
     REP #$30
     
@@ -178,13 +240,6 @@ SnesOamDMA:
     SEP #$20
     LDA #$01
     STA $420B
-
-
-    LDA #$18
-    STA $2101
-
-    LDA #$15
-    STA $212C
 
     SEP #$30
     RTL

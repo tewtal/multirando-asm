@@ -47,13 +47,12 @@ transition_to_m1:
     lda #$20 : sta $2107
     lda #$01 : sta $210B
     lda #$01 : sta $2105
-    lda #$00 : sta $2101
-    lda #$15 : sta $212C
+    lda #$18 : sta $2101
     lda #$00 : sta $212d
     lda #$8f : sta $2100
     jsl SetupScrollHDMA
 
-    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
+    jsl nes_initOAMBuffer  ; Clear unused SNES OAM slots
 
     ; Clear SNES port buffers
     rep #$30
@@ -97,7 +96,7 @@ transition_to_m1:
     lda #%00010000                  ; BG pattern table $1000, nametable 0, NMI off.
     sta PPUCNT0ZP
     lda #%00000010
-    sta PPUCNT1ZP
+    jsr WritePPUCTRL1
 
     stz $1c                         ; PalDataPending.
 
@@ -137,9 +136,7 @@ transition_to_m1:
     jsr m1_entry_upload_initial_palettes
 
     lda #$1f
-    sta PPUCNT1ZP
-    lda #$0f
-    sta.l $002100
+    jsr WritePPUCTRL1
     lda PPUCNT0ZP
     ora #$80
     sta PPUCNT0ZP
@@ -361,10 +358,8 @@ m1_entry_upload_room_attributes:
     lda PPUCNT0ZP
     and.b #$7F
     sta PPUCNT0ZP
-    lda.b #$8F
-    sta.l $002100
     lda.b #%00000010
-    sta PPUCNT1ZP
+    jsr WritePPUCTRL1
     stz $1B
     stz $07A0
     stz $07A1
@@ -435,10 +430,8 @@ m1_entry_upload_initial_palettes:
     lda PPUCNT0ZP
     and.b #$7F
     sta PPUCNT0ZP
-    lda.b #$8F
-    sta.l $002100
     lda.b #%00000010
-    sta PPUCNT1ZP
+    jsr WritePPUCTRL1
     rep #$20
     lda.w #$0000
     sta.l m1_SnesPPUDataStringPtr

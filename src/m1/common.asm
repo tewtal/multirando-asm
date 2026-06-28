@@ -56,6 +56,27 @@ WritePPUCTRL1:
     sta PPUCNT1ZP
     pha
     and #$18
+    cmp #$18
+    beq .bgObj
+    cmp #$10
+    beq .objOnly
+    cmp #$08
+    beq .bgOnly
+    lda #$00
+    bra .writeLayers
+.bgObj
+    lda #$15
+    bra .writeLayers
+.objOnly
+    lda #$10
+    bra .writeLayers
+.bgOnly
+    lda #$05
+.writeLayers
+    sta $212C
+    pla
+    pha
+    and #$18
     beq .blank
     lda #$0f
     bra +
