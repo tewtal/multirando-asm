@@ -607,6 +607,7 @@ TransferSourceSet = $0B20
 PalIdx = $0B0E
 
 NeedsBGPriorityUpdate = $0B22
+SnesTileBufPrepped = $0B23
 
 DungeonCopyLength = $0A10
 
@@ -616,8 +617,6 @@ ScrollYDMA = $0A40
 ScrollXDMA = $0A42
 VScrollAddrTmp = $0A44
 VScrollSplit = $0A46
-ScrollXDMAPrev = $0A84
-ScrollYDMAPrev = $0A48
 
 ButtonsPressedSnes = $0A4A
 ButtonsDownSnes = $0A4C

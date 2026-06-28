@@ -60,10 +60,6 @@ UpdateVScrollHDMA:
     sta VScrollSplit
 ++
 
-    ;  Save the previous ScrollYDMA to ScrollYDMAPrev
-    lda ScrollYDMA
-    sta ScrollYDMAPrev
-
     rep #$20
     lda CurVScroll : and #$00ff : sta ScrollYDMA
 
@@ -91,9 +87,8 @@ UpdateVScrollHDMA:
 
     cmp #$7f
     bcs .secondHalf
-    cmp #$00        ;  Avoid a zero in [A] getting written to the second hdma line
-    bne .nonzero    ;  counter byte [VScrollTable_len1] which disables hdma for the rest of frame
-                    ;  and displays the wrong screen leading to tile-attribute flicker
+    cmp #$00        ;  Avoid a zero in [A] getting written to the first variable HDMA
+    bne .nonzero    ;  counter byte, which disables HDMA for the rest of the frame.
     lda #$80
     sta VScrollTable_len1
     stz VScrollTable_len2
@@ -124,23 +119,6 @@ UpdateVScrollHDMA:
     sta VScrollTable_len3
     rep #$20
     lda ScrollYDMA
-
-    ;  If ScrollYDMA is $0f, wait one more time before returning to nonscrolling operation since both
-    ;  tilesets should be identical and the one being updated has an extra frame to
-    ;  process attribute data.  Fixes N->S scroll tileset attribute flicker
-    cmp #$000f
-    bne .normalFrame
-    lda ScrollYDMAPrev
-    cmp #$0080      ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
-    bcc .notSpecialCase
-    cmp #$00d1      ;  Only use the previous value if we're not doing a pause menu scroll
-    bcc .delayedFrame
-
-.notSpecialCase:
-    lda ScrollYDMA  ;  Restore ScrollYDMA
-
-.normalFrame
-.delayedFrame
     sta VScrollTable_val1
     sta VScrollTable_val2
     clc : adc #$0010 : and #$01ff
@@ -152,10 +130,6 @@ UpdateVScrollHDMA:
 UpdateHScrollHDMA:
     rep #$20
 
-    ; Save the previous ScrollXDMA to ScrollXDMAPrev
-    lda ScrollXDMA
-    sta ScrollXDMAPrev
-
     lda CurHScroll : and #$00ff : sta ScrollXDMA
     
     lda PPUCNT0ZP
@@ -166,9 +140,6 @@ UpdateHScrollHDMA:
     xba
     ora ScrollXDMA
     sta ScrollXDMA
-
-    jsr SpecialFixHScrollHDMA
-
     sta HScrollTable_val
 
     sep #$20
@@ -182,26 +153,6 @@ UpdateHScrollHDMA:
 ++
     sta HScrollTable_sblen
     rtl
-
-
-;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
-;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
-;  Fixes some (but not all) horizontal scroll tileset attribute flicker.
-;  [A]: ScrollXDMA
-;  Returns in [A]: HScrollTable_val
-SpecialFixHScrollHDMA:
-    cmp #$0000
-    bne .end
-
-    lda ScrollXDMAPrev
-    cmp #$0100
-    bne .end
-
-.horizontalLayout:
-    lda ScrollXDMA
-
-.end:
-rts
 
 
 ; The game does special magic when scrolling vertically, so we'll have to calculate the correct Y scroll position here
@@ -342,9 +293,7 @@ SnesOamPrepare:
     PLP
     RTL
 
-;  Start NMI by clearing BG1HOFS to allow special case code
-;  to fix tileset attribute flicker on horizontal scrolling.
-;  See snes.asm/UpdateHScrollHDMA for details.
+;  Start NMI by clearing BG1HOFS so HDMA begins from a known latch state.
 ResetBg1hofs:
     rep #$20
     lda.w #$0000

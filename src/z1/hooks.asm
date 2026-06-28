@@ -44,6 +44,10 @@ org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 ; 858824  20 13 70       JSR $7013
 org ((!BASE_BANK+5)<<16)+$8824 : jsr InitMode_EnterRoom_UW_Hook
 
+; Pre-convert play-area attribute halves as soon as the dynamic transfer buffer
+; is built, so NMI only has to upload the prepared SNES buffer.
+org ((!BASE_BANK+5)<<16)+$8CA6 : jmp CueTransferPlayAreaAttrsHalfAndPrepareSnesBuffer : nop : nop : nop
+
 ; Hook the start and end of NMI to be able to inject code to NMI
 %zhook($E484, "jmp NMIStart")
 %zhook($E573, "jmp NMIEnd")

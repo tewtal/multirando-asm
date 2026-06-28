@@ -58,6 +58,11 @@ NMIEnd:
 
 print "sttb = ", pc
 SnesTransferTileBuf:
+    lda.w SnesTileBufPrepped
+    beq +
+    stz.w SnesTileBufPrepped
+    rts
++
     lda #$01
     sta.w TransferSourceSet
     phb : pla : sta $02
@@ -310,6 +315,20 @@ endif
 InitMode_EnterRoom_UW_Hook:
     inc.w NeedsBGPriorityUpdate
     jsr $7013
+    rts
+
+CueTransferPlayAreaAttrsHalfAndPrepareSnesBuffer:
+    jsr $B0E1  ; CopyPlayAreaAttrsHalfToDynTransferBuf
+    lda #$01
+    sta.w TransferSourceSet
+    sta.w SnesTileBufPrepped
+    lda.b #DynTileBuf
+    sta $00
+    lda.b #(DynTileBuf>>8)
+    sta $01
+    phb : pla : sta $02
+    jsl SnesPPUPrepare
+    inc.b GameSubmode
     rts
 
 SnesResetVerticalGameScroll:
