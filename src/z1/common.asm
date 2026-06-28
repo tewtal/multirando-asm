@@ -100,6 +100,47 @@ WritePPUCTRL1:
     sta PPUCNT1ZP
     pha
     and #$18
+    cmp #$18
+    beq .bgObj
+    cmp #$10
+    beq .objOnly
+    cmp #$08
+    beq .bgOnly
+    lda #$00
+    bra .writeLayers
+.bgObj
+    lda #$15
+    bra .writeLayers
+.objOnly
+    lda #$10
+    bra .writeLayers
+.bgOnly
+    lda #$05
+.writeLayers
+    ; Cave-exit init has not prepared valid Link OAM for the new room yet.
+    pha
+    lda.b z1GameMode
+    cmp #$0A
+    beq .maybeHideObj
+    cmp #$04
+    bne .keepObj
+.maybeHideObj
+    lda.b IsUpdatingMode
+    bne .keepObj
+    lda.b UndergroundExitType
+    beq .keepObj
+    lda.b CurLevel
+    bne .keepObj
+    pla
+    and #$EF
+    bra .storeLayers
+.keepObj
+    pla
+.storeLayers
+    sta.l $00212C
+    pla
+    pha
+    and #$18
     beq .blank
     lda #$0f
     bra +

@@ -302,7 +302,7 @@ ResetBg1hofs:
     rtl
 
 SnesOamDMA:
-    PHP    
+    PHP
     REP #$30
     
     LDA #$0400
@@ -322,9 +322,6 @@ SnesOamDMA:
 
     LDA #$00
     STA $2101
-
-    LDA #$15
-    STA $212C
 
     PLP
     RTL
