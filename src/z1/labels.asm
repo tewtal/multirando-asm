@@ -606,7 +606,6 @@ TransferTarget = $0B18
 TransferSourceSet = $0B20
 PalIdx = $0B0E
 
-NeedsBGPriorityUpdate = $0B22
 SnesTileBufPrepped = $0B23
 
 DungeonCopyLength = $0A10

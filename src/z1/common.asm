@@ -42,8 +42,6 @@ NMIStart:
     lda.b z1FrameCounter
     jsl nes_UpdateItemAnimations
 
-    jsl SnesApplyBGPriority
-
     ;  Run standard z1 nmi start code:
     lda $ff
     ldx $5c
@@ -353,9 +351,13 @@ if not(defined("STANDALONE"))
 endif
     jmp $ea2b
 
-InitMode_EnterRoom_UW_Hook:
-    inc.w NeedsBGPriorityUpdate
-    jsr $7013
+TransferCurTileBufAndApplyBGPriority:
+    jsr $A080
+
+    lda.b CurLevel
+    beq .end
+    jsl SnesApplyBGPriority
+.end
     rts
 
 CueTransferPlayAreaAttrsHalfAndPrepareSnesBuffer:

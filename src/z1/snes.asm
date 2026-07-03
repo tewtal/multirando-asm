@@ -243,7 +243,7 @@ SnesOamPrepare:
     ORA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr+$4, Y
-    
+
     ; Check bit 2 to see if this is an "extended" sprite using
     ; 16-color sprites and custom 8x16 layout
     LDA.w Z1OAMNES.Attr, X
@@ -277,6 +277,14 @@ SnesOamPrepare:
     LDA.w Z1OAM.Index, Y : DEC : STA.w Z1OAM.Index, Y
 
 .noExtended
+    LDA.w Z1OAMNES.Attr, X
+    AND.b #$08
+    BEQ .Next
+    LDA.w Z1OAM.Attr, Y
+    AND.b #$CF
+    ORA.b #$30
+    STA.w Z1OAM.Attr, Y
+    STA.w Z1OAM.Attr+$4, Y
     BRA .Next
 
 .Clear
@@ -374,15 +382,11 @@ SnesApplyBGPriority:
     pha : phx : phy : php
     sep #$30
 
-    lda.w NeedsBGPriorityUpdate   ; Check if we need to update the BG priority
-    beq .end
     lda.b $10                     ; Load current level
     beq .end                    ; If zero, exit
 
     lda #$80
     sta $2115
-
-    stz.w NeedsBGPriorityUpdate
 
     ; Set the two tiles above the doorways to a solid white tile with a blank palette to mask link properly
     rep #$30
