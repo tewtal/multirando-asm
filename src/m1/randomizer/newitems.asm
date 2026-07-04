@@ -131,6 +131,23 @@ StoreSpriteAttributes_extended:
     inc $11
     rtl
 
+StoreBeamSpriteAttributes_extended:
+    phy
+    ldy.b $4C
+    lda.w $074C, y
+    bne .custom
+
+    ply
+    tya
+    sta.w $0206, x
+    lda.b #$FF
+    rtl
+
+.custom
+    lda.w $0748, y
+    ply
+    rtl
+
 UpdatePaletteEffect_extended:
     phx
     ldx $4c
