@@ -507,7 +507,8 @@ DecompBuffer2 = $7F4000            ; Another buffer
 
 base $7F5000
 RedrawFlag: skip 1                 ;
-skip 2                             ; Unused
+ZeldaTransitionHideLink: skip 1     ; Hide stale Link OAM during cross-game transition-in.
+skip 1                             ; Unused
 HexToDecDigit1: skip 1             ; Space for storing the result of hex to decimal conversion.
 HexToDecDigit2: skip 1             ; Digits are stored from high to low.
 HexToDecDigit3: skip 1             ;
