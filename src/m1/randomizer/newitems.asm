@@ -51,6 +51,15 @@ GetFramePtrTable_extended:
     beq .normal_item
 
     jsl mb_CheckProgressiveItemLong
+    sep #$20
+    cmp.w $074D, x
+    beq +
+    sta.w $074D, x
+    rep #$20
+    jsr QueueCustomItemGfx
+    bra ++
++   rep #$20
+++
 
     ; Get pointer to FrameDataTable graphics string
     phx
@@ -163,6 +172,60 @@ UpdatePaletteEffect_extended:
     plx
     rtl
 
+QueueCustomItemGfx:
+    phx : phy : pha
+
+    lda.l SnesPPUDataStringPtr
+    tay
+
+    lda.l #SnesPPUDataString
+    sta $d0
+    lda.l #(SnesPPUDataString>>8)
+    sta $d1
+
+    lda.w #$0005
+    sta [$d0], y
+    iny #2
+
+    txa : and #$00ff
+    beq .slot_1
+
+    lda.w #$4040
+    bra .slot_2
+
+.slot_1
+    lda.w #$4000
+
+.slot_2
+    sta [$d0], y
+    pha
+    iny #4
+
+    lda.w #$0080
+    sta [$d0], y
+    iny #2
+
+    lda.b 3,s
+    tax : pla
+    jsl nes_StoreAnimatedItems
+
+    asl #2 : tax
+    lda.l ItemData, x
+
+    sta [$d0], y
+    iny #2
+    lda #(nes_new_item_graphics>>16)
+    sta [$d0], y
+    iny #2
+    lda #$0000
+    sta [$d0], y
+
+    tya
+    sta.l SnesPPUDataStringPtr
+
+    pla : ply : plx
+    rts
+
 CustomItemHandler:
     jsr CheckItemBit
     bcs .end
@@ -179,58 +242,13 @@ CustomItemHandler:
     sta.w $074D, x                  ; Two bytes that can be anything we want
 
     rep #$30
-    
-    lda.l SnesPPUDataStringPtr
-    tay
-    
-    lda.l #SnesPPUDataString
-    sta $d0
-    lda.l #(SnesPPUDataString>>8)
-    sta $d1
-
-    lda.w #$0005
-    sta [$d0], y
-    iny #2
-
-    txa : and #$00ff
-    beq .slot_1
-    
-    lda.w #$4040
-    bra .slot_2
-
-.slot_1
-    lda.w #$4000
-
-.slot_2
-    sta [$d0], y
-    pha     ;  Store vram slot for calling argument to nes_StoreAnimatedItems
-    iny #4
-
-    lda.w #$0080
-    sta [$d0], y
-    iny #2
-
     lda.w $0748, x
     and.w #$00ff
-    
     jsl mb_CheckProgressiveItemLong
-
-    tax : pla   ; Prep subroutine arguments in [X] and [A]
-    jsl nes_StoreAnimatedItems
-    
-    asl #2 : tax
-    lda.l ItemData, x
-
-    sta [$d0], y
-    iny #2
-    lda #(nes_new_item_graphics>>16)
-    sta [$d0], y
-    iny #2
-    lda #$0000
-    sta [$d0], y
-    
-    tya    
-    sta.l SnesPPUDataStringPtr
+    sep #$20
+    sta.w $074D, x
+    rep #$20
+    jsr QueueCustomItemGfx
 
     sep #$30
 
