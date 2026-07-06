@@ -608,6 +608,9 @@ PalIdx = $0B0E
 
 SnesTileBufPrepped = $0B23
 
+GrayscalePaletteState = $0AC0
+CurrentNesPalette = $0AC1
+
 DungeonCopyLength = $0A10
 
 PPUAddrTmpLo = $0A30

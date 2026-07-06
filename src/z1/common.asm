@@ -96,6 +96,7 @@ WritePPUCTRL:
 
 WritePPUCTRL1:
     sta PPUCNT1ZP
+    jsl UpdateGrayscalePalette
     pha
     and #$18
     cmp #$18
