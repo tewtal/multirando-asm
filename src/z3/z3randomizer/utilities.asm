@@ -445,7 +445,7 @@ LoadNesItemPalette:
 ; In: X - Loot ID
 ; Out: A - Sprite palette index
         PHX : PHY : PHB
-        LDA.b #PalettesNESBlueWhite>>16 : STA.b Scrap0C
+        LDA.b #PalettesNES>>16 : STA.b Scrap0C
         PEA $7E00
         PLB : PLB
         REP #$30
