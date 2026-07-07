@@ -32,11 +32,17 @@ RTL
 ; in:	A - Loot ID
 ; out:	A - Palette
 ;--------------------------------------------------------------------------------
+!NesItemFirst = $D0
+!NesItemLast = $F3
+!NesItemPalette = $04
+!NesItemPaletteOffset = $0190
+
 GetSpritePalette:
         JSL.l AttemptItemSubstitution
         JSR.w ResolveLootID
         .resolved
         TAX
+        JSR.w IsNesItem : BCS .load_nes_palette
         LDA.l SpriteProperties_standing_palette, X : BIT #$80 : BNE .load_palette
         ASL
 RTL
@@ -44,6 +50,29 @@ RTL
         JSL.l LoadItemPalette
         ASL
 RTL
+        .load_nes_palette
+        JSL.l LoadNesItemPalette
+        ASL
+RTL
+
+IsNesItem:
+        TXA
+        CMP.b #!NesItemFirst : BCC .m1
+        CMP.b #!NesItemLast+1 : BCC .yes
+        BRA .no
+        .m1
+        CMP.b #$62 : BCC .no
+        CMP.b #$64 : BCC .yes
+        CMP.b #$66 : BCC .no
+        CMP.b #$6A : BCC .yes
+        CMP.b #$6C : BCC .no
+        CMP.b #$70 : BCS .no
+        .yes
+        SEC
+RTS
+        .no
+        CLC
+RTS
 
 ;--------------------------------------------------------------------------------
 ; PrepDynamicTile
@@ -342,6 +371,7 @@ CheckReceivedItemPropertiesBeforeLoad:
         LDX.w CurrentSpriteSlot
         LDA.w AncillaID,X : CMP.b #$29 : BEQ .falling_sprite
                 PLX
+                JSR.w IsNesItem : BCS .load_nes_palette
                 LDA.b RoomIndex : BEQ .normalCode
                 LDA.l RoomFade : BNE .load_palette
                         .normalCode
@@ -350,8 +380,12 @@ CheckReceivedItemPropertiesBeforeLoad:
                         .load_palette
                         JSL.l LoadItemPalette
                         RTL
+                        .load_nes_palette
+                        JSL.l LoadNesItemPalette
+                        RTL
         .falling_sprite
         PLX
+        JSR.w IsNesItem : BCS .load_nes_palette
         LDA.l SpriteProperties_standing_palette,X : BIT #$80 : BNE .load_palette
 RTL
 
@@ -406,6 +440,38 @@ RTL
         BPL -
         LDA.w #$0005
         BRA .done
+
+LoadNesItemPalette:
+; In: X - Loot ID
+; Out: A - Sprite palette index
+        PHX : PHY : PHB
+        LDA.b #PalettesNESBlueWhite>>16 : STA.b Scrap0C
+        PEA $7E00
+        PLB : PLB
+        REP #$30
+
+        TXA : ASL : TAX
+        LDA.l SpriteProperties_palette_addr,X : STA.b Scrap0A
+        LDY.w #$0006
+        JSR.w AuxPaletteCheck : BCS .aux
+                -
+                        LDA.b [Scrap0A], Y
+                        STA.w PaletteBuffer+!NesItemPaletteOffset,Y
+                        DEY #2
+                BPL -
+                BRA .done
+        .aux
+        -
+                LDA.b [Scrap0A], Y
+                STA.w PaletteBufferAux+!NesItemPaletteOffset,Y
+                DEY #2
+        BPL -
+        .done
+        LDA.w #!NesItemPalette
+        SEP #$30
+        PLB : PLY : PLX
+        INC.b NMICGRAM
+RTL
 
 TransferVRAMStripes:
         JSL.l TransferNewNameStripes

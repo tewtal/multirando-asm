@@ -33,12 +33,13 @@
 ;------------------------------------------------------------------------------
 
 ;------------------------------------------------------------------------------
-; ItemReceiptGraphicsROM - $A28000 (0x110000 PC)
+; ItemReceiptGraphicsROM - $A78000 (ExLoROM PC $538000)
 ;------------------------------------------------------------------------------
 ; Where the custom uncompressed 4bpp item graphics are stored. See customitems.4bpp
-; and customitems.png for reference. Offsets into this label should written to
-; ItemReceiptGraphicsOffsets & StandingItemGraphicsOffsets without the high byte
-; (0x8000) set.
+; for reference. The ROM label has a blank 8x8 tile ($20 bytes) before the incbin,
+; so a table offset of $0020 points at file offset $0000. Offsets into this label
+; should written to ItemReceiptGraphicsOffsets & StandingItemGraphicsOffsets without
+; the high byte (0x8000) set.
 ;
 ; We can understand this buffer as being divided into an 8x8 grid with most sprites
 ; occupying a 16x16 space and narrow sprites occupying an 8x16 space. The first 16x16
@@ -546,20 +547,20 @@ endmacro
 %SpriteProps($5F, 2, 2, $FF, $FF, $0000)                                ; 5F - Progressive shield
 %SpriteProps($60, 2, 2, $FF, $FF, $0000)                                ; 60 - Progressive armor
 %SpriteProps($61, 2, 2, $FF, $FF, $0000)                                ; 61 - Progressive glove
-%SpriteProps($62, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; 62 - Bombs                  (M1)
-%SpriteProps($63, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; 63 - High Jump              (M1)
+%SpriteProps($62, 2, 2, $04, $04, PalettesNESM1Bombs)                      ; 62 - Bombs                  (M1)
+%SpriteProps($63, 2, 2, $04, $04, PalettesNESM1HighJump)                   ; 63 - High Jump              (M1)
 %SpriteProps($64, 2, 2, $FF, $FF, $0000)                                ; 64 - Progressive bow
 %SpriteProps($65, 2, 2, $FF, $FF, $0000)                                ; 65 - Progressive bow
-%SpriteProps($66, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 66 - Long Beam              (M1)
-%SpriteProps($67, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 67 - Screw Attack           (M1)
-%SpriteProps($68, 2, 2, $02, $02, PalettesVanilla_blue_ice+$0E)         ; 68 - Morph Ball             (M1)
-%SpriteProps($69, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 69 - Varia Suit             (M1)
+%SpriteProps($66, 2, 2, $04, $04, PalettesNESM1LongBeam)                   ; 66 - Long Beam              (M1)
+%SpriteProps($67, 2, 2, $04, $04, PalettesNESM1ScrewAttack)                ; 67 - Screw Attack           (M1)
+%SpriteProps($68, 2, 2, $04, $04, PalettesNESM1MorphBall)                  ; 68 - Morph Ball             (M1)
+%SpriteProps($69, 2, 2, $04, $04, PalettesNESM1VariaSuit)                  ; 69 - Varia Suit             (M1)
 %SpriteProps($6A, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 6A - Triforce
 %SpriteProps($6B, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 6B - Power star
-%SpriteProps($6C, 2, 2, $02, $02, PalettesVanilla_blue_ice+$0E) 		; 6C - Wave Beam              (M1) 
-%SpriteProps($6D, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E) 	; 6D - Ice Beam               (M1) 
-%SpriteProps($6E, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 6E - Energy Tank            (M1) 
-%SpriteProps($6F, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 6F - Missiles               (M1)
+%SpriteProps($6C, 2, 2, $04, $04, PalettesNESM1WaveBeam)                   ; 6C - Wave Beam              (M1)
+%SpriteProps($6D, 2, 2, $04, $04, PalettesNESM1IceBeam)                    ; 6D - Ice Beam               (M1)
+%SpriteProps($6E, 2, 2, $04, $04, PalettesNESM1EnergyTank)                 ; 6E - Energy Tank            (M1)
+%SpriteProps($6F, 2, 2, $04, $04, PalettesNESM1Missiles)                   ; 6F - Missiles               (M1)
 %SpriteProps($70, 2, 2, $02, $02, PalettesVanilla_blue_ice+$0E) ; 70 - Crateria L1 Key        (SM)
 %SpriteProps($71, 2, 2, $01, $01, PalettesVanilla_red_melon+$0E) ; 71 - Crateria L2 Key        (SM)
 %SpriteProps($72, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E) ; 72 - Map of Ganon's Tower
@@ -662,44 +663,44 @@ endmacro
 %SpriteProps($CE, 2, 2, $04, $04, $0000)                                ; CE - Unused
 %SpriteProps($CF, 2, 2, $04, $04, $0000)                                ; CF - Unused (Reserved for Z1 internal u
 
-%SpriteProps($D0, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; D0 - Bombs
-%SpriteProps($D1, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D1 - Wooden Sword
-%SpriteProps($D2, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; D2 - White Sword
-%SpriteProps($D3, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D3 - Magical Sword
-%SpriteProps($D4, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D4 - Bait
-%SpriteProps($D5, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D5 - Recorder
-%SpriteProps($D6, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; D6 - Blue Candle
-%SpriteProps($D7, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D7 - Red Candle
-%SpriteProps($D8, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; D8 - Arrows
-%SpriteProps($D9, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; D9 - Silver Arrows
-%SpriteProps($DA, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; DA - Bow
-%SpriteProps($DB, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; DB - Magical Key
-%SpriteProps($DC, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; DC - Raft
-%SpriteProps($DD, 2, 2, $02, $02, PalettesVanilla_blue_ice+$0E)                                ; DD - Stepladder
-%SpriteProps($DE, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; DE - Unused?
-%SpriteProps($DF, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; DF - 5 Rupees
+%SpriteProps($D0, 2, 2, $04, $04, PalettesNESZ1Bombs)                      ; D0 - Bombs
+%SpriteProps($D1, 2, 2, $04, $04, PalettesNESZ1WoodenSword)                ; D1 - Wooden Sword
+%SpriteProps($D2, 2, 2, $04, $04, PalettesNESZ1WhiteSword)                 ; D2 - White Sword
+%SpriteProps($D3, 2, 2, $04, $04, PalettesNESZ1MagicalSword)               ; D3 - Magical Sword
+%SpriteProps($D4, 2, 2, $04, $04, PalettesNESZ1Bait)                       ; D4 - Bait
+%SpriteProps($D5, 2, 2, $04, $04, PalettesNESZ1Recorder)                   ; D5 - Recorder
+%SpriteProps($D6, 2, 2, $04, $04, PalettesNESZ1BlueCandle)                 ; D6 - Blue Candle
+%SpriteProps($D7, 2, 2, $04, $04, PalettesNESZ1RedCandle)                  ; D7 - Red Candle
+%SpriteProps($D8, 2, 2, $04, $04, PalettesNESZ1Arrows)                     ; D8 - Arrows
+%SpriteProps($D9, 2, 2, $04, $04, PalettesNESZ1SilverArrows)               ; D9 - Silver Arrows
+%SpriteProps($DA, 2, 2, $04, $04, PalettesNESZ1Bow)                        ; DA - Bow
+%SpriteProps($DB, 2, 2, $04, $04, PalettesNESZ1MagicalKey)                 ; DB - Magical Key
+%SpriteProps($DC, 2, 2, $04, $04, PalettesNESZ1Raft)                       ; DC - Raft
+%SpriteProps($DD, 2, 2, $04, $04, PalettesNESZ1Stepladder)                 ; DD - Stepladder
+%SpriteProps($DE, 2, 2, $04, $04, PalettesNESGoldGreen)                               ; DE - Unused?
+%SpriteProps($DF, 2, 2, $04, $04, PalettesNESZ15Rupees)                    ; DF - 5 Rupees
 
-%SpriteProps($E0, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; E0 - Magical Rod
-%SpriteProps($E1, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E1 - Book of Magic
-%SpriteProps($E2, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; E2 - Blue Ring
-%SpriteProps($E3, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E3 - Red Ring
-%SpriteProps($E4, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E4 - Power Bracelet
-%SpriteProps($E5, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; E5 - Letter
-%SpriteProps($E6, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E6 - Compass
-%SpriteProps($E7, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E7 - Dungeon Map
-%SpriteProps($E8, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E8 - 1 Rupee
-%SpriteProps($E9, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; E9 - Small Key
-%SpriteProps($EA, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; EA - Heart Container
-%SpriteProps($EB, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; EB - Triforce Fragment
-%SpriteProps($EC, 2, 2, $02, $02, PalettesVanilla_blue_ice+$0E)                                ; EC - Magical Shield
-%SpriteProps($ED, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; ED - Boomerang
-%SpriteProps($EE, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; EE - Magical Boomerang
-%SpriteProps($EF, 2, 2, $05, $05, PalettesVanilla_blue_dark_ice+$0E)                                ; EF - Blue Potion
+%SpriteProps($E0, 2, 2, $04, $04, PalettesNESZ1MagicalRod)                 ; E0 - Magical Rod
+%SpriteProps($E1, 2, 2, $04, $04, PalettesNESZ1Book)                       ; E1 - Book of Magic
+%SpriteProps($E2, 2, 2, $04, $04, PalettesNESZ1BlueRing)                   ; E2 - Blue Ring
+%SpriteProps($E3, 2, 2, $04, $04, PalettesNESZ1RedRing)                    ; E3 - Red Ring
+%SpriteProps($E4, 2, 2, $04, $04, PalettesNESZ1PowerBracelet)              ; E4 - Power Bracelet
+%SpriteProps($E5, 2, 2, $04, $04, PalettesNESZ1Letter)                     ; E5 - Letter
+%SpriteProps($E6, 2, 2, $04, $04, PalettesNESZ1Compass)                    ; E6 - Compass
+%SpriteProps($E7, 2, 2, $04, $04, PalettesNESZ1DungeonMap)                 ; E7 - Dungeon Map
+%SpriteProps($E8, 2, 2, $04, $04, PalettesNESZ11Rupee)                     ; E8 - 1 Rupee
+%SpriteProps($E9, 2, 2, $04, $04, PalettesNESZ1SmallKey)                   ; E9 - Small Key
+%SpriteProps($EA, 2, 2, $04, $04, PalettesNESZ1HeartContainer)             ; EA - Heart Container
+%SpriteProps($EB, 2, 2, $04, $04, PalettesNESZ1TriforceFragment)           ; EB - Triforce Fragment
+%SpriteProps($EC, 2, 2, $04, $04, PalettesNESZ1MagicalShield)              ; EC - Magical Shield
+%SpriteProps($ED, 2, 2, $04, $04, PalettesNESZ1Boomerang)                  ; ED - Boomerang
+%SpriteProps($EE, 2, 2, $04, $04, PalettesNESZ1MagicalBoomerang)           ; EE - Magical Boomerang
+%SpriteProps($EF, 2, 2, $04, $04, PalettesNESZ1BluePotion)                 ; EF - Blue Potion
 
-%SpriteProps($F0, 2, 2, $04, $04, PalettesVanilla_green_blue_guard+$0E)                                ; F0 - Red Potion
-%SpriteProps($F1, 2, 2, $04, $04, $0000)                                ; F1 - Clock
-%SpriteProps($F2, 2, 2, $04, $04, $0000)                                ; F2 - Small Heart
-%SpriteProps($F3, 2, 2, $04, $04, $0000)                                ; F3 - Fairy
+%SpriteProps($F0, 2, 2, $04, $04, PalettesNESZ1RedPotion)                  ; F0 - Red Potion
+%SpriteProps($F1, 2, 2, $04, $04, PalettesNESBlueWhite)                               ; F1 - Clock
+%SpriteProps($F2, 2, 2, $04, $04, PalettesNESHeart)                                   ; F2 - Small Heart
+%SpriteProps($F3, 2, 2, $04, $04, PalettesNESBlueWhite)                               ; F3 - Fairy
 %SpriteProps($F4, 2, 2, $04, $04, $0000)                                ; F4 - Unused
 %SpriteProps($F5, 2, 2, $04, $04, $0000)                                ; F5 - Unused
 %SpriteProps($F6, 2, 2, $04, $04, $0000)                                ; F6 - Unused
@@ -1564,6 +1565,154 @@ StandingItemGraphicsOffsets:
 	dw $0                                  ; FD - Unused
 	dw $0                                  ; FE - Unused
 	dw $0                                  ; FF - Reserved (Blank item in shops)
+
+
+PalettesNESBlueWhite:
+	dw $0000, $7FFF, $5DF5, $44E5
+
+PalettesNESGoldGreen:
+	dw $0000, $02DF, $01D7, $0BB1
+
+PalettesNESGoldBrown:
+	dw $0000, $02DF, $01D7, $00AC
+
+PalettesNESGreenBrown:
+	dw $0000, $02DF, $00AC, $0BB1
+
+PalettesNESRedGold:
+	dw $0000, $7FFF, $02DF, $001F
+
+PalettesNESRodBlue:
+	dw $0000, $72B2, $71C7, $4D03
+
+PalettesNESHeart:
+	dw $0000, $7FFF, $1E59, $10B0
+
+PalettesNESM1Bombs:
+	dw $0000, $10B0, $0186, $1E59 ; NES $0F,$16,$19,$27
+
+PalettesNESM1HighJump:
+	dw $10B0, $0000, $1E59, $0186
+
+PalettesNESM1LongBeam:
+	dw $001F, $02DF, $0145, $7FFF
+
+PalettesNESM1ScrewAttack:
+	dw $0000, $0186, $1E59, $10B0 ; NES $0F,$19,$27,$16
+
+PalettesNESM1MorphBall:
+	dw $1E59, $79B9, $7FFF, $0000
+
+PalettesNESM1VariaSuit:
+	dw $1E59, $230C, $10B0, $0000
+
+PalettesNESM1WaveBeam:
+	dw $1816, $72BC, $48FB, $7FFF
+
+PalettesNESM1IceBeam:
+	dw $72B2, $4D03, $6318, $0000
+
+PalettesNESM1EnergyTank:
+	dw $0000, $1E59, $10B0, $0186 ; NES $0F,$27,$16,$19
+
+PalettesNESM1Missiles:
+	dw $10B0, $1E59, $0000, $0186
+
+PalettesNESZ1Bombs:
+	dw $7FFF, $44E5, $5DF5, $0000
+
+PalettesNESZ1WoodenSword:
+	dw $01D7, $0BB1, $02DF, $0000
+
+PalettesNESZ1WhiteSword:
+	dw $7FFF, $44E5, $5DF5, $0000
+
+PalettesNESZ1MagicalSword:
+	dw $7FFF, $001F, $02DF, $0000
+
+PalettesNESZ1Bait:
+	dw $7FFF, $001F, $02DF, $0000
+
+PalettesNESZ1Recorder:
+	dw $02DF, $00AC, $0000, $01D7
+
+PalettesNESZ1BlueCandle:
+	dw $44E5, $7FFF, $0000, $0000
+
+PalettesNESZ1RedCandle:
+	dw $001F, $02DF, $7FFF, $0000
+
+PalettesNESZ1Arrows:
+	dw $02DF, $0BB1, $01D7, $0000
+
+PalettesNESZ1SilverArrows:
+	dw $5DF5, $44E5, $7FFF, $0000
+
+PalettesNESZ1Bow:
+	dw $01D7, $0BB1, $0000, $0000
+
+PalettesNESZ1MagicalKey:
+	dw $02DF, $001F, $0000, $0000
+
+PalettesNESZ1Raft:
+	dw $00AC, $0000, $0BB1, $02DF
+
+PalettesNESZ1Stepladder:
+	dw $01D7, $00AC, $0000, $0000
+
+PalettesNESZ15Rupees:
+	dw $7FFF, $44E5, $0000, $0000
+
+PalettesNESZ1MagicalRod:
+	dw $4D03, $72B2, $71C7, $0000
+
+PalettesNESZ1Book:
+	dw $001F, $7FFF, $0000, $0000
+
+PalettesNESZ1BlueRing:
+	dw $44E5, $7FFF, $5DF5, $0000
+
+PalettesNESZ1RedRing:
+	dw $001F, $7FFF, $02DF, $0000
+
+PalettesNESZ1PowerBracelet:
+	dw $001F, $02DF, $7FFF, $0000
+
+PalettesNESZ1Letter:
+	dw $71C7, $4D03, $72B2, $0000
+
+PalettesNESZ1Compass:
+	dw $7FFF, $02DF, $001F, $0000
+
+PalettesNESZ1DungeonMap:
+	dw $7FFF, $7FFF, $7FFF, $0000
+
+PalettesNESZ11Rupee:
+	dw $7FFF, $02DF, $0000, $0000
+
+PalettesNESZ1SmallKey:
+	dw $02DF, $001F, $7FFF, $0000
+
+PalettesNESZ1HeartContainer:
+	dw $1E59, $7FFF, $10B0, $0000
+
+PalettesNESZ1TriforceFragment:
+	dw $7FFF, $44E5, $0000, $0000
+
+PalettesNESZ1MagicalShield:
+	dw $00AC, $01D7, $0000, $0000
+
+PalettesNESZ1Boomerang:
+	dw $02DF, $01D7, $00AC, $0000
+
+PalettesNESZ1MagicalBoomerang:
+	dw $72B2, $71C7, $4D03, $0000
+
+PalettesNESZ1BluePotion:
+	dw $5DF5, $44E5, $7FFF, $0000
+
+PalettesNESZ1RedPotion:
+	dw $02DF, $001F, $7FFF, $0000
 
 
 ; Set up item behaviour for items belong to another game
