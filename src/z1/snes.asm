@@ -1240,7 +1240,7 @@ QueueGrayscalePalette:
     sta.l SnesPPUDataString, x
     inx #2
 
-    lda.w #$0020
+    lda.w #$0021
     sta.l SnesPPUDataString, x
     inx #2
 
@@ -1299,7 +1299,7 @@ QueueGrayscalePalette:
 
     inc.w TransferCount
     lda.w TransferCount
-    cmp #$20
+    cmp #$21
     bne .loop
 
     ; Terminate the queued PPU string for NMI consumption.
@@ -1329,13 +1329,13 @@ ApplyPaletteGrayscale:
 ; $00-$3F; sprite palettes start at $80, so the list jumps after $33.
 GrayscalePaletteCgramEntries:
     db $00, $01, $02, $03, $10, $11, $12, $13, $20, $21, $22, $23, $30, $31, $32, $33
-    db $80, $81, $82, $83, $90, $91, $92, $93, $A0, $A1, $A2, $A3, $B0, $B1, $B2, $B3
+    db $80, $81, $82, $83, $90, $91, $92, $93, $A0, $A1, $A2, $A3, $B0, $B1, $B2, $B3, $71
 
 ; Matching offsets into CurrentNesPalette, which stores NES $3F00-$3F1F
 ; contiguously even though SNES CGRAM separates BG and sprite colors.
 GrayscalePaletteNesIndexes:
     db $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
-    db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1A, $1B, $1C, $1D, $1E, $1F
+    db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1A, $1B, $1C, $1D, $1E, $1F, $00
 
 PreparePalette:
     lda #$0003
