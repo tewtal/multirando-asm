@@ -36,6 +36,8 @@ RTL
 !NesItemLast = $F3
 !NesItemPalette = $04
 !NesItemPaletteOffset = $0190
+!NesItemPaletteCacheMain = $01
+!NesItemPaletteCacheAux = $02
 
 GetSpritePalette:
         JSL.l AttemptItemSubstitution
@@ -454,6 +456,7 @@ LoadNesItemPalette:
         LDA.l SpriteProperties_palette_addr,X : STA.b Scrap0A
         LDY.w #$0006
         JSR.w AuxPaletteCheck : BCS .aux
+                JSR.w CacheNesItemPaletteMain
                 -
                         LDA.b [Scrap0A], Y
                         STA.w PaletteBuffer+!NesItemPaletteOffset,Y
@@ -461,6 +464,7 @@ LoadNesItemPalette:
                 BPL -
                 BRA .done
         .aux
+        JSR.w CacheNesItemPaletteAux
         -
                 LDA.b [Scrap0A], Y
                 STA.w PaletteBufferAux+!NesItemPaletteOffset,Y
@@ -471,6 +475,74 @@ LoadNesItemPalette:
         SEP #$30
         PLB : PLY : PLX
         INC.b NMICGRAM
+RTL
+
+CacheNesItemPaletteMain:
+        PHP
+        REP #$30
+        PHX : PHY
+        LDA.l NesItemPaletteCached : AND.w #!NesItemPaletteCacheMain : BNE .done
+        LDX.w #$0006
+        -
+                LDA.l PaletteBuffer+!NesItemPaletteOffset,X
+                STA.l NesItemPaletteCache,X
+                DEX #2
+        BPL -
+        SEP #$20
+        LDA.l NesItemPaletteCached : ORA.b #!NesItemPaletteCacheMain : STA.l NesItemPaletteCached
+        .done
+        REP #$10
+        PLY : PLX
+        PLP
+RTS
+
+CacheNesItemPaletteAux:
+        PHP
+        REP #$30
+        PHX : PHY
+        LDA.l NesItemPaletteCached : AND.w #!NesItemPaletteCacheAux : BNE .done
+        LDX.w #$0006
+        -
+                LDA.l PaletteBufferAux+!NesItemPaletteOffset,X
+                STA.l NesItemPaletteAuxCache,X
+                DEX #2
+        BPL -
+        SEP #$20
+        LDA.l NesItemPaletteCached : ORA.b #!NesItemPaletteCacheAux : STA.l NesItemPaletteCached
+        .done
+        REP #$10
+        PLY : PLX
+        PLP
+RTS
+
+RestoreNesItemPalette:
+        PHP
+        REP #$30
+        PHX : PHY
+        LDA.l NesItemPaletteCached : AND.w #$00FF : BEQ .done
+        BIT.w #!NesItemPaletteCacheMain : BEQ .aux
+                LDX.w #$0006
+                -
+                        LDA.l NesItemPaletteCache,X
+                        STA.l PaletteBuffer+!NesItemPaletteOffset,X
+                        DEX #2
+                BPL -
+        .aux
+        LDA.l NesItemPaletteCached : AND.w #!NesItemPaletteCacheAux : BEQ .clear
+                LDX.w #$0006
+                -
+                        LDA.l NesItemPaletteAuxCache,X
+                        STA.l PaletteBufferAux+!NesItemPaletteOffset,X
+                        DEX #2
+                BPL -
+        .clear
+        SEP #$20
+        LDA.b #$00 : STA.l NesItemPaletteCached
+        INC.b NMICGRAM
+        .done
+        REP #$10
+        PLY : PLX
+        PLP
 RTL
 
 TransferVRAMStripes:

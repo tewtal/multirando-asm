@@ -1582,7 +1582,7 @@ PalettesNES:
 	dw $0000, $0186, $1E59, $10B0 ; NES $0F,$19,$27,$16
 
 .M1MorphBall:
-	dw $1E59, $79B9, $7FFF, $0000
+	dw $1E59, $0DF6, $7FFF, $0000
 
 .M1VariaSuit:
 	dw $1E59, $230C, $10B0, $0000

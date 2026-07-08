@@ -291,6 +291,7 @@ PostItemAnimation:
         STA.w PaletteBuffer+$01BE : STA.w PaletteBufferAux+$01BE
         .done
         INC.b NMICGRAM
+        JSL.l RestoreNesItemPalette
         SEP #$20
 
         STZ.w ItemReceiptMethod : LDA.w AncillaGet, X ; thing we wrote over to get here
