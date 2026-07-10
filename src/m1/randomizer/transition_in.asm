@@ -1,9 +1,19 @@
 print "transition to m1 = ", pc
 
 !M1_ENTRY_BASE_BANK = $90
+
+; !IRAM_TRANSITION_DESTINATION_ARGS bit format for M1:
+;   aaa = area index: 0 Brinstar, 1 Norfair, 2 Kraid, 3 Tourian, 4 Ridley
+;   p   = area palette (0 normal, 1 alternate)
+;   s   = scrolling entry path (0 horizontal, 1 vertical)
+;   d   = door side/direction (0 right, 1 left)
+;   Format: dsp--aaa
 !M1_ENTRY_ARGS_DIRECTION = $80
 !M1_ENTRY_ARGS_SCROLLING = $40
+!M1_ENTRY_ARGS_ALT_PALETTE = $20
 !M1_ENTRY_ARGS_AREA = $07
+!M1_ENTRY_AREA_PALETTE_NORMAL = $01
+!M1_ENTRY_AREA_PALETTE_ALT = $06
 !M1_ENTRY_DOOR_Y = $68
 !M1_ENTRY_SAMUS_Y = $70
 !M1_ENTRY_DOOR_TYPE = $01
@@ -199,13 +209,17 @@ m1_entry_apply_destination_area:
     rts
 
 m1_entry_apply_area_palette_toggle:
-    phb
-    jsr m1_entry_get_program_bank
-    pha
-    plb
-    lda.w $95DA                     ; Vanilla startup seeds PalToggle from area data.
-    sta $76
-    plb
+    lda.l !IRAM_TRANSITION_DESTINATION_ARGS
+    and.b #!M1_ENTRY_ARGS_ALT_PALETTE
+    beq .normal
+    lda.b #!M1_ENTRY_AREA_PALETTE_ALT
+    bra .store
+
+.normal
+    lda.b #!M1_ENTRY_AREA_PALETTE_NORMAL
+
+.store
+    sta $76                         ; PalToggle: normal $01, alternate $06.
     rts
 
 m1_entry_prepare_bank_switch:
@@ -436,9 +450,16 @@ m1_entry_upload_initial_palettes:
     lda.w #$0000
     sta.l m1_SnesPPUDataStringPtr
     sep #$20
-    lda.b #$01
-    sta $1C                         ; Full room palette.
+    lda.b #!M1_ENTRY_AREA_PALETTE_NORMAL
+    sta $1C                         ; Seed full area palette, including sprite palette 0.
     jsr m1_entry_call_area_check_pal_write
+    lda $76
+    cmp.b #!M1_ENTRY_AREA_PALETTE_NORMAL
+    beq .samus_palette
+    sta $1C                         ; Overlay alternate area palette.
+    jsr m1_entry_call_area_check_pal_write
+
+.samus_palette
     jsr m1_entry_call_area_select_samus_pal
     jsr m1_entry_call_area_check_pal_write
     rts
