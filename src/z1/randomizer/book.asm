@@ -11,8 +11,13 @@ HasMap_BookCheck:
 
 .vanilla
     ldx #$11
-    lda $10
-    sec
+    lda CurLevel
+    beq .overworld
+    sec                 ; carry set -> caller falls through to the vanilla tail at $B5F5
+    rtl
+
+.overworld
+    clc                 ; carry clear -> caller branches to the RTS at $B607 with A=0
     rtl
 
 LoadItemIdToDescriptor_BookCheck:

@@ -205,10 +205,13 @@ org $8587C6
 ; Configurable Book item behavior
 ; =============================================
 
-; Hook the check for whether the Book reveals maps, and if so, set the StatusBarMapTrigger flag when entering a dungeon
-; LDX #$11 : LDA $10
+; Hook the check for whether the Book reveals maps, and if so, set the StatusBarMapTrigger flag when entering a dungeon.
+; HasCompass ($B5EB) shares HasMap's vanilla tail, which the HasMap hook below
+; overwrites, so HasCompass is rerouted through HasCompass_Common instead.
+org $85B5EB
+    jmp HasCompass_Common               ; HasCompass entry ($B5EB)
 org $85B5EF
-    jsl HasMap_BookCheck : bcc $12
+    jsl HasMap_BookCheck : bcc $12      ; HasMap entry ($B5EF)
 
 ; Replace the Book check in blocked magic-shot handling so the Book can stop
 ; creating fire when repurposed without moving the whole routine to common.

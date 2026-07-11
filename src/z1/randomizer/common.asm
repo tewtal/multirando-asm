@@ -58,3 +58,11 @@ InitMode_EnterRoom_SpriteHook:
 HandleShotBlocked_BookCheck_Common:
     jsl HandleShotBlocked_BookCheck
     rts
+
+; Relocated HasCompass head ($B5EB); re-enters the vanilla tail at $B5F5.
+HasCompass_Common:
+    ldx #$10
+    lda CurLevel
+    beq +
+    jmp $B5F5
++   rts

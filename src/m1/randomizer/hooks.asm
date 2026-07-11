@@ -42,14 +42,15 @@ org $939D79 : lda [$00], y              ; Rinka
 ; on the linear history.
 ;
 ; AddItemToHistory body ($DC51) is diverted to the plane writer; the raw linear writer
-; ($DC54) is relocated to bank $99 and a JML trampoline left in the freed tail. The
+; ($DC54) is relocated to bank $99 and a JSL trampoline left in the freed tail. The
 ; bank-$99 handlers return via RTL, so each hook ends in RTS to match the vanilla
 ; routine's RTS return. Freed $DC51-$DC66 tail layout:
 ;   $DC51 jsl AddItemToHistory_plane   (4)
 ;   $DC55 rts                          (1)  return to GetItemXYPos's caller
-;   $DC56 jml AddItemToHistory_raw     (4)  MB/Zeb trampoline
+;   $DC56 jsl AddItemToHistory_raw     (4)  MB/Zeb trampoline
+;   $DC5A rts                          (1)
 %hook($DC51, "jsl AddItemToHistory_plane : rts")
-%hook($DC56, "jml AddItemToHistory_raw")
+%hook($DC56, "jsl AddItemToHistory_raw : rts")
 %hook($EE4A, "jsl CheckForItem_plane : rts")
 
 ; Repoint the two raw-history callers (MB at $FDF6, Zeb at $FE18) from $DC54 to the
