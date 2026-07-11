@@ -11,6 +11,10 @@ org $02d70f
 org $02E214
     jml check_teleport_out
 
+; Module10_SpotlightOpen draws Link during the cross-game transition load.
+org $0299DD
+    jml zelda_transition_draw_link
+
 ; org $8089be
 ; 	jml zelda_save_done_hook
 

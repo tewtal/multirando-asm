@@ -180,6 +180,9 @@ transition_to_zelda:
 
     %ai8()
 
+    lda #$01
+    sta.l ZeldaTransitionHideLink
+
     lda #$08
     sta $10
     lda #$01
@@ -244,6 +247,43 @@ zelda_blank_cgram:
     cpx #$00ff
     bne -
     rts
+
+
+zelda_hide_link_sprites:
+    php
+
+    %ai16()
+    lda #$f000
+    sta.l OAMBuffer+$01a0        ; Sprite 104
+    sta.l OAMBuffer+$01a4        ; Sprite 105
+    sta.l OAMBuffer+$01b8        ; Sprite 110
+    sta.l OAMBuffer+$01bc        ; Sprite 111
+
+    plp
+    rts
+
+zelda_transition_draw_link:
+    php
+
+    %a8()
+    lda.l ZeldaTransitionHideLink
+    beq .draw_link
+
+    lda $10
+    cmp #$10
+    beq .hide_link
+
+    lda #$00
+    sta.l ZeldaTransitionHideLink
+
+.hide_link
+    jsr zelda_hide_link_sprites
+    plp
+    rtl
+
+.draw_link
+    plp
+    jml $8da18e                  ; DrawLink
 
 
 zelda_restore_dmaregs:

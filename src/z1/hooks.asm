@@ -40,13 +40,16 @@ org ((!BASE_BANK+5)<<16)+$8581 : jsl UpdateHScrollHDMA : rts
 org ((!BASE_BANK+5)<<16)+$8559 : jsl SnesUpdateVerticalGameScroll : rts
 org ((!BASE_BANK+5)<<16)+$84D3 : jsr SnesResetVerticalGameScroll
 
-; Hook Init mode 4 for setting up after entering a dungeon
-; 858824  20 13 70       JSR $7013
-org ((!BASE_BANK+5)<<16)+$8824 : jsr InitMode_EnterRoom_UW_Hook
+; Pre-convert play-area attribute halves as soon as the dynamic transfer buffer
+; is built, so NMI only has to upload the prepared SNES buffer.
+org ((!BASE_BANK+5)<<16)+$8CA6 : jmp CueTransferPlayAreaAttrsHalfAndPrepareSnesBuffer : nop : nop : nop
 
 ; Hook the start and end of NMI to be able to inject code to NMI
 %zhook($E484, "jmp NMIStart")
 %zhook($E573, "jmp NMIEnd")
+
+; Apply the SNES BG-priority replacement after vanilla tile-buffer transfers.
+%zhook($E4C1, "jsr TransferCurTileBufAndApplyBGPriority")
 
 ; Hook MMC1 Bank switch Routine
 %zhook($FFAC, "jsr MMCWriteReg3 : rts")
@@ -75,6 +78,10 @@ org ((!BASE_BANK+5)<<16)+$8824 : jsr InitMode_EnterRoom_UW_Hook
 
 ; Hook controller reading routine
 %zhook($E62D, "jsl SnesReadInputs : rts")
+
+; Mark bomb/cloud sprites so the SNES OAM converter can draw them above
+; the priority doorway tiles.
+%zhook($F9CB, "ldy #$08 : stz $0f")
 
 ; Hook TransferTileBuf writes (dynamic tilemap/attribute writes)
 org ((!BASE_BANK+$6)<<16)+$A08C : jsr SnesTransferTileBuf

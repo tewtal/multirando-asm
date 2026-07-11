@@ -60,10 +60,6 @@ UpdateVScrollHDMA:
     sta VScrollSplit
 ++
 
-    ;  Save the previous ScrollYDMA to ScrollYDMAPrev
-    lda ScrollYDMA
-    sta ScrollYDMAPrev
-
     rep #$20
     lda CurVScroll : and #$00ff : sta ScrollYDMA
 
@@ -91,9 +87,8 @@ UpdateVScrollHDMA:
 
     cmp #$7f
     bcs .secondHalf
-    cmp #$00        ;  Avoid a zero in [A] getting written to the second hdma line
-    bne .nonzero    ;  counter byte [VScrollTable_len1] which disables hdma for the rest of frame
-                    ;  and displays the wrong screen leading to tile-attribute flicker
+    cmp #$00        ;  Avoid a zero in [A] getting written to the first variable HDMA
+    bne .nonzero    ;  counter byte, which disables HDMA for the rest of the frame.
     lda #$80
     sta VScrollTable_len1
     stz VScrollTable_len2
@@ -124,23 +119,6 @@ UpdateVScrollHDMA:
     sta VScrollTable_len3
     rep #$20
     lda ScrollYDMA
-
-    ;  If ScrollYDMA is $0f, wait one more time before returning to nonscrolling operation since both
-    ;  tilesets should be identical and the one being updated has an extra frame to
-    ;  process attribute data.  Fixes N->S scroll tileset attribute flicker
-    cmp #$000f
-    bne .normalFrame
-    lda ScrollYDMAPrev
-    cmp #$0080      ;  Only use the previous value if we're scrolling N->S (avoids S->N artifact)
-    bcc .notSpecialCase
-    cmp #$00d1      ;  Only use the previous value if we're not doing a pause menu scroll
-    bcc .delayedFrame
-
-.notSpecialCase:
-    lda ScrollYDMA  ;  Restore ScrollYDMA
-
-.normalFrame
-.delayedFrame
     sta VScrollTable_val1
     sta VScrollTable_val2
     clc : adc #$0010 : and #$01ff
@@ -152,10 +130,6 @@ UpdateVScrollHDMA:
 UpdateHScrollHDMA:
     rep #$20
 
-    ; Save the previous ScrollXDMA to ScrollXDMAPrev
-    lda ScrollXDMA
-    sta ScrollXDMAPrev
-
     lda CurHScroll : and #$00ff : sta ScrollXDMA
     
     lda PPUCNT0ZP
@@ -166,9 +140,6 @@ UpdateHScrollHDMA:
     xba
     ora ScrollXDMA
     sta ScrollXDMA
-
-    jsr SpecialFixHScrollHDMA
-
     sta HScrollTable_val
 
     sep #$20
@@ -182,26 +153,6 @@ UpdateHScrollHDMA:
 ++
     sta HScrollTable_sblen
     rtl
-
-
-;  Check special case where scrollxdma == 0000 and scrollxdmaprev === 0100,
-;  then store the 0100 instead of 0000.  Next frame prev will be 0000 also so we're back to normal.
-;  Fixes some (but not all) horizontal scroll tileset attribute flicker.
-;  [A]: ScrollXDMA
-;  Returns in [A]: HScrollTable_val
-SpecialFixHScrollHDMA:
-    cmp #$0000
-    bne .end
-
-    lda ScrollXDMAPrev
-    cmp #$0100
-    bne .end
-
-.horizontalLayout:
-    lda ScrollXDMA
-
-.end:
-rts
 
 
 ; The game does special magic when scrolling vertically, so we'll have to calculate the correct Y scroll position here
@@ -292,7 +243,7 @@ SnesOamPrepare:
     ORA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr, Y
     STA.w Z1OAM.Attr+$4, Y
-    
+
     ; Check bit 2 to see if this is an "extended" sprite using
     ; 16-color sprites and custom 8x16 layout
     LDA.w Z1OAMNES.Attr, X
@@ -326,6 +277,14 @@ SnesOamPrepare:
     LDA.w Z1OAM.Index, Y : DEC : STA.w Z1OAM.Index, Y
 
 .noExtended
+    LDA.w Z1OAMNES.Attr, X
+    AND.b #$08
+    BEQ .Next
+    LDA.w Z1OAM.Attr, Y
+    AND.b #$CF
+    ORA.b #$30
+    STA.w Z1OAM.Attr, Y
+    STA.w Z1OAM.Attr+$4, Y
     BRA .Next
 
 .Clear
@@ -342,9 +301,7 @@ SnesOamPrepare:
     PLP
     RTL
 
-;  Start NMI by clearing BG1HOFS to allow special case code
-;  to fix tileset attribute flicker on horizontal scrolling.
-;  See snes.asm/UpdateHScrollHDMA for details.
+;  Start NMI by clearing BG1HOFS so HDMA begins from a known latch state.
 ResetBg1hofs:
     rep #$20
     lda.w #$0000
@@ -353,7 +310,7 @@ ResetBg1hofs:
     rtl
 
 SnesOamDMA:
-    PHP    
+    PHP
     REP #$30
     
     LDA #$0400
@@ -373,9 +330,6 @@ SnesOamDMA:
 
     LDA #$00
     STA $2101
-
-    LDA #$15
-    STA $212C
 
     PLP
     RTL
@@ -428,15 +382,11 @@ SnesApplyBGPriority:
     pha : phx : phy : php
     sep #$30
 
-    lda.w NeedsBGPriorityUpdate   ; Check if we need to update the BG priority
-    beq .end
     lda.b $10                     ; Load current level
     beq .end                    ; If zero, exit
 
     lda #$80
     sta $2115
-
-    stz.w NeedsBGPriorityUpdate
 
     ; Set the two tiles above the doorways to a solid white tile with a blank palette to mask link properly
     rep #$30
@@ -1240,6 +1190,153 @@ PreparePattern:
 
 
 print "ppal = ", pc
+UpdateGrayscalePalette:
+    php
+    rep #$30
+    pha : phx : phy
+    phb
+    ; Use WRAM as the data bank for the cached state and PPU queue.
+    pea $7e7e : plb : plb
+
+    ; Only queue palette work when the NES grayscale bit changes.
+    sep #$30
+    lda.b PPUCNT1ZP
+    and #$01
+    cmp.w GrayscalePaletteState
+    beq .exit
+    sta.w GrayscalePaletteState
+
+    ; QueueGrayscalePalette borrows the transfer scratch regs used by
+    ; SnesPPUPrepare, so preserve them across this far hook.
+    rep #$30
+    lda.w TransferCount : pha
+    lda.w TransferTarget : pha
+    lda.w TransferTmp : pha
+    jsr QueueGrayscalePalette
+    rep #$30
+    pla : sta.w TransferTmp
+    pla : sta.w TransferTarget
+    pla : sta.w TransferCount
+
+.exit
+    rep #$30
+    plb
+    ply : plx : pla
+    plp
+    rtl
+
+QueueGrayscalePalette:
+    rep #$30
+    ldx.w SnesPPUDataStringPtr
+
+    ; Append one CGRAM block: type, address, flags, then entry count.
+    lda.w #$0003
+    sta.l SnesPPUDataString, x
+    inx #2
+
+    lda.w #$0000
+    sta.l SnesPPUDataString, x
+    inx #2
+    sta.l SnesPPUDataString, x
+    inx #2
+
+    lda.w #$0021
+    sta.l SnesPPUDataString, x
+    inx #2
+
+    ; Keep the output cursor in scratch RAM because X is reused for
+    ; table lookups and for indexing the cached NES palette.
+    stx.w TransferTmp
+
+    stz.w TransferCount
+    sep #$20
+
+.loop
+    ; Each row maps one SNES CGRAM index to one cached NES palette byte.
+    ldx.w TransferCount
+    lda.l GrayscalePaletteCgramEntries, x
+    ldx.w TransferTmp
+    sta.l SnesPPUDataString, x
+    inx
+    stx.w TransferTmp
+
+    ldx.w TransferCount
+    lda.l GrayscalePaletteNesIndexes, x
+    tax
+    lda.w CurrentNesPalette, x
+    pha
+    lda.w GrayscalePaletteState
+    beq .normal
+
+    ; NES grayscale masks out chroma by dropping the low nibble before
+    ; the existing NES->SNES color table conversion.
+    pla
+    and #$f0
+    bra .lookup
+
+.normal
+    pla
+
+.lookup
+    asl
+    tax
+    stx.w TransferTarget
+
+    ; CGRAM queue entries are index/lo/hi triples, matching .CGRAM in
+    ; SnesProcessPPUString rather than writing $2121/$2122 here.
+    lda.l NesPalTable, x
+    ldx.w TransferTmp
+    sta.l SnesPPUDataString, x
+    inx
+    stx.w TransferTmp
+
+    ldx.w TransferTarget
+    lda.l NesPalTable+1, x
+    ldx.w TransferTmp
+    sta.l SnesPPUDataString, x
+    inx
+    stx.w TransferTmp
+
+    inc.w TransferCount
+    lda.w TransferCount
+    cmp #$21
+    bne .loop
+
+    ; Terminate the queued PPU string for NMI consumption.
+    rep #$20
+    ldx.w TransferTmp
+    lda.w #$0000
+    sta.l SnesPPUDataString, x
+    stx.w SnesPPUDataStringPtr
+    rts
+
+ApplyPaletteGrayscale:
+    pha
+    ; Live $3Fxx uploads follow the current $2001 value directly; the
+    ; original NES byte was already cached by PreparePalette.
+    lda.b PPUCNT1ZP
+    and #$01
+    beq .normal
+    pla
+    and #$f0
+    rts
+
+.normal
+    pla
+    rts
+
+; SNES CGRAM entries affected by NES grayscale. Background palettes use
+; $00-$3F; sprite palettes start at $80, so the list jumps after $33.
+GrayscalePaletteCgramEntries:
+    db $00, $01, $02, $03, $10, $11, $12, $13, $20, $21, $22, $23, $30, $31, $32, $33
+    db $80, $81, $82, $83, $90, $91, $92, $93, $A0, $A1, $A2, $A3, $B0, $B1, $B2, $B3, $71
+
+; Matching offsets into CurrentNesPalette, which stores NES $3F00-$3F1F
+; contiguously even though SNES CGRAM separates BG and sprite colors.
+GrayscalePaletteNesIndexes:
+    db $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
+    db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1A, $1B, $1C, $1D, $1E, $1F, $00
+
 PreparePalette:
     lda #$0003
     sta ($04), y     ; Store type
@@ -1265,6 +1362,9 @@ PreparePalette:
     and #$0003
     clc : adc TransferTmp
     sta PalIdx
+    lda TransferAddress
+    and #$001f
+    sta TransferTarget
 
     lda TransferCount
     and #$003f
@@ -1279,6 +1379,11 @@ PreparePalette:
     sta ($04), y
     iny    
     lda [$00]
+    phx
+    ldx.w TransferTarget
+    sta.w CurrentNesPalette, x
+    plx
+    jsr ApplyPaletteGrayscale
     phx : asl : tax
     lda.l NesPalTable, x
     sta ($04), y
@@ -1299,7 +1404,14 @@ PreparePalette:
     clc : adc #$40 : sta PalIdx
 +
     plx
-    rep #$20 : inc $00 : sep #$20 : dex
+    rep #$20
+    inc $00
+    inc.w TransferTarget
+    lda.w TransferTarget
+    and #$001f
+    sta.w TransferTarget
+    sep #$20
+    dex
     bne .loop
     
     rep #$30
@@ -1316,7 +1428,10 @@ ProcessPPUString:
 
 
 NesPalTable:
-dw $294A, $2860, $3021, $3004, $2406, $1008, $0027, $0046, $0083, $00A1, $00A0, $04A0, $1480, $0000, $0000, $0000, $5294, $4D23, $5CC7, $5CAB, $488E, $2C90, $10B0, $00ED, $014A, $0186, $01A3, $15A1, $3562, $0000, $0000, $0000, $7FFF, $7E6D, $7E11, $7DD5, $79B9, $59DC, $39FB, $1E59, $1294, $16F0, $230C, $3F0A, $62CA, $1CE7, $0000, $0000, $7FFF, $7F57, $7F39, $7F1B, $7F1D, $6F1E, $631E, $575D, $4F7B, $4F99, $5797, $6396, $7376, $56B5, $0000, $0000
+dw $294A, $2860, $3021, $3004, $2406, $1008, $0027, $0046, $0083, $00A1, $00A0, $04A0, $1480, $0000, $0000, $0000
+dw $5294, $4D23, $5CC7, $5CAB, $488E, $2C90, $10B0, $00ED, $014A, $0186, $01A3, $15A1, $3562, $0000, $0000, $0000
+dw $7FFF, $7E6D, $7E11, $7DD5, $79B9, $59DC, $39FB, $1E59, $1294, $16F0, $230C, $3F0A, $62CA, $1CE7, $0000, $0000
+dw $7FFF, $7F57, $7F39, $7F1B, $7F1D, $6F1E, $631E, $575D, $4F7B, $4F99, $5797, $6396, $7376, $56B5, $0000, $0000
 
 AttributeTable:
 db $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $00, $02, $04, $06 

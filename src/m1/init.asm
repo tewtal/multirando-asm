@@ -17,11 +17,10 @@ SnesBoot:
     SEP #$30
     LDA #$21 : STA $2107
     LDA #$01 : STA $210B
-    LDA #$00 : STA $2101
-    LDA #$15 : STA $212C
+    LDA #$18 : STA $2101
     JSL SetupScrollHDMA
 
-    jsl nes_initOAMBuffer  ; Clear SNES OAM Buffer
+    jsl nes_initOAMBuffer  ; Clear unused SNES OAM slots
 
     SEP #$30
     JSL UploadItemPalettes

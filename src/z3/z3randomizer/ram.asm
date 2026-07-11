@@ -507,14 +507,18 @@ DecompBuffer2 = $7F4000            ; Another buffer
 
 base $7F5000
 RedrawFlag: skip 1                 ;
-skip 2                             ; Unused
+ZeldaTransitionHideLink: skip 1     ; Hide stale Link OAM during cross-game transition-in.
+skip 1                             ; Unused
 HexToDecDigit1: skip 1             ; Space for storing the result of hex to decimal conversion.
 HexToDecDigit2: skip 1             ; Digits are stored from high to low.
 HexToDecDigit3: skip 1             ;
 HexToDecDigit4: skip 1             ;
 HexToDecDigit5: skip 1             ;
 SpriteSkipEOR: skip 2              ; Used in utilities.asm to determine when to skip drawing sprites. Zero-padded
-skip $2B                           ; Unused
+NesItemPaletteCache: skip 8        ; Cached sprite colors c8-cb while NES item palettes are loaded.
+NesItemPaletteAuxCache: skip 8     ;
+NesItemPaletteCached: skip 1       ; Bit 0 = main buffer cached | bit 1 = aux buffer cached
+skip $1A                           ; Unused
 AltTextFlag: skip 2                ; dialog.asm: Determines whether to load from vanilla decompression buffer
                                    ; or from a secondary buffer (used for things like free dungeon item text)
 BossKills: skip 1                  ;

@@ -42,8 +42,6 @@ NMIStart:
     lda.b z1FrameCounter
     jsl nes_UpdateItemAnimations
 
-    jsl SnesApplyBGPriority
-
     ;  Run standard z1 nmi start code:
     lda $ff
     ldx $5c
@@ -58,6 +56,11 @@ NMIEnd:
 
 print "sttb = ", pc
 SnesTransferTileBuf:
+    lda.w SnesTileBufPrepped
+    beq +
+    stz.w SnesTileBufPrepped
+    rts
++
     lda #$01
     sta.w TransferSourceSet
     phb : pla : sta $02
@@ -93,6 +96,48 @@ WritePPUCTRL:
 
 WritePPUCTRL1:
     sta PPUCNT1ZP
+    jsl UpdateGrayscalePalette
+    pha
+    and #$18
+    cmp #$18
+    beq .bgObj
+    cmp #$10
+    beq .objOnly
+    cmp #$08
+    beq .bgOnly
+    lda #$00
+    bra .writeLayers
+.bgObj
+    lda #$15
+    bra .writeLayers
+.objOnly
+    lda #$10
+    bra .writeLayers
+.bgOnly
+    lda #$05
+.writeLayers
+    ; Cave-exit init has not prepared valid Link OAM for the new room yet.
+    pha
+    lda.b z1GameMode
+    cmp #$0A
+    beq .maybeHideObj
+    cmp #$04
+    bne .keepObj
+.maybeHideObj
+    lda.b IsUpdatingMode
+    bne .keepObj
+    lda.b UndergroundExitType
+    beq .keepObj
+    lda.b CurLevel
+    bne .keepObj
+    pla
+    and #$EF
+    bra .storeLayers
+.keepObj
+    pla
+.storeLayers
+    sta.l $00212C
+    pla
     pha
     and #$18
     beq .blank
@@ -307,9 +352,27 @@ if not(defined("STANDALONE"))
 endif
     jmp $ea2b
 
-InitMode_EnterRoom_UW_Hook:
-    inc.w NeedsBGPriorityUpdate
-    jsr $7013
+TransferCurTileBufAndApplyBGPriority:
+    jsr $A080
+
+    lda.b CurLevel
+    beq .end
+    jsl SnesApplyBGPriority
+.end
+    rts
+
+CueTransferPlayAreaAttrsHalfAndPrepareSnesBuffer:
+    jsr $B0E1  ; CopyPlayAreaAttrsHalfToDynTransferBuf
+    lda #$01
+    sta.w TransferSourceSet
+    sta.w SnesTileBufPrepped
+    lda.b #DynTileBuf
+    sta $00
+    lda.b #(DynTileBuf>>8)
+    sta $01
+    phb : pla : sta $02
+    jsl SnesPPUPrepare
+    inc.b GameSubmode
     rts
 
 SnesResetVerticalGameScroll:

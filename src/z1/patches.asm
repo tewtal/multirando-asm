@@ -10,6 +10,13 @@ org !B1+$881d
 db $02
 
 
+;  Quieter ocean wave noise SFX
+; Z_00.asm @ContinueSeaSfx ramps $68 while SeaSfxCounter >= $BF
+; Raise the threshold for a less grating volume ramp
+org !B0+$9a0d
+db $c6
+
+
 ;  Z3-speed faster heart refills
 ; $B1E6 [World_FillHearts]:  [original code from z1 disassembly]
 ; 171E6  A5 63          LDA $63

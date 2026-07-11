@@ -224,6 +224,15 @@ GetDynamicItemIndex:
 ;
 PrepDynamicItem:
     pha : phx : phy
+    rep #$30
+
+    and #$00ff
+    sec : sbc #$0030
+    jsl mb_CheckProgressiveItemLong
+    sta.w TransferTmp
+
+    clc : adc #$0030
+    sep #$30
     ldx #$00
 
 -    
@@ -250,12 +259,7 @@ PrepDynamicItem:
     pla
 
     rep #$30
-    and #$00ff
-
-    ; Get the ROM address containing the item data to be uploaded
-    sec : sbc #$0030 
-    jsl mb_CheckProgressiveItemLong
-    sta.w TransferTmp  ;  Preserve item id in [A]
+    lda.w TransferTmp
 
     asl #2 : tax
 
