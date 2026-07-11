@@ -152,6 +152,11 @@ backup_wram:
     inx #2
     cpx.w #$0480
     bne -
+
+    ; Persist items + world flags into the Z1 SRAM save file (+checksum) so a
+    ; cold boot (reset with Z1 as the starting game) doesn't lose progress
+    jsl mb_Z1WriteSramFullFile
+
     plp
     rtl
 

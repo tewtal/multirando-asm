@@ -172,8 +172,10 @@ RestoreItemBuffer:
     cpx.w #(!Z1_BUFFER_END-!Z1_BUFFER_START)
     bne -
 
-    ; We're skipping the save mechanic completely in Z1 and copy items
-    ; directly into WRAM so we don't need to fix checksums and deal with saving
+    ; The WRAM-buffer copy above only covers cross-game transitions (which restore
+    ; RAM directly). A cold boot of Z1 (reset with Z1 as the starting game) loads
+    ; from the SRAM save file instead, so mirror the items there too (+fix checksum).
+    jsl Z1WriteSramFile
 
     jmp .end
 
@@ -256,21 +258,22 @@ FixALTTPChecksum:
 ; between the new and old item bytes.
 ;
 ; Runs with A/X 16-bit on entry/exit. TEMP_1 = running 16-bit delta, TEMP_2 =
-; zero-extended byte scratch.
+; zero-extended byte scratch (long-addressed so any caller's data bank works).
 Z1WriteSramFile:
     php
     %ai16()
-    stz.w !IRAM_INVENTORY_TEMP_1         ; running 16-bit checksum delta
+    lda.w #$0000
+    sta.l !IRAM_INVENTORY_TEMP_1         ; running 16-bit checksum delta
     ldx.w #$0000
 -
     ; delta += new
     lda.l !Z1_BUFFER_START, x : and.w #$00ff
-    clc : adc.w !IRAM_INVENTORY_TEMP_1 : sta.w !IRAM_INVENTORY_TEMP_1
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
     ; delta -= old
     lda.l $40601A, x : and.w #$00ff
-    sta.w !IRAM_INVENTORY_TEMP_2
-    lda.w !IRAM_INVENTORY_TEMP_1 : sec : sbc.w !IRAM_INVENTORY_TEMP_2
-    sta.w !IRAM_INVENTORY_TEMP_1
+    sta.l !IRAM_INVENTORY_TEMP_2
+    lda.l !IRAM_INVENTORY_TEMP_1 : sec : sbc.l !IRAM_INVENTORY_TEMP_2
+    sta.l !IRAM_INVENTORY_TEMP_1
     ; write new item byte into the save file (only the low byte)
     sep #$20
     lda.l !Z1_BUFFER_START, x
@@ -284,16 +287,102 @@ Z1WriteSramFile:
     ; value, add the delta, write back, byte by byte to respect the byte order.
     sep #$20
     lda.l $406525                        ; low byte
-    sta.w !IRAM_INVENTORY_TEMP_2
+    sta.l !IRAM_INVENTORY_TEMP_2
     lda.l $406524                        ; high byte
     xba
-    lda.w !IRAM_INVENTORY_TEMP_2         ; A(low)=low, B(high)=high
+    lda.l !IRAM_INVENTORY_TEMP_2         ; A(low)=low, B(high)=high
     rep #$20
-    clc : adc.w !IRAM_INVENTORY_TEMP_1
+    clc : adc.l !IRAM_INVENTORY_TEMP_1
     sep #$20
     sta.l $406525                        ; new low byte
     xba
     sta.l $406524                        ; new high byte
+    rep #$20
+    plp
+    rtl
+
+; Writes the current Z1 progress into the SRAM save file so it survives a reset.
+; Copies the Items block ($28 bytes) and WorldFlags block ($180 bytes) from the
+; Z1 WRAM snapshot at $40C800 (NES RAM $0657/$067F, kept current by backup_wram)
+; into save File A slot 0, marks the slot active, and recomputes the stored
+; checksum from scratch (same fields Z1's CalculateFileAChecksum sums: name,
+; Items, WorldFlags, slot-active byte, $6518 byte, death count, quest number).
+;
+; Without this, only the vanilla Up+A -> SAVE flow ever writes the file, so a
+; cold boot of Z1 (reset with Z1 as the starting game) reverts to the seed's
+; initial state. Called from backup_wram on every transition out of Z1 and on
+; every Up+A/death menu. Safe from any CPU/data bank: long addressing only.
+Z1WriteSramFullFile:
+    php
+    %ai16()
+
+    ; Items block: snapshot $40C800+$0657 -> file $40601A
+    ldx.w #$0000
+-
+    sep #$20
+    lda.l $40CE57, x
+    sta.l $40601A, x
+    rep #$20
+    inx
+    cpx.w #$0028
+    bne -
+
+    ; WorldFlags block: snapshot $40C800+$067F -> file $406092
+    ldx.w #$0000
+-
+    sep #$20
+    lda.l $40CE7F, x
+    sta.l $406092, x
+    rep #$20
+    inx
+    cpx.w #$0180
+    bne -
+
+    ; Mark slot 0 active so the file reads as a real save
+    sep #$20
+    lda.b #$01
+    sta.l $406512
+    rep #$20
+
+    ; Recompute the slot 0 checksum: byte sum of name(8) + Items($28) +
+    ; WorldFlags($180) + slot-active + $6518 + death count + quest number
+    lda.w #$0000
+    sta.l !IRAM_INVENTORY_TEMP_1
+    ldx.w #$0000
+-
+    lda.l $406002, x : and.w #$00ff      ; name
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    inx
+    cpx.w #$0008
+    bne -
+    ldx.w #$0000
+-
+    lda.l $40601A, x : and.w #$00ff      ; Items
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    inx
+    cpx.w #$0028
+    bne -
+    ldx.w #$0000
+-
+    lda.l $406092, x : and.w #$00ff      ; WorldFlags
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    inx
+    cpx.w #$0180
+    bne -
+    lda.l $406512 : and.w #$00ff         ; IsSaveSlotActive
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    lda.l $406518 : and.w #$00ff         ; unnamed per-slot byte (also summed)
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    lda.l $406515 : and.w #$00ff         ; DeathCount
+    clc : adc.l !IRAM_INVENTORY_TEMP_1 : sta.l !IRAM_INVENTORY_TEMP_1
+    lda.l $40651B : and.w #$00ff         ; QuestNumber
+    clc : adc.l !IRAM_INVENTORY_TEMP_1
+
+    ; Store big-endian: [high]=$406524, [low]=$406525
+    sep #$20
+    sta.l $406525
+    xba
+    sta.l $406524
     rep #$20
     plp
     rtl
