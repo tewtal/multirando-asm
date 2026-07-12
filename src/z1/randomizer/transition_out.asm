@@ -40,7 +40,9 @@ check_cave_transition_out:
     phx : phy : php
     rep #$30
     lda.w #transition_table_out
-    sta.w ExitRoomTable    
+    sta.w ExitRoomTable
+    lda.b $eb
+    and.w #$00ff
     jsr check_cave_transition
     plp : ply : plx
     rtl
@@ -50,15 +52,24 @@ check_cave_transition_in:
     rep #$30
     lda.w #transition_table_in
     sta.w ExitRoomTable
+    lda.b CurLevel
+    and.w #$00ff
+    beq .overworld
+    lda.w #$8000
+    bra .check_transition
+.overworld
+    lda.w #$0000
+.check_transition
+    sta.w ExitRoomTemp
+    lda.b $eb
+    and.w #$00ff
+    ora.w ExitRoomTemp
     jsr check_cave_transition
     plp : ply : plx
     lda.w $AB45, X : sta $02
     rtl
 
 check_cave_transition:
-    lda.b $eb
-    ; Force the room Id to 8-bit
-    and.w #$00ff
     sta.w ExitRoomTemp
 
     ldx.w ExitRoomTable
