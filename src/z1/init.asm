@@ -13,6 +13,21 @@ SnesBoot:
     CPX #$0C00
     BNE -
 
+    ; Restore the expanded-dungeon world-flags region ($1B80-$1FFF) from its
+    ; BW-RAM backup. Generated/shuffled dungeons store their room flags here
+    ; (world_flags_addr = $1B80 + (level-1)*$80), so the item-taken bit lives in
+    ; this region rather than the profile WorldFlags at $67F.
+if not(defined("STANDALONE"))
+    REP #$30
+    LDX #$0000
+-
+    LDA.l !SRAM_Z1_EXPANDED_DUNGEONS, x
+    STA.l (!BASE_BANK<<16)+$1B80, x
+    INX #2
+    CPX #$0480
+    BNE -
+endif
+
     jsl spc_init_dpcm
     JSL spc_init_driver
 
