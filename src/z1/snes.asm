@@ -1261,6 +1261,15 @@ QueueGrayscalePalette:
     stx.w TransferTmp
 
     ldx.w TransferCount
+    ; The priority mask uses $71 as an independent black color normally.
+    cpx.w #$0020
+    bne .cachedColor
+    lda.w GrayscalePaletteState
+    bne .cachedColor
+    lda #$0d                  ; NesPalTable[$0d] = pure black
+    bra .lookup
+
+.cachedColor
     lda.l GrayscalePaletteNesIndexes, x
     tax
     lda.w CurrentNesPalette, x
