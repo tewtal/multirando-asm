@@ -52,6 +52,8 @@ transition_to_z1:
     bne -    
 
     sep #$30
+    ; Prevent transition-time PPU hooks from treating startup as grayscale.
+    lda #$0e : sta PPUCNT1ZP
     jsl UploadItemPalettes
     jsl nes_initSpecialPaletteEntry
 
@@ -111,9 +113,6 @@ transition_to_z1:
     stz $11     
     stz $13     ; Clear submode
     stz $E3     ; Clear sprite 0 flag
-
-    ; Set rendering to off
-    lda #$0f : sta PPUCNT1ZP
 
     ; Reset scrolling
     stz.b CurVScroll
