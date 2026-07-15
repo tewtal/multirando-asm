@@ -1570,22 +1570,22 @@ StandingItemGraphicsOffsets:
 PalettesNES:
 
 .M1Bombs:
-	dw $0000, $10B0, $0186, $1E59 ; NES $0F,$16,$19,$27
+	dw $0000, $10D6, $0207, $127C ; NES $0F,$16,$19,$27
 
 .M1HighJump:
-	dw $10B0, $0000, $1E59, $0186
+	dw $10D6, $0000, $127C, $0207
 
 .M1LongBeam:
-	dw $10B0, $1E59, $0145, $7FFF
+	dw $10D6, $127C, $0207, $7FFF
 
 .M1ScrewAttack:
-	dw $0000, $0186, $1E59, $10B0 ; NES $0F,$19,$27,$16
+	dw $0000, $0207, $127C, $10D6 ; NES $0F,$19,$27,$16
 
 .M1MorphBall:
-	dw $1E59, $0DF6, $7FFF, $0000
+	dw $127C, $0DF6, $10D6, $0000
 
 .M1VariaSuit:
-	dw $1E59, $230C, $10B0, $0000
+	dw $127C, $0207, $10D6, $0000
 
 .M1WaveBeam:
 	dw $1816, $72BC, $48FB, $7FFF
@@ -1594,10 +1594,10 @@ PalettesNES:
 	dw $72B2, $4D03, $7fff, $0000
 
 .M1EnergyTank:
-	dw $0000, $1E59, $10B0, $0186 ; NES $0F,$27,$16,$19
+	dw $0000, $127C, $10D6, $0207 ; NES $0F,$27,$16,$19
 
 .M1Missiles:
-	dw $10B0, $1E59, $0000, $0186
+	dw $10D6, $127C, $0000, $0207
 
 .Z1Bombs:
 	dw $7FFF, $5042, $7E52, $0000

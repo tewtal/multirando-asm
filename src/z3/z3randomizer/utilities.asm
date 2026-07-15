@@ -36,6 +36,8 @@ RTL
 !NesItemLast = $F3
 !NesItemPalette = $04
 !NesItemPaletteOffset = $0190
+!NesItemPalette3 = $03
+!NesItemPalette3Offset = $0170
 !NesItemPaletteCacheMain = $01
 !NesItemPaletteCacheAux = $02
 
@@ -45,6 +47,7 @@ GetSpritePalette:
         .resolved
         TAX
         JSR.w IsNesItem : BCS .load_nes_palette
+        .load_native_palette
         LDA.l SpriteProperties_standing_palette, X : BIT #$80 : BNE .load_palette
         ASL
 RTL
@@ -54,6 +57,12 @@ RTL
 RTL
         .load_nes_palette
         JSL.l LoadNesItemPalette
+        ASL
+RTL
+        .resolved_palette3
+        TAX
+        JSR.w IsNesItem : BCC .load_native_palette
+        JSL.l LoadNesItemPalette3
         ASL
 RTL
 
@@ -84,7 +93,9 @@ print "prepdynamictile = ", pc
 PrepDynamicTile:
 	PHX : PHY : PHB
 	JSR.w ResolveLootID
-        -
+	.default_palette
+	CLC
+	.load
 	JSR.w LoadDynamicTileOAMTable
 	JSL TransferItemReceiptToBuffer_using_ReceiptID
         SEP #$30
@@ -92,7 +103,11 @@ PrepDynamicTile:
 RTL
         .loot_resolved
 	PHX : PHY : PHB
-        BRA -
+	BRA .default_palette
+	.loot_resolved_palette3
+	PHX : PHY : PHB
+	SEC
+	BRA .load
 ;--------------------------------------------------------------------------------
 
 ;--------------------------------------------------------------------------------
@@ -109,7 +124,12 @@ LoadDynamicTileOAMTable:
         LDA.b #$24 : STA.l SpriteOAM+4
 
         LDA.w SpriteID,X
-        JSL.l GetSpritePalette_resolved
+	BCS .nes_palette3
+		JSL.l GetSpritePalette_resolved
+		BRA .palette_done
+	.nes_palette3
+		JSL.l GetSpritePalette_resolved_palette3
+	.palette_done
         STA.l SpriteOAM+5 : STA.l SpriteOAM+13
         PHX
         LDA.l SpriteProperties_standing_width,X : BEQ .narrow
@@ -373,7 +393,7 @@ CheckReceivedItemPropertiesBeforeLoad:
         LDX.w CurrentSpriteSlot
         LDA.w AncillaID,X : CMP.b #$29 : BEQ .falling_sprite
                 PLX
-                JSR.w IsNesItem : BCS .load_nes_palette
+                JSR.w IsNesItem : BCS .load_nes_palette3
                 LDA.b RoomIndex : BEQ .normalCode
                 LDA.l RoomFade : BNE .load_palette
                         .normalCode
@@ -382,13 +402,16 @@ CheckReceivedItemPropertiesBeforeLoad:
                         .load_palette
                         JSL.l LoadItemPalette
                         RTL
-                        .load_nes_palette
-                        JSL.l LoadNesItemPalette
+                        .load_nes_palette3
+                        JSL.l LoadNesItemPalette3
                         RTL
         .falling_sprite
         PLX
-        JSR.w IsNesItem : BCS .load_nes_palette
+        JSR.w IsNesItem : BCS .load_nes_palette4
         LDA.l SpriteProperties_standing_palette,X : BIT #$80 : BNE .load_palette
+RTL
+        .load_nes_palette4
+        JSL.l LoadNesItemPalette
 RTL
 
 ;------------------------------------------------------------------------------
@@ -447,6 +470,13 @@ LoadNesItemPalette:
 ; In: X - Loot ID
 ; Out: A - Sprite palette index
         PHX : PHY : PHB
+        PEA.w !NesItemPaletteOffset+$0006
+        BRA LoadNesItemPaletteShared
+LoadNesItemPalette3:
+; Palette 3 is reserved for item receipts and constrained standing items.
+        PHX : PHY : PHB
+        PEA.w !NesItemPalette3Offset+$0006
+LoadNesItemPaletteShared:
         LDA.b #PalettesNES>>16 : STA.b Scrap0C
         PEA $7E00
         PLB : PLB
@@ -454,24 +484,34 @@ LoadNesItemPalette:
 
         TXA : ASL : TAX
         LDA.l SpriteProperties_palette_addr,X : STA.b Scrap0A
+        PLA : TAX
         LDY.w #$0006
         JSR.w AuxPaletteCheck : BCS .aux
+                CPX.w #!NesItemPaletteOffset+$0006 : BNE +
                 JSR.w CacheNesItemPaletteMain
+                +
                 -
                         LDA.b [Scrap0A], Y
-                        STA.w PaletteBuffer+!NesItemPaletteOffset,Y
+                        STA.w PaletteBuffer,X
+                        DEX #2
                         DEY #2
                 BPL -
                 BRA .done
         .aux
+        CPX.w #!NesItemPaletteOffset+$0006 : BNE +
         JSR.w CacheNesItemPaletteAux
+        +
         -
                 LDA.b [Scrap0A], Y
-                STA.w PaletteBufferAux+!NesItemPaletteOffset,Y
+                STA.w PaletteBufferAux,X
+                DEX #2
                 DEY #2
         BPL -
         .done
-        LDA.w #!NesItemPalette
+        LDA.w #!NesItemPalette3
+        CPX.w #!NesItemPalette3Offset-$0002 : BEQ +
+                INC
+        +
         SEP #$30
         PLB : PLY : PLX
         INC.b NMICGRAM
