@@ -2,5 +2,7 @@ build/*
 resources/*.sfc
 resources/*.nes
 resources/*.bps
+resources/__pycache__/
+src/data/m1_map_*.png
 external/
 dev/

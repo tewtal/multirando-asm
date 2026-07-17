@@ -32,6 +32,8 @@ NMIStart:
     sep #$30
     lda $4210
     jsl nes_overlay_handle
+    jsl M1UpdateLayer3ScrollHDMA
+    jsl M1MapHudTransfer
 
     lda.b m1_FrameCounter
     jsl nes_UpdateItemAnimations
@@ -48,6 +50,7 @@ WritePPUCTRL:
     sta PPUCNT0ZP
     pha
     and #$80
+    ora #$01    ; Always keep auto-joypad read active
     sta $4200
     pla
     rts
@@ -230,5 +233,21 @@ dw $0000
 .len3
 db $01
 .val3
+dw $0000
+db $00
+
+; Keep the minimap's first four tile rows fixed while the popup scrolls below.
+M1Layer3ScrollTable:
+.minimap_len
+db $20
+.minimap_val
+dw $0000
+.popup_len1
+db $7F
+.popup_val1
+dw $0000
+.popup_len2
+db $41
+.popup_val2
 dw $0000
 db $00

@@ -270,7 +270,9 @@ overlay_clear_byte:
     db $00
 
 overlay_tile_data:
+    ; The M1 automap tiles follow the popup font at BG3 characters $100-$11F.
     incbin ../../data/ovl_gfx.bin
+    incbin ../../data/m1_map_tiles.2bpp
 
 overlay_item_names:
     table ../../data/tables/small_overlay.tbl,rtl
@@ -486,8 +488,8 @@ overlay_item_names:
     dw "        Brinstar Map      "  
     dw "      Wrecked Ship Map    "  
     dw "        Maridia Map       "  
-    dw "     Lower Norfair Map    "  
-    dw "                          "  
+    dw "     Lower Norfair Map    "
+    dw "         Area Map         "
     dw "                          " ; CF
 
     dw "         Z1 Bombs         " ; D0

@@ -21,6 +21,37 @@ m1_TransferTarget = $0B18
 m1_TransferSourceSet = $0B20
 m1_PalIdx = $0B0E
 
+; Automap state
+m1_MiniMapAreaTmp = $0A20
+m1_MiniMapIndexTmp = $0A22
+m1_HudRedraw = $0A24        ; Nonzero = DMA the HUD tilemap buffer to BG3 during next NMI
+m1_MiniMapCellTmp = $0A26   ; Player's current world-map cell index (Y*32+X)
+m1_MiniMapRevealedTmp = $0A28 ; Nonzero while rendering an area revealed by a map station/item
+m1_MapViewArea = $0A2A      ; Area index shown in the full-screen map view
+m1_MapViewDMA = $0A2C       ; Nonzero = NMI bulk-copies the map-view buffer to BG3
+m1_MapViewActive = $0A2E    ; Nonzero while the full-screen map view is open
+m1_MapViewVofs = $0A30      ; BG3 vertical scroll while the map view is open
+m1_MapViewTick = $0A32      ; Set by NMI each frame; the frozen view loop waits on it
+m1_PadHeld = $0A34          ; SNES controller word from the previous frame (edge detect)
+m1_MapViewBndX = $0A36      ; Viewed area bounds: minX | maxX<<8
+m1_MapViewBndY = $0A38      ; Viewed area bounds: minY | maxY<<8
+m1_MapViewShiftX = $0A3A    ; Compose translation (signed): dest col = src col + shift
+m1_MapViewShiftY = $0A3C    ; Compose translation (signed): dest row = src row + shift
+m1_MapViewTgtTmp = $0A3E    ; Scratch for the centering math
+m1_MapViewSrcRow = $0A40    ; Compose loop: current source row
+m1_MapViewSrcCol = $0A42    ; Compose loop: current source column
+m1_MapViewTileBase = $0A44  ; Byte offset of the viewed area's ROM tilemap
+m1_MapViewVisitBase = $0A46 ; Byte offset of the viewed area's visited plane
+m1_MapViewSrcCell = $0A48   ; Compose loop: current source cell index
+m1_MapViewTileTmp = $0A4A   ; Compose loop: current tilemap word
+m1_MapViewMaskTmp = $0A4C   ; Compose loop: visited bit mask
+m1_MapViewMaxX = $0A4E      ; Compose loop: inclusive source-column limit
+m1_MapViewMaxY = $0A50      ; Compose loop: inclusive source-row limit
+m1_MapViewDestTmp = $0A52   ; Compose loop: destination byte offset
+m1_MapLastCell = $0A54      ; area*$400+cell the tracker last rendered; $FFFF forces one
+m1_MiniMapTileTmp = $0A56   ; Minimap loop: current tilemap word
+m1_MapViewBuffer = $7E8800  ; 32x32-word compose buffer for the full-screen map view
+
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02
 M1AttrTransferOffset = $0A04
@@ -58,6 +89,8 @@ m1_SnesPPUDataStringPtr = $7E3000
 m1_FrameCounter = $2d
 m1_RoomPalette = $68
 m1_CurrentArea = $74    ;  $10 = Brinstar, $11 = Norfair, $12 = Kraid, $13 = Tourian, $14 = Ridley
+m1_MapPosY = $4f
+m1_MapPosX = $50
 m1_MirrorCntrl = $fa
 m1_ScrollY = $fc
 m1_ScrollX = $fd
@@ -87,3 +120,7 @@ UnqItmHist     = $6887      ; thru $68FC: write base, 2 bytes per entry
 ; 1 bit/cell, 128 bytes each. 
 m1_ItemBitArray = $7E00     ; item plane  ($7E00-$7E7F)
 m1_DoorBitArray = $7E80     ; door plane  ($7E80-$7EFF)
+
+; Automap buffers
+m1_MiniMapBuffer = $7E8000  ; HUD tilemap buffer (3 full BG3 rows) DMA:d to VRAM word $5020;
+                            ; the minimap occupies columns 24-28 (byte offset $30 per row)
