@@ -108,6 +108,14 @@ M1MapSeedId:
 M1MapAreaBounds:
     incbin ../../data/m1_map_vanilla_bounds.bin
 
+; Initial revealed-areas mask, copied into the persistent reveal/seen bytes when
+; the automap state resets for a new seed. Vanilla-layout seeds patch this to $1F
+; so the whole map is visible from the start; generated maps keep $00 and reveal
+; areas through their map-station pickups instead.
+M1MapInitialReveal:
+    db $00
+assert M1MapInitialReveal == $989024
+
 ; Keep the tilemaps page-aligned and at stable addresses for the seed writer.
 org $989100
 M1MapTilemaps:
