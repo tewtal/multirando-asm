@@ -6,6 +6,9 @@ struct FrameData $00d9
     .placePtr: skip 1
 endstruct
 
+; Local-only item: reveal the current area's automap without adding inventory.
+!M1_MAP_ITEM_ID = $CE
+
 UploadItemPalettes:
     lda #$80 : sta $2100
     
@@ -276,16 +279,31 @@ PickupItem_extended:
 
     ; Ok, we have a custom item, handle picking it up here
     lda.w $0748, x    ; Load item id
+    cmp.b #!M1_MAP_ITEM_ID
+    beq .map_item
     jsl nes_overlay_show_item
-    
+
     phx : phy
     jsl mb_WriteItemToInventory
     ply : plx
-    
+
     ; Flag this item as picked up
     jsr SetItemBit
 
     sec ; Setting carry skips the normal processing
+    rtl
+
+.map_item
+    ; Reveal the current area; the reveal and collected flags persist locally.
+    jsl nes_overlay_show_item
+    jsl M1MapGetCurrentAreaIndex    ; Exits rep #$30; carry set = unmapped area
+    bcs +
+    jsl M1MapRevealArea
++   lda.w #$ffff
+    sta.l m1_MapLastCell            ; Force the tracker to re-render next frame
+    sep #$30
+    jsr SetItemBit
+    sec
     rtl
 
 .m1item
@@ -820,7 +838,7 @@ ItemData:
     dw $8B80, pal_0        ; CB - Phantoon Map
     dw $8B80, pal_0        ; CC - Draygon Map
     dw $8B80, pal_0        ; CD - Ridley Map
-    dw $0000, pal_0        ; CE - Unused
+    dw $8B80, pal_0        ; CE - M1 Area Map (map station item)
     dw $0000, pal_0        ; CF - Unused (Reserved)
 
     dw $BB00, pal_0        ; D0 - Bombs                (Z1)

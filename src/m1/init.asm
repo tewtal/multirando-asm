@@ -25,6 +25,7 @@ SnesBoot:
     SEP #$30
     JSL UploadItemPalettes
     JSL nes_overlay_init
+    JSL M1MapUploadPalettes
     JSL (!BASE_BANK<<16)+$C01A ; Startup
 
 SnesInit:

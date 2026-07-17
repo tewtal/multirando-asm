@@ -6,11 +6,55 @@ optimize address ram
 SnesProcessFrame:
     jsr SnesOamPrepare
     jsl SnesPPUPrepare
-    
-    lda #$00	
+    jsl M1MapViewFrame
+
+    lda #$00
 	sta NMIStatus
     print "frame done = ", pc
     rtl
+
+; Replaces the NES serial controller read with SNES auto-poll results.
+; JOY1H/JOY2H preserve the NES input order, with SNES B/Y as NES A/B.
+; The change and retrigger logic preserves the original behavior.
+; Runs in NES NMI context: D = zero page.
+SnesReadJoyPads:
+    php
+    sep #$30
+-   lda.l $004212                   ; Wait out an in-flight auto-read
+    lsr
+    bcs -
+    ldx.b #$00
+    lda.l $004219                   ; JOY1H
+    jsr .process
+    ldx.b #$01
+    lda.l $00421B                   ; JOY2H
+    jsr .process
+    plp
+    rtl
+
+.process
+    ldy.b $14,x                     ; Joy1Status/Joy2Status from last frame
+    sty.b $00
+    sta.b $14,x
+    eor.b $00
+    beq +
+    lda.b $00
+    and.b #$BF                      ; Drop B from the old status so a held B
+    sta.b $00                       ; is reported as changed
+    eor.b $14,x
++   and.b $14,x
+    sta.b $12,x                     ; Joy1Change/Joy2Change
+    sta.b $16,x                     ; Joy1Retrig/Joy2Retrig
+    ldy.b #$20
+    lda.b $14,x
+    cmp.b $00
+    bne +                           ; Pad changed: restart the repeat delay
+    dec.b $18,x
+    bne ++                          ; Held steady: run down the repeat timer
+    sta.b $16,x                     ; Timer expired: retrigger the held buttons
+    ldy.b #$08
++   sty.b $18,x
+++  rts
 
 SetupScrollHDMA:
     sep #$30
@@ -24,6 +68,46 @@ SetupScrollHDMA:
     sep #$30
     lda.b #(ScrollTable>>16)
     sta $4374
+
+    lda #$02
+    sta $4360
+    lda #$12     ; BG3 vertical scroll
+    sta $4361
+    rep #$30
+    lda.w #M1Layer3ScrollTable
+    sta $4362
+    sep #$30
+    lda.b #(M1Layer3ScrollTable>>16)
+    sta $4364
+    rtl
+
+; Keep the minimap fixed and scroll the popup below it. Map view scrolls both.
+M1UpdateLayer3ScrollHDMA:
+    php
+    rep #$20
+    pha
+
+    lda.w m1_MapViewActive
+    beq .overlay
+    lda.w m1_MapViewVofs
+    bra .set_top
+.overlay
+    lda.w #$0000
+.set_top
+    sta.l M1Layer3ScrollTable_minimap_val
+
+    lda.w m1_MapViewActive
+    beq .overlay_scroll
+    lda.w m1_MapViewVofs
+    bra .set_popup
+.overlay_scroll
+    lda.l nes_overlay_scroll
+.set_popup
+    sta.l M1Layer3ScrollTable_popup_val1
+    sta.l M1Layer3ScrollTable_popup_val2
+
+    pla
+    plp
     rtl
 
 UpdateScrollHDMA:
@@ -61,7 +145,7 @@ UpdateScrollHDMA:
     sta ScrollTable_val2+$1
     sta ScrollTable_val3+$1
 
-    lda #$80
+    lda #$c0
     bra .end
 .noDma
     ; Handle scrolling normally
@@ -70,7 +154,7 @@ UpdateScrollHDMA:
     lda PPUCNT0ZP
     and #$01
     sta $210e
-    lda #$00
+    lda #$40
 .end
     sta $420c
     rtl

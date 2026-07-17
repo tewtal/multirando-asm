@@ -56,6 +56,9 @@ endmacro
 ; Patch startup to not trash the stack
 %hook($C03E, "nop")
 
+; Preserve persistent automap state during the cart-RAM clear.
+%hook($C057, "jsl M1BootClearCartRam : jmp $C06D")
+
 ; Hook ProcessPPUString so that it can upload data converted to SNES format
 %hook($C30C, "jsl ProcessPPUString : jmp $C29A")    ;  return-jumps to prg $69429A
 
@@ -81,6 +84,9 @@ endmacro
 
 ; Hook code that creates PPU strings outside of the regular gameplay modes
 %hook($C20E, "jsl PreparePPUProcess")
+
+; Replace the NES serial controller read with the SNES auto-poller.
+%hook($C215, "jsl SnesReadJoyPads : rts")
 
 ; The title screen uses this routine instead of the common one
 org (!BASE_BANK<<16)+$9449

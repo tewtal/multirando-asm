@@ -352,7 +352,6 @@ ridley_item_table:
 	db $14, $FF, $02, $09, $6D, $00
 
 
-; Reserve space From A000-FFFF for eventual expansion of item tables.
 warnpc $989000
 org $989000
 next_thing:

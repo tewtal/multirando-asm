@@ -38,6 +38,8 @@ LoadItems:
     rep #$30
     lda.w #$0003
     jsl mb_RestoreItemBuffer
+    jsl M1MapEnsureInitialized
+    jsl M1MapClearHud
     plp
 
     lda.b #$02

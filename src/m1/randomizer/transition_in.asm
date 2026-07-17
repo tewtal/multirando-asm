@@ -50,6 +50,7 @@ transition_to_m1:
     ; Scratch stack in IRAM to avoid corrupting WRAM during transition-in
     ; (reset to the NES stack $01f4 further down before the game loop runs).
     ldx.w #!IRAM_TRANSITION_STACK : txs
+    jsl M1MapEnsureInitialized
 
     jsl spc_init_driver
 
@@ -82,9 +83,13 @@ transition_to_m1:
     cpx #$0400
     bne -    
 
+    ; Queue the HUD redraw after clearing its control flag.
+    jsl M1MapClearHud
+
     sep #$30
     jsl UploadItemPalettes
     jsl nes_overlay_init
+    jsl M1MapUploadPalettes
 
     %ai16()
 
