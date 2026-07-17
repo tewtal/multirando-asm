@@ -939,6 +939,11 @@ M1MapEnsureInitialized:
     lda.b #!M1_MAP_FORMAT_VERSION
     sta.w !M1_MAP_STATE_VERSION
 
+    ; Seed-defined starting reveal (vanilla-layout seeds pre-reveal every area).
+    lda.l M1MapInitialReveal
+    sta.w !M1_MAP_STATE_REVEALED_AREAS
+    sta.w !M1_MAP_STATE_SEEN_AREAS
+
 .done
     plb
     plx

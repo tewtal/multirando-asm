@@ -27,9 +27,14 @@ Before writing a seed, read and validate the `M1MP` header at SNES address
 | `+$0C` | 4 | Seed/map identity, little-endian CRC-32 |
 
 The five bounds records start at `header + areaBoundsOffset` from the JSON
-file, currently `$989010`. The map planes begin at `romMap.tilemapsSnesAddress`,
-currently `$989100`. Use the randomizer's existing SNES-to-file-offset helper;
-do not hard-code a PC offset.
+file, currently `$989010`. One byte directly after the bounds records
+(`$989024`, `M1MapInitialReveal`) is the initial revealed-areas mask copied
+into the persistent reveal/seen state whenever the automap state resets for a
+new seed: write `$1F` for vanilla-layout seeds so the whole map is visible
+from the start, and leave the assembled default `$00` for generated maps,
+which reveal areas through their map-station pickups. The map planes begin at
+`romMap.tilemapsSnesAddress`, currently `$989100`. Use the randomizer's
+existing SNES-to-file-offset helper; do not hard-code a PC offset.
 
 ## C# Model
 
