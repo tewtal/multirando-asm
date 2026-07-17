@@ -541,7 +541,7 @@ LoadPowder:
         JSL.l ResolveLootIDLong
 	STA.w SpriteID, Y
         TYX
-	JSL.l PrepDynamicTile_loot_resolved
+	JSL.l PrepDynamicTile_loot_resolved_palette3
         PLX
 RTL
 ;--------------------------------------------------------------------------------
@@ -563,10 +563,13 @@ RTL
 ; DrawPowder:
 ;--------------------------------------------------------------------------------
 DrawPowder:
-	LDA.w ItemReceiptPose : BNE .defer ; defer if link is buying a potion
+	LDA.w ItemReceiptPose : BEQ + ; defer if link is buying a potion
+		LDA.b #$01 : STA.l RedrawFlag
+		BRA .defer
+	+
 	LDA.l RedrawFlag : BEQ +
 		; LDA.w SpriteAuxTable, X ; Retrieve stored item type
-		JSL.l PrepDynamicTile_loot_resolved
+		JSL.l PrepDynamicTile_loot_resolved_palette3
 		LDA.b #$00 : STA.l RedrawFlag ; reset redraw flag
 		BRA .defer
 	+
