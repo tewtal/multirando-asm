@@ -125,17 +125,17 @@ update_save_station:
     iny
     cpy #$0012
     bne -
-    bra .not_found
+    bra .save                       ; No load station for this room, keep the current one
 
 .found_station:
     tya
     sta.w $078b
     sta.l $7ed916
-    lda #$0000
-    ; Autosave game to the portal station
-    jsl $818000
 
-.not_found
+.save
+    ; Autosave game to the portal station
+    lda #$0000
+    jsl $818000
     rts
 
 sm_spc_load:

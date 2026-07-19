@@ -43,12 +43,8 @@ sm_do_transition:
 sm_do_transition_ext:
     jsl $8085c6                     ; Save map data
 
-    lda #$0000
-    jsl $818000                     ; Save SRAM
-
-    lda #$0000
-    sta.l $806166
-    sta.l $806168                   ; Set these values to 0 to force load from the ship if samus dies
+    jsr.w update_save_station       ; Point the save at this portal's load station and save SRAM,
+                                    ; so a reset loads back into the portal room we left from
     jsl sm_fix_checksum             ; Fix SRAM checksum (otherwise SM deletes the file on load)
 
     ; Set previous game id
