@@ -30,6 +30,7 @@ transition_to_zelda:
     ; jsl zelda_fix_checksum
 
     jsr zelda_spc_load          ; Load Zelda's music engine
+    jsl MSUInit                 ; Rebuild Z3 fallback state after the WRAM template restore
     jsr zelda_blank_cgram       ; Blank out CGRAM
     jsr zelda_restore_dmaregs   ; Restore ALTTP DMA regs
     

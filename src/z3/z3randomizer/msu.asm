@@ -163,24 +163,11 @@ CheckMusicLoadRequest:
     RTL
         
 .continue
-        LDA.l TournamentSeed : BNE +++
-        LDA.l MSUPackRequest
-        CMP.l MSUPackCurrent : BEQ +++
-        CMP.l MSUPackCount : !BLT ++
-        CMP.b #$FE : !BLT +
-                    STA.l MSUPackCurrent
-                    SEP #$10
-                        LDA.b #$00
-                        LDX.b #$07
-                        -
-                            STA.l MSUFallbackTable,X
-                        DEX : BPL -
-                    REP #$10
-                    BRA +++
-                + : LDA.l MSUPackCurrent : STA.l MSUPackRequest
-            ++ : STA.l MSUPackCurrent
-            JSL MSUInit_check_fallback
-        +++
+        ; The quad track ABI reserves 101+ for Super Metroid. The historical
+        ; Z3 alternate-pack scheme also used +100, so it must remain disabled.
+        LDA.b #$00
+        STA.l MSUPackCurrent
+        STA.l MSUPackRequest
 
         LDA.w MusicControlRequest : CMP.b #$08 : BEQ ++  ; Mirror SFX is not affected by NoBGM or pack $FE
             LDA.l NoBGM : BNE +
@@ -399,6 +386,7 @@ StoreMusicOnDeath:
 ;--------------------------------------------------------------------------------
 MSUInit:
     PHP
+    SEP #$20
 
     LDA.b #$00
     STA.l MSULoadedTrack
@@ -406,66 +394,66 @@ MSUInit:
     STA.l MSUResumeTime : STA.l MSUResumeTime+1 : STA.l MSUResumeTime+2 : STA.l MSUResumeTime+3
     STA.l MSUResumeControl
 
-    LDA.l NoBGM : BNE .done
+    LDA.l NoBGM : BNE .init_done
 
     REP #$20
 
-        LDA.w MSUID : CMP.w #!VAL_MSU_ID_01 : BNE .done
-        LDA.w MSUID+2 : CMP.w #!VAL_MSU_ID_23 : BNE .done
-        LDA.w MSUID+4 : CMP.w #!VAL_MSU_ID_45 : BNE .done
+        LDA.w MSUID : CMP.w #!VAL_MSU_ID_01 : BNE .init_done
+        LDA.w MSUID+2 : CMP.w #!VAL_MSU_ID_23 : BNE .init_done
+        LDA.w MSUID+4 : CMP.w #!VAL_MSU_ID_45 : BNE .init_done
 
-; Count the number of available MSU-1 packs
-        LDA.w #$0000
-        LDX.b #$FF
-        LDY.b #$01
+    ; Only the canonical Z3 pack is valid in the shared 1-99 namespace.
     SEP #$20
+    LDA.b #$01 : STA.l MSUPackCount
+    LDA.b #$00 : STA.l MSUPackCurrent : STA.l MSUPackRequest
+    JSL MSUInit_check_fallback
+.init_done
+    PLP
+    RTL
 
-.check_pack
-    TYA
-    REP #$20
-        STA.w MSUTRACK
-        !ADD.w #100
-        INX
-    SEP #$20
-    TAY
-.wait_pack
-    LDA.w MSUSTATUS : BIT.b #!FLAG_MSU_STATUS_AUDIO_BUSY : BNE .wait_pack
-    LDA.w MSUSTATUS : BIT.b #!FLAG_MSU_STATUS_TRACK_MISSING : BEQ .check_pack
-    TXA : STA.l MSUPackCount
-    BRA +
-
-; Check the current MSU-1 pack for tracks that require SPC fallback
+; Build Z3's legacy bit-packed fallback table from the quad boot cache. This
+; replaces the old synchronous 64-track seek loop, so transition-in can never
+; deadlock on MSU audio-busy.
 .check_fallback
-        PHP : SEP #$10
-        LDA.l NoBGM : BNE .done
-    + : LDA.b #64
-    LDX.b #7
-    LDY.b #7
+    PHP
+    REP #$30
+    PHA : PHX : PHY
+    SEP #$20
+    LDA.b #$00 : STA.l !MSU_TEMP
+    REP #$10
+    LDX.w #$0001
+    LDY.w #$0000
+.cache_track
+    SEP #$20
+    LDA.l !MSU_TRACK_CACHE,X
+    BEQ .next_cached_track
+    PHX
+    REP #$20
+    TXA : DEC : AND.w #$0007 : TAX
+    SEP #$20
+    LDA.l MSUFallbackBitMasks,X
+    ORA.l !MSU_TEMP
+    STA.l !MSU_TEMP
+    PLX
+.next_cached_track
+    TXA : AND.b #$07 : BNE .advance_cached_track
+    PHX
+    TYX
+    LDA.l !MSU_TEMP : STA.l MSUFallbackTable,X
+    LDA.b #$00 : STA.l !MSU_TEMP
+    PLX
+    INY
+.advance_cached_track
+    INX
+    CPX.w #$0041
+    BNE .cache_track
+    REP #$30
+    PLY : PLX : PLA
+    PLP
+    RTL
 
-.check_track
-    STA.w MSUTRACK
-    STZ.w MSUTRACK+1
-    PHA
-    CLC
-
-.wait_track
-    LDA.w MSUSTATUS : BIT.b #!FLAG_MSU_STATUS_AUDIO_BUSY : BNE .wait_track
-    LDA.w MSUSTATUS : BIT.b #!FLAG_MSU_STATUS_TRACK_MISSING : BNE +
-        SEC
-    +
-    LDA.l MSUFallbackTable,X : ROL : STA.l MSUFallbackTable,X
-
-    DEY : BPL .next_track
-        DEX : BPL +
-            PLA
-.done
-            PLP
-            RTL
-        +
-        LDY.b #7
-.next_track
-    PLA : DEC
-    BRA .check_track
+MSUFallbackBitMasks:
+    db $01,$02,$04,$08,$10,$20,$40,$80
 
 ;--------------------------------------------------------------------------------
 
@@ -523,7 +511,8 @@ MSUMain:
     LDX.w MusicControl : BEQ +
         JMP .command_ff
     +
-    LDA.l MSUDelayedCommand : BEQ .do_fade
+    LDA.l MSUDelayedCommand : BNE .check_busy
+    BRL .do_fade
 
 .check_busy
     LDA.w MSUSTATUS : BIT.b #!FLAG_MSU_STATUS_AUDIO_BUSY : BNE -
@@ -535,15 +524,15 @@ MSUMain:
         REP #$20 : LDA.l MSULoadedTrack : STA.w MSUTRACK : SEP #$20
         BRA -
     +
-    LDA.b #!VAL_VOLUME_FULL
+    LDA.l config_msu_volume
     STA.w TargetVolume
-    
+
     LDA.l MSUResumeControl : BIT.b #!FLAG_RESUME_FADEIN : BEQ +
         EOR.b #!FLAG_RESUME_FADEIN : STA.l MSUResumeControl
         LDA.b #$00
         BRA ++
     +
-    LDA.b #!VAL_VOLUME_FULL
+    LDA.l config_msu_volume
     ++
     STA.w CurrentVolume
     STA.w MSUVOL
@@ -581,7 +570,7 @@ MSUMain:
     CMP.w TargetVolume : !BLT .set
     LDA.w TargetVolume : BRA .set
 .max
-    LDA.b #!VAL_VOLUME_FULL
+    LDA.w TargetVolume
 .set
     STA.w CurrentVolume
     STA.w MSUVOL
@@ -593,13 +582,13 @@ MSUMain:
 
 .command_f3:
     CPX.b #!VAL_COMMAND_FULL_VOLUME : BNE .command_f2
-    LDA.b #!VAL_VOLUME_FULL
+    LDA.l config_msu_volume
     STA.w TargetVolume
     JML SPCContinue
 
 .command_f2:
     CPX.b #!VAL_COMMAND_FADE_HALF : BNE .command_f1
-    LDA.b #!VAL_VOLUME_HALF
+    LDA.l config_msu_volume : LSR
     STA.w TargetVolume
     JML SPCContinue
 

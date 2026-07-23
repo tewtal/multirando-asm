@@ -102,6 +102,13 @@ SnesUpdateAudio:
 ;   [B] has the apu register value
 ;  Caller should preserve original [A] outside the routine if needed
 EnqueueApuWrite:
+    pha
+    lda.l !MSU_WRITE_SUPPRESS
+    beq .enqueue
+    pla
+    rts
+.enqueue:
+    pla
     phx     ;  Preserve [X]
     ldx !ApuWritesIndex
     sta !ApuNumberWrites,x     ;  Write reg. number

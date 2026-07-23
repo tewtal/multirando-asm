@@ -68,6 +68,19 @@ transition_to_z1:
 
     sep #$30
 
+    ; The WRAM snapshot restores the audio engine's requests and active
+    ; tune/song state ($600-$609). A stale active tune (e.g. the looping
+    ; game-over jingle if the snapshot was taken on the continue screen)
+    ; would keep driving audibly here, because the mode-change cleanup
+    ; (SilenceAllSound) never runs on the transition path and MSU native
+    ; suppression only covers the background song. Clear it all; the
+    ; spawn's own song request re-drives music and the MSU adapter.
+    lda #$00
+    ldx #$09
+-   sta.w $0600, x
+    dex
+    bpl -
+
     ; Store the overworld map exit id
     lda.l !IRAM_TRANSITION_DESTINATION_ID
     sta.w $526

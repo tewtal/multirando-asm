@@ -63,6 +63,64 @@ print "SRAM buffer ends at ", hex(!INVENTORY_TEMP_3)
 !SRAM_RANDOLIVE = $40AD00   ; to $40AEFF
 !SRAM_Z1_EXPANDED_DUNGEONS = $40B800 ; to $40BC7F
 
+; Shared MSU-1 state. This must live outside game WRAM because the quad
+; transition system replaces each game's WRAM image. The cache is indexed by
+; the physical 16-bit MSU track number; the initial ABI uses tracks 1-316.
+!SRAM_MSU_STATE = $40BD00
+!MSU_CACHE_MAGIC = !SRAM_MSU_STATE+$00
+!MSU_CACHE_SEED = !SRAM_MSU_STATE+$02       ; Four bytes from the generated seed hash
+!MSU_PRESENT = !SRAM_MSU_STATE+$06
+!MSU_STATE = !SRAM_MSU_STATE+$07
+!MSU_OWNER = !SRAM_MSU_STATE+$08
+!MSU_REQUEST_CONTROL = !SRAM_MSU_STATE+$09
+!MSU_NATIVE_MUTE = !SRAM_MSU_STATE+$0A      ; Adapter policy: suppress native BGM writes
+!MSU_WRITE_SUPPRESS = !SRAM_MSU_STATE+$0B   ; Set only while a native music phase executes
+!MSU_EXPECTED_SPC = !SRAM_MSU_STATE+$0C     ; Optional SPC IO0 acknowledgement byte
+!MSU_REQUEST_TRACK = !SRAM_MSU_STATE+$0E    ; 16-bit physical track
+!MSU_SELECTED_TRACK = !SRAM_MSU_STATE+$10   ; 16-bit track selected in $2004/$2005
+!MSU_CURRENT_TRACK = !SRAM_MSU_STATE+$12    ; 16-bit track most recently started
+!MSU_BUSY_FRAMES = !SRAM_MSU_STATE+$14
+!MSU_TEMP = !SRAM_MSU_STATE+$16
+!MSU_TEMP2 = !SRAM_MSU_STATE+$18
+!MSU_TRACK_CACHE = !SRAM_MSU_STATE+$20      ; Byte per physical track, through +$13C
+!MSU_TRACK_CACHE_SIZE = $013D
+
+; Boot-resolved fallback targets: one 16-bit word per physical track, indexed
+; directly (0 = no fallback / nothing present). Derived scratch rebuilt from
+; MSU_FallbackChains each boot, so it lives in free BW-RAM outside the
+; fingerprinted save file. $40B000-$40B279 (634 bytes of the free 2KB page).
+!MSU_FALLBACK_TABLE = $40B000
+assert !MSU_FALLBACK_TABLE+(!MSU_TRACK_CACHE_SIZE*2) <= $40B800
+
+; MSU-1 hardware registers (shared by the boot-only and runtime MSU modules).
+!MSU_STATUS = $002000
+!MSU_ID = $002002
+!MSU_TRACK = $002004
+!MSU_VOLUME = $002006
+!MSU_CONTROL = $002007
+!MSU_SPC_IO0 = $002140
+
+!MSU_STATUS_MISSING = $08
+!MSU_STATUS_PLAYING = $10
+!MSU_STATUS_BUSY = $40
+!MSU_BUSY_TIMEOUT = $00F0
+
+!MSU_CACHE_MAGIC_VALUE = $3451              ; "Q4"; forces one rescan after manifest/fallback changes
+!MSU_STATE_IDLE = $00
+!MSU_STATE_REQUESTED = $01
+!MSU_STATE_LOADING = $02
+!MSU_STATE_PLAYING = $03
+!MSU_STATE_MISSING = $04
+!MSU_STATE_STOPPING = $05
+!MSU_STATE_ENDED = $06
+!MSU_STATE_ERROR = $07
+
+!MSU_OWNER_NONE = $00
+!MSU_OWNER_SM = $01
+!MSU_OWNER_Z3 = $02
+!MSU_OWNER_Z1 = $03
+!MSU_OWNER_M1 = $04
+
 ;  Z1 sram
 !SRAM_Z1_Start = $406000
 !SRAM_Z1_End   = $407fff
@@ -82,6 +140,8 @@ print "SRAM buffer ends at ", hex(!INVENTORY_TEMP_3)
 ; !SRAM_MW_SEED_DATA = $40B6a0
 
 !SRAM_FILE_MARKER = $40BFFC
+
+assert !MSU_TRACK_CACHE+!MSU_TRACK_CACHE_SIZE <= !SRAM_FILE_MARKER
 
 ; --- SA-1 IRAM ---
 

@@ -16,6 +16,7 @@ namespace menu
 incsrc "menu/main.asm"
 namespace mb
 incsrc "randomizer/init.asm"
+incsrc "randomizer/msu_init.asm"
 warnpc $FC8000
 namespace off
 
@@ -49,8 +50,10 @@ base $40E000
 incsrc "snes.asm"
 incsrc "sa1.asm"
 incsrc "transition.asm"
+incsrc "msu.asm"
 incsrc "randomizer/main.asm"
 print "MotherBrain ends = ", pc
+warnpc $40FF00      ; config.asm claims $40FF00+ and would silently overwrite
 namespace off
 
 incsrc "config.asm"

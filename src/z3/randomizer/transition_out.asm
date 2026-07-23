@@ -37,6 +37,7 @@ transition_from_zelda:
     lda.b #$8f
     sta.l $002100                 ; Enable PPU force blank
 
+    jsl mb_MSU_Stop
     jsl spc_reset
 
     lda.b #$81                  

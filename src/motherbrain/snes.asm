@@ -420,6 +420,7 @@ snes_init:
  	rts   
 
 snes_run_z1:
+    jsl mb_MSU_Stop
     sep #$20
 
 	lda #$00
@@ -457,6 +458,7 @@ snes_run_z1:
     jml z1_SnesBoot
 
 snes_run_m1:
+    jsl mb_MSU_Stop
     sep #$20
 
 	lda #$00
@@ -494,6 +496,7 @@ snes_run_m1:
     jml m1_SnesBoot	
 
 snes_run_z3:
+    jsl mb_MSU_Stop
     sep #$20
     
 	lda #$00
@@ -540,6 +543,7 @@ snes_run_z3:
     jml $008000
 
 snes_run_m3:
+    jsl mb_MSU_Stop
     sep #$20
     
 	lda #$00
@@ -581,6 +585,7 @@ snes_run_m3:
     jml $80841C
 
 snes_run_credits:
+    jsl mb_MSU_Stop
     %a16()
     lda #$0011 : sta !SRAM_CURRENT_GAME
     %a8()

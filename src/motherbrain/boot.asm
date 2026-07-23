@@ -63,6 +63,7 @@ snes_reset:
 
     jsr sa1_setup
     jsl randomizer_init
+    jsl mb_MSU_Init
     jml snes_main
     
 

@@ -20,6 +20,7 @@ org $878000
 base $7E1000
 incsrc "common.asm"
 incsrc "audio/common.asm"
+incsrc "audio/msu.asm"
 CommonBankEnd:
 warnpc $879000
 

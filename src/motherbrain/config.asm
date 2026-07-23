@@ -13,6 +13,11 @@ config_alttp_sprite: ; $FFFF02
     dw #$0000
 config_sm_sprite:    ; $FFFF04
     dw #$0000
+
+; MSU-1 maximum PCM volume, low byte ($00-$FF, $FF = full). All games scale
+; their MSU output from this so PCM music does not overpower native SFX.
+config_msu_volume:   ; $FFFF06
+    dw #$007F
    
 ; Game-selection flags
 org $FFFFE0

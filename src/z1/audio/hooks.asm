@@ -6,8 +6,19 @@
 ;  Audio update routine end
 %zhook($e564, "jsl SnesUpdateAudio")
 
+; DriveSong is the only phase that emits background-song APU writes. Routing
+; its call through WRAM lets MSU suppress BGM without suppressing Tune/SFX/DPCM.
+org !B0+$983A : jsr MSU_DriveTune1Wrapper
+org !B0+$9843 : jsr MSU_DriveSongWrapper
+
+; SilenceSong is the single point every native song stop passes through;
+; replace its leading LDA #$00 : STA Song so the PCM stops with the song.
+org !B0+$9D46 : jsr MSU_SilenceSongWrapper : nop : nop
+
 ;  APU Status writes ($4015)
-org !B0+$982B : jsr WriteAPUControl
+; The paused path silences the channels each frame without stopping the
+; song; the wrapper performs the original $4015 write and mutes the PCM.
+org !B0+$982B : jsr MSU_PauseSilenceWrapper
 org !B0+$9830 : jsr WriteAPUControl
 org !B0+$9928 : jsr WriteAPUControl
 org !B0+$9BA6 : jsr WriteAPUControl

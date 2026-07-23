@@ -67,6 +67,7 @@ sm_do_transition_ext:
     lda #$8f
     sta.l $002100                 ; Enable PPU force blank
 
+    jsl mb_MSU_Stop               ; Mute/cancel PCM before replacing the SPC engine
     jsl sm_reset_spc_engine       ; Kill the SM music engine and put the SPC in IPL upload mode
                                   ; Gotta do this before switching RAM contents
 

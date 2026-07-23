@@ -5,6 +5,7 @@ optimize address ram
 ; So this is the last chance to execute code before the next NMI starts
 SnesProcessFrame:
     jsl SnesOamPrepare
+    jsl mb_MSU_Service
     rtl
 
 SetupScrollHDMA:

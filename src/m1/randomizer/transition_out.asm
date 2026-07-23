@@ -31,6 +31,7 @@ transition_from_m1:
     lda #$8f
     sta $002100               ; Enable PPU force blank
 
+    jsl mb_MSU_Stop
     lda #$f5
     sta $002140               ; Reset SPC
 

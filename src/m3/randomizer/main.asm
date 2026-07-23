@@ -30,6 +30,7 @@ incsrc "item_messages.asm"    ; Super Metroid Item Messages
 incsrc "ending.asm"           ; Super Metroid Ending conditions
 incsrc "newgame.asm"          ; Super Metroid New Game Initialization
 incsrc "minorfixes.asm"       ; Super Metroid some softlock removals etc
+incsrc "msu.asm"              ; Shared-service MSU-1 adapter
 incsrc "newrooms.asm"         ; Super Metroid New Rooms (double door refill/map/saves)
 incsrc "demofix.asm"          ; Super Metroid Stop demos from playing
 ; incsrc "maps.asm"             ; Super Metroid map pause screen and HUD changes

@@ -20,6 +20,7 @@ print "m1 common.asm end = ", pc
 incsrc "audio/common.asm"
 print "m1 audio/common.asm end = ", pc
 incsrc "randomizer/wavy_ice.asm"  ; This has to exist in RAM
+incsrc "audio/msu.asm"
 print "m1 randomizer/wavy_ice.asm end = ", pc
 warnpc $978f00
 

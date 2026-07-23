@@ -91,3 +91,43 @@ endmacro
 ; The title screen uses this routine instead of the common one
 org (!BASE_BANK<<16)+$9449
     jsl PreparePPUProcess
+
+; ------------------------------------------------------------------------------
+; Remove remaining NES PPU register accesses ($2000-$2007 are the MSU-1
+; registers on the SNES; see the equivalent block in z1/hooks.asm). Every
+; removed access is either PPU latch housekeeping or a raw VRAM write whose
+; SNES replacement already exists; the shadows ($FC/$FD/$FF) and all
+; register/flag consumers are unaffected.
+; ------------------------------------------------------------------------------
+
+; Boot path scroll reset ($FD/$FC shadows are set right before).
+%hook($C07B, "nop : nop : nop : nop : nop : nop")                       ; STY $2005 x2
+
+; ClearNameTableAddr ($C16D/$C175): still called from the title sequence
+; (bank 0 $9C07) and the fixed-bank screen-clear path ($CB23). Its raw
+; fill wrote MSU volume/control instead of VRAM; the SNES port never
+; needed the fill, so only the PPU accesses are removed.
+%hook($C175, "nop : nop : nop")                                         ; LDX $2002
+%hook($C187, "nop : nop : nop")                                         ; STA $2006
+%hook($C18C, "nop : nop : nop")                                         ; STA $2006
+%hook($C195, "nop : nop : nop")                                         ; STA $2007
+
+; Start-tilemap upload: $2002 latch read between the two existing hooks
+; (UploadStartTilemap sets up its own registers).
+%hook($C888, "nop : nop : nop")                                         ; LDY $2002
+
+; Reset stub PPU warm-up waits would spin forever on the MSU ID byte.
+%hook($FFBA, "nop : nop : nop : nop : nop : nop : nop : nop : nop : nop")
+
+; Title-screen tile/attribute writer (bank 0, called from $9127).
+org (!BASE_BANK<<16)+$940B : nop : nop : nop    ; LDA $2002
+org (!BASE_BANK<<16)+$941A : nop : nop : nop    ; STA $2006
+org (!BASE_BANK<<16)+$9420 : nop : nop : nop    ; STA $2006
+org (!BASE_BANK<<16)+$9428 : nop : nop : nop    ; STA $2007
+org (!BASE_BANK<<16)+$942D : nop : nop : nop    ; STA $2007
+
+; Palette-latch reset sequence after PreparePPUProcess (bank 0).
+org (!BASE_BANK<<16)+$9F72 : nop : nop : nop    ; STA $2006
+org (!BASE_BANK<<16)+$9F77 : nop : nop : nop    ; STA $2006
+org (!BASE_BANK<<16)+$9F7A : nop : nop : nop    ; STA $2006
+org (!BASE_BANK<<16)+$9F7D : nop : nop : nop    ; STA $2006

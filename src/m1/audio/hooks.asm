@@ -4,6 +4,16 @@
 ; SFX data to APU registers and redirects it properly
 %hook($B384, "jsr LoadSFXRegisters")
 
+; Separate regular and multichannel music phases from the surrounding SFX
+; phases. The wrappers selectively suppress only music-generated APU writes.
+%hook($B3CD, "jsr MSU_MultiMusicWrapper")
+%hook($B3D3, "jsr MSU_MusicWrapper")
+
+; Stop the PCM when the engine takes the NoiseSFXFlag bit-0 silence path,
+; and mute it across the pause freeze (PauseSFX's ClearSounds call).
+%hook($B3EB, "jsr MSU_SilenceMusicWrapper")
+%hook($B392, "jsr MSU_PauseClearSoundsWrapper")
+
 ; Hook initial status register write
 %hook($C0A3, "jsr WriteAPUControl")
 

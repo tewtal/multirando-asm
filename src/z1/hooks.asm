@@ -85,3 +85,54 @@ org ((!BASE_BANK+5)<<16)+$8CA6 : jmp CueTransferPlayAreaAttrsHalfAndPrepareSnesB
 
 ; Hook TransferTileBuf writes (dynamic tilemap/attribute writes)
 org ((!BASE_BANK+$6)<<16)+$A08C : jsr SnesTransferTileBuf
+
+; ------------------------------------------------------------------------------
+; Remove remaining NES PPU register accesses. $2000-$2007 are the MSU-1
+; registers on the SNES ($2004/$2005 track select, $2006 volume, $2007
+; control), so every surviving vanilla access corrupts MSU state, and the
+; $2002 status polls spin forever on the constant MSU ID bytes. The SNES
+; port replaces all of this PPU work (OAM DMA, scroll HDMA, VRAM uploads),
+; so the vanilla accesses are simply removed. Registers/flags stay intact:
+; every removed store/read is followed by a fresh load in the vanilla code.
+; ------------------------------------------------------------------------------
+
+; NMI body: OAMADDR reset, scroll reset, palette-latch $3F00 sequence, and
+; the sprite-0 hit wait ($2002 bit 6 is always set in the MSU ID byte 'S',
+; so the vanilla wait would hang every frame).
+%zhook($E4AC, "nop : nop : nop")                                        ; STA $2003
+%zhook($E4B6, "nop : nop : nop : nop : nop : nop")                      ; STA $2005 x2
+%zhook($E4C6, "nop : nop : nop")                                        ; STA $2006
+%zhook($E4CB, "nop : nop : nop : nop : nop : nop : nop : nop : nop")    ; STA $2006 x3
+%zhook($E4D4, "nop : nop : nop : nop : nop : nop : nop : nop : nop : nop") ; sprite-0 wait + LDA $2002
+
+; InitializeAllScrolling: raw scroll writes ($FD/$FC shadows remain).
+%zhook($E582, "nop : nop : nop")                                        ; STA $2005
+%zhook($E587, "nop : nop : nop")                                        ; STA $2005
+
+; Orphaned nametable-fill helper at $E59A (no remaining callers, but its
+; PPU stores are neutralized in case a stray path still enters it).
+%zhook($E59A, "nop : nop : nop")                                        ; LDA $2002
+%zhook($E5A8, "nop : nop : nop")                                        ; STA $2006
+%zhook($E5AD, "nop : nop : nop")                                        ; STY $2006
+%zhook($E5BC, "nop : nop : nop")                                        ; STA $2007
+%zhook($E5CF, "nop : nop : nop")                                        ; STA $2006
+%zhook($E5D4, "nop : nop : nop")                                        ; STA $2006
+%zhook($E5D9, "nop : nop : nop")                                        ; STY $2007
+
+; Reset stub: the two PPU warm-up vblank waits poll $2002 bit 7, which is
+; always clear in the MSU ID byte, hanging the boot. No warm-up is needed.
+%zhook($FF5A, "nop : nop : nop : nop : nop : nop : nop : nop : nop : nop : nop : nop : nop : nop")
+
+; Status-bar/scroll code (bank 5): PPUCTRL nametable-select and scroll
+; writes; the $FF shadow (PPUCNT0ZP) is already updated right before each,
+; and the port derives scroll/layer state from the shadows via HDMA.
+org ((!BASE_BANK+5)<<16)+$8528 : nop : nop : nop    ; LDA $2002 (discarded)
+org ((!BASE_BANK+5)<<16)+$857E : nop : nop : nop    ; STA $2000
+org ((!BASE_BANK+5)<<16)+$8588 : nop : nop : nop    ; STA $2005
+org ((!BASE_BANK+5)<<16)+$8599 : nop : nop : nop    ; STA $2000
+org ((!BASE_BANK+5)<<16)+$A8B8 : nop : nop : nop    ; STA $2000
+
+; CHR upload preambles (banks 1-3): $2002 latch-reset reads, value unused.
+org ((!BASE_BANK+1)<<16)+$8D4A : nop : nop : nop    ; LDA $2002
+org ((!BASE_BANK+2)<<16)+$8015 : nop : nop : nop    ; LDA $2002
+org ((!BASE_BANK+3)<<16)+$8047 : nop : nop : nop    ; LDA $2002
