@@ -26,6 +26,7 @@ ConstructMapFromGameStart:
 	STZ $0763				;set pause screen mode to "map" (found by "Tundain)
 ConstructMap:
 	LDA $1F5B : STA !OriginAreaIndex
+	JSL sm_persist_current_map_station
 	LDA #$0300 : STA $2E
 	LDA.w #!RAM_ActiveMap : JSR MainMapConstruction : RTL
 

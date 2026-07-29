@@ -116,6 +116,7 @@ ApplyTileGFXtoRAM:
 UpdateActiveMapWithExplored:
 	SEP #$20 : LDA $07F7,y : BIT $AC04,x : BEQ + : RTS	;check if explored bit already set
 + : ORA $AC04,x : STA $07F7,y	;save bit
+	JSL sm_persist_explored_tile
 	STX $20 : STY $1E : REP #$30
 	JSL LoadSourceMapData		;[$00] = long pointer to current area map data
 	JSR UpdateMaptileInActiveMap
@@ -137,7 +138,9 @@ UpdateActiveMapWithExplored:
 + : INX : CPX #$08 : BMI ++ : INY : LDX #$00	;offset one tile right
 ++ : STX $20
 
-+++ : LDA $07F7,y : ORA $AC04,x : STA $07F7,y : REP #$30	;set explored bit of adjacent maptile
++++ : LDA $07F7,y : ORA $AC04,x : STA $07F7,y	;set explored bit of adjacent maptile
+	JSL sm_persist_explored_tile
+	REP #$30
 UpdateMaptileInActiveMap:
 	TYA : ASL #3 : CLC : ADC $20 : ASL : TAX : TAY	;get maptile offset of active map
 	LDA [$00],y : STA !RAM_ActiveMap,x				;save origin tile to active map

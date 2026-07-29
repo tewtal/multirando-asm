@@ -51,8 +51,10 @@ org $82941B  ; Updates the area and map in the map screen
 org $848C91  ; Activate map station
     ldx $1F5B
 
-org $8FC90C  ; Tourian first room gives area map (TODO: change this)
-    ldx $1F5B
+org $8FC90A  ; Tourian first room gives the randomized area's map
+    jsl sm_set_tourian_collected_map
+    rts
+    nop #15
 
 org $84B19C  ; At map station, check if current area map already collected
     ldx $1F5B

@@ -244,7 +244,8 @@ setup_samus:
 
 ; Determine which save slot to load from, and load it:
 load_save_slot:
-    lda $0952
+    stz $0952
+    lda #$0000
     jml $818085
     rtl
 

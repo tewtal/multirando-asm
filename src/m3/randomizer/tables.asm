@@ -42,3 +42,9 @@ config_screw_attack: ; DF0208
 ; Reload button combo
 config_reload_button_combo: ; DF020A
     dw #$3030  ; L + R + Select + Start
+
+; Nonzero when the SM room/map layout is randomized. Enables persistent
+; explored-map and map-station progress in the otherwise unused second
+; SM save-slot block.
+config_sm_map_randomization: ; DF020C
+    dw #$0000
