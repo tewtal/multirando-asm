@@ -127,9 +127,10 @@ org $908D3D : rts
 %hook($C922, "jsl RestoreSamusHealth : rts")
 
 ; ============================================================================
-; Move Up+A (Up+B on SNES) to controller 1
+; Move Up+A (Up+B on SNES) to controller 1. Read the raw physical pad so
+; controller remapping never changes this shortcut.
 ; ============================================================================
-%hook($C9B1, "lda.b $14")
+%hook($C9B1, "jsl M1ReadResetButtons")
 
 ; ============================================================================
 ; Patch ending sequence to check for full game completion

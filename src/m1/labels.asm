@@ -50,7 +50,18 @@ m1_MapViewMaxY = $0A50      ; Compose loop: inclusive source-row limit
 m1_MapViewDestTmp = $0A52   ; Compose loop: destination byte offset
 m1_MapLastCell = $0A54      ; area*$400+cell the tracker last rendered; $FFFF forces one
 m1_MiniMapTileTmp = $0A56   ; Minimap loop: current tilemap word
+m1_RawPad1 = $0A58          ; Raw SNES controller 1 word, before M1 remapping
+m1_RawPadTmp = $0A5A        ; Controller remapping scratch
+m1_MappedPadTmp = $0A5C     ; Controller remapping scratch
+m1_MapButtonTmp = $0A5E     ; Effective full-screen map button
 m1_MapViewBuffer = $7E8800  ; 32x32-word compose buffer for the full-screen map view
+
+; Persistent M1 controller configuration. An all-zero record disables remapping.
+m1_ControlShoot = $7C00
+m1_ControlJump = $7C02
+m1_ControlItemSelect = $7C04
+m1_ControlMap = $7C06
+m1_ControlEnd = $7C08
 
 M1CurMMC1Control = $0A00
 M1NTTransferOffset = $0A02

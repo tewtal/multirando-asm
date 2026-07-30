@@ -351,6 +351,19 @@ M1MapReadPad:
     plp
     rts
 
+; Return the configured map button, or X when the controller record is blank.
+M1GetMapButton:
+    lda.w m1_ControlShoot
+    ora.w m1_ControlJump
+    ora.w m1_ControlItemSelect
+    ora.w m1_ControlMap
+    beq .default
+    lda.w m1_ControlMap
+    rts
+.default
+    lda.w #!M1_PAD_X
+    rts
+
 ; Called once per frame from SnesProcessFrame (main thread, right before the
 ; NMI wait-loop). During stable gameplay this tracks the cell Samus occupies
 ; (re-rendering the minimap when it changes) and opens the full-screen map
@@ -384,8 +397,12 @@ M1MapViewFrame:
     jsr M1MapTrackPlayer
     plx
 
+    phx
+    jsr M1GetMapButton
+    sta.w m1_MapButtonTmp
+    plx
     txa
-    and.w #!M1_PAD_X
+    and.w m1_MapButtonTmp
     beq .done
 
     jsr M1MapViewRun
@@ -455,7 +472,12 @@ M1MapViewRun:
     sty.w m1_PadHeld
     tax                             ; X = newly pressed buttons
 
-    and.w #!M1_PAD_X                ; X closes the map
+    phx
+    jsr M1GetMapButton
+    sta.w m1_MapButtonTmp
+    plx
+    txa
+    and.w m1_MapButtonTmp           ; Configured button closes the map
     bne .exit
 
     txa
@@ -496,7 +518,7 @@ M1MapViewRun:
     inc #2
     sta.w m1_MapViewVofs
 +
-    bra .frame_loop
+    jmp .frame_loop
 
 .exit
     ; Blank BG3 with one full-screen transfer and re-queue the HUD rows on
@@ -869,8 +891,8 @@ M1MapViewBlank:
     plp
     rts
 
-; Clear cart RAM while preserving the persistent automap block. Invalid map
-; state is reset later by M1MapEnsureInitialized.
+; Clear cart RAM while preserving the automap and controller settings.
+; Invalid map state is reset later by M1MapEnsureInitialized.
 M1BootClearCartRam:
     phb : phk : plb
     php
@@ -881,9 +903,9 @@ M1BootClearCartRam:
     sta.w $6000,x
     dex #2
     bpl .below
-    ldx.w #($8000-!M1_MAP_STATE_END-$02)
+    ldx.w #($8000-!M1_PERSISTENT_STATE_END-$02)
 .above
-    sta.w !M1_MAP_STATE_END,x
+    sta.w !M1_PERSISTENT_STATE_END,x
     dex #2
     bpl .above
     plp

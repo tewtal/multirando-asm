@@ -14,8 +14,9 @@ SnesProcessFrame:
     rtl
 
 ; Replaces the NES serial controller read with SNES auto-poll results.
-; JOY1H/JOY2H preserve the NES input order, with SNES B/Y as NES A/B.
-; The change and retrigger logic preserves the original behavior.
+; With a blank controller record, JOY1H/JOY2H preserve the NES input order,
+; with SNES B/Y as NES A/B. A configured record remaps shoot, jump, and select
+; into that NES-compatible byte. The change and retrigger logic is unchanged.
 ; Runs in NES NMI context: D = zero page.
 SnesReadJoyPads:
     php
@@ -24,13 +25,62 @@ SnesReadJoyPads:
     lsr
     bcs -
     ldx.b #$00
-    lda.l $004219                   ; JOY1H
+    rep #$20
+    lda.l $004218                   ; Full raw JOY1 word
+    sta.w m1_RawPad1                ; Reset always uses the physical buttons
+    jsr .map
+    sep #$20
     jsr .process
     ldx.b #$01
-    lda.l $00421B                   ; JOY2H
+    rep #$20
+    lda.l $00421A                   ; Full raw JOY2 word
+    jsr .map
+    sep #$20
     jsr .process
     plp
     rtl
+
+.map
+    sta.w m1_RawPadTmp
+
+    lda.w m1_ControlShoot
+    ora.w m1_ControlJump
+    ora.w m1_ControlItemSelect
+    ora.w m1_ControlMap
+    beq .unmapped
+
+    ; Keep Start and the D-pad physical, then synthesize the three NES actions.
+    lda.w m1_RawPadTmp
+    and.w #$1F00
+    xba
+    sta.w m1_MappedPadTmp
+
+    lda.w m1_RawPadTmp
+    and.w m1_ControlShoot
+    beq +
+    lda.w m1_MappedPadTmp
+    ora.w #$0080
+    sta.w m1_MappedPadTmp
++   lda.w m1_RawPadTmp
+    and.w m1_ControlJump
+    beq +
+    lda.w m1_MappedPadTmp
+    ora.w #$0040
+    sta.w m1_MappedPadTmp
++   lda.w m1_RawPadTmp
+    and.w m1_ControlItemSelect
+    beq +
+    lda.w m1_MappedPadTmp
+    ora.w #$0020
+    sta.w m1_MappedPadTmp
++   lda.w m1_MappedPadTmp
+    rts
+
+.unmapped
+    lda.w m1_RawPadTmp
+    xba                             ; JOYxH is already NES-compatible
+    and.w #$00FF
+    rts
 
 .process
     ldy.b $14,x                     ; Joy1Status/Joy2Status from last frame
@@ -55,6 +105,13 @@ SnesReadJoyPads:
     ldy.b #$08
 +   sty.b $18,x
 ++  rts
+
+; Return the hard-coded physical Up+B shortcut bits. The hook replaces both
+; the original controller load and its AND #$88.
+M1ReadResetButtons:
+    lda.w m1_RawPad1+$01
+    and.b #$88
+    rtl
 
 SetupScrollHDMA:
     sep #$30

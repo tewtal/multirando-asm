@@ -190,10 +190,15 @@
 !CTRL_BINDING_ANGLEDOWN = $40002A
 !CTRL_BINDING_ANGLEUP = $40002C
 
+; M1 cart SRAM $7C00-$7C07, mirrored in BW-RAM. All zero means no remapping.
+!M1_CONTROL_SHOOT = $409C00
+!M1_CONTROL_JUMP = $409C02
+!M1_CONTROL_ITEM_SELECT = $409C04
+!M1_CONTROL_MAP = $409C06
+
 incsrc "macros.asm"
 incsrc "menu.asm"
 
 init:
     phk : plb
     jml cm_start
-

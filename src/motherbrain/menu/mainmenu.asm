@@ -346,13 +346,55 @@ SetupMenu:
     dw #sm_moonwalk
     dw $FFFF
     dw #sm_goto_controller
+    dw #m1_goto_controller
     dw #$0000
     %cm_header("Quad - Configuration")
 
 sm_moonwalk:
     %cm_toggle("SM - Moonwalk", $400052, 1, 0)
 sm_goto_controller:
-    %cm_submenu("Configure controller", #ControllerMenu)
+    %cm_submenu("SM - Configure controller", #ControllerMenu)
+
+m1_goto_controller:
+    %cm_jsl_submenu("M1 - Configure controller", #m1_open_controller, #M1ControllerMenu)
+
+m1_open_controller:
+    lda.l !M1_CONTROL_SHOOT
+    ora.l !M1_CONTROL_JUMP
+    ora.l !M1_CONTROL_ITEM_SELECT
+    ora.l !M1_CONTROL_MAP
+    bne +
+    lda.w #$8000
+    sta.l !M1_CONTROL_SHOOT
+    lda.w #$4000
+    sta.l !M1_CONTROL_JUMP
+    lda.w #$2000
+    sta.l !M1_CONTROL_ITEM_SELECT
+    lda.w #$0040
+    sta.l !M1_CONTROL_MAP
++   jml action_submenu
+
+M1ControllerMenu:
+    dw #controls_save_to_file
+    dw #$FFFF
+    dw #m1_controls_shot
+    dw #m1_controls_jump
+    dw #m1_controls_item_select
+    dw #m1_controls_map
+    dw #$0000
+    %cm_header("M1 CONTROLLER SETTINGS")
+
+m1_controls_shot:
+    %cm_ctrl_input("       SHOOT", !M1_CONTROL_SHOOT, action_submenu, #AssignControlsMenu)
+
+m1_controls_jump:
+    %cm_ctrl_input("        JUMP", !M1_CONTROL_JUMP, action_submenu, #AssignControlsMenu)
+
+m1_controls_item_select:
+    %cm_ctrl_input(" ITEM SELECT", !M1_CONTROL_ITEM_SELECT, action_submenu, #AssignControlsMenu)
+
+m1_controls_map:
+    %cm_ctrl_input("         MAP", !M1_CONTROL_MAP, action_submenu, #AssignControlsMenu)
 
 ControllerMenu:
     dw #controls_save_to_file
