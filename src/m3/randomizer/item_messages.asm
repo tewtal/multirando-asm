@@ -19,6 +19,12 @@
 
 !BossRewardSmall = #BossRewardSmall
 
+; Nonzero only while a native message interaction is rendering portal-revert
+; text: 1 = confirmation, 2 = checkpoint unavailable.
+!SM_PORTAL_REVERT_DIALOG_ACTIVE = $7E1F66
+!SM_PORTAL_REVERT_MESSAGE_ID = $0027
+!SM_PORTAL_UNAVAILABLE_MESSAGE_ID = $0028
+
 org $D0A000
 item_message_table:
     ; Offset = ALTTP SRAM Offset
@@ -688,6 +694,8 @@ org $859643
     dw !MapMarkerBig,      !Big, map_marker             ; 24
     dw !PlaceholderBig,    !Big, sm_item_sent           ; 25
     dw !PlaceholderBig,    !Big, sm_item_received       ; 26
+    dw !EmptyBig,          !Small, portal_revert         ; 27
+    dw !EmptySmall,        !Small, portal_unavailable    ; 28
 
     dw !EmptySmall, !Small, btn_array
 
@@ -748,6 +756,19 @@ sm_item_received:
     dw "___      ITEM NAME HERE      ___"
     dw "___           from           ___"
     dw "___          PLAYER          ___"
+
+portal_revert:
+    dw "______ Revert to portal? _______"
+    dw "______ Progress since    _______"
+    dw "______ then will be lost _______"
+    ; Native save-confirmation row, initialized with No selected.
+    dw $000E,$000E,$000E,$000E,$000E,$000E,$3C4E,$3C4E
+    dw $3C4E,$3C4E,$2CF8,$2CE4,$2CF2,$3C4E,$3C4E,$3C4E
+    dw $3C4E,$38CC,$38CD,$3CED,$3CEE,$3C4E,$3C4E,$3C4E
+    dw $3C4E,$000E,$000E,$000E,$000E,$000E,$000E,$000E
+
+portal_unavailable:
+    dw "____ Checkpoint unavailable ____"
 cleartable
 
 btn_array:
@@ -1065,6 +1086,23 @@ char_table:
 
 org $858749
 fix_1c1f:
+    ; Keep the stored native index ($17 confirmation or $15 information) so
+    ; the native routine retains its interaction and return behavior. Only
+    ; redirect the two definition lookups to our custom message.
+    LDA.l !SM_PORTAL_REVERT_DIALOG_ACTIVE
+    BEQ .normal_message
+    CMP.w #$0002
+    BEQ .unavailable
+    LDA.w #!SM_PORTAL_REVERT_MESSAGE_ID
+    BRA .redirect
+.unavailable:
+    LDA.w #!SM_PORTAL_UNAVAILABLE_MESSAGE_ID
+.redirect:
+    CMP #$001D
+    ADC #$027F
+    RTS
+
+.normal_message:
     LDA !DP_MsgOverride      ; if $CE is set, it overrides the message box
     BEQ +
     STA $1C1F
@@ -1085,3 +1123,10 @@ org $8582E5
 
 org $858413
 	DW btn_array
+
+; Replace REP #$30 : STZ $05F9 at the start of the native save-confirmation
+; interaction. The wrapper performs those instructions and chooses No only
+; for the portal-revert prompt.
+org $8584B5
+    jsl sm_portal_revert_init_confirmation
+    nop

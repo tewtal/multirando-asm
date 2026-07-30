@@ -69,6 +69,7 @@ transition_to_sm:
     jsl sm_setup_door
 
     jsr update_save_station     ; Update save station to portal room and autosave
+    jsl sm_portal_checkpoint_create
 
     %ai16()
 
@@ -376,6 +377,5 @@ sm_setup_door:
     plb
     plp
     rtl
-
 
 

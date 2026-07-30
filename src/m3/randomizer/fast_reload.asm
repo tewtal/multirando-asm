@@ -2,6 +2,7 @@
 ; Based on patch by total: https://metroidconstruction.com/resource.php?id=421
 ; Compile with "asar" (https://github.com/RPGHacker/asar/releases)
 
+incsrc "portal_revert.asm"
 
 !deathhook82 = $82DDC7 ;$82 used for death hook (game state $19)
 
@@ -16,6 +17,10 @@
 !freespacea0 = $a0fe00 ;$A0 used for instant save reload
 
 !QUICK_RELOAD = $1f60 ;dont need to touch this
+!PORTAL_REVERT_HOLD_COUNTER = $1f62
+!PORTAL_REVERT_HOLD_ACTIVE = $1f64
+!PORTAL_REVERT_COMBO_MASK = $1f68
+!PORTAL_REVERT_HOLD_FRAMES = $0078
 
 ; Hook Death Game event (19h)
 org !deathhook82
@@ -47,6 +52,15 @@ org $82897A
     jsl hook_main
 
 org !bank_85_free_space_start
+hook_main:
+    jsl $808338  ; run hi-jacked instruction
+    jml sm_fast_reload_hook
+
+warnpc !bank_85_free_space_end
+
+; The original bank-$85 allocation was tight. Keep only the trampoline there
+; and put the input state machine beside the map-randomizer rollback code.
+org sm_portal_revert_code_end
 SupportedStates:
     dw #$0007  ; Main gameplay fading in
     dw #$0008  ; Main gameplay
@@ -68,8 +82,9 @@ SupportedStates:
     dw #$0027  ; Ending and credits. Cinematic. (reboot only)
     dw #$ffff
 
-hook_main:
-    jsl $808338  ; run hi-jacked instruction
+sm_fast_reload_hook:
+    php
+    rep #$30
     phb
     phk
     plb
@@ -82,25 +97,121 @@ hook_main:
     inx : inx
     bra .next_check
 .leave    ; inapplicable game state, so skip check for quick reload inputs.
+    stz !PORTAL_REVERT_HOLD_COUNTER
+    stz !PORTAL_REVERT_HOLD_ACTIVE
     plb
+    plp
     rtl
 
 .check
     plb
-    php
-    rep #$30
 
     ; Disable quick reload during the Samus fanfare at the start of the game (or when loading game from menu)
     lda $0A44
     cmp #$E86A
-    beq .noreset
+    bne +
+    brl .cancel_hold
++
 
-    lda $8B      ; Controller 1 input
-    and.l config_reload_button_combo   ; L + R + Select + Start (or customized reset inputs)
+    lda.l config_reload_button_combo
+    bne +
+    brl .cancel_hold
++
+    sta !PORTAL_REVERT_COMBO_MASK
+
+    lda $8B
+    and !PORTAL_REVERT_COMBO_MASK
     cmp.l config_reload_button_combo
-    bne .noreset ; If any of the inputs are not currently held, then do not reset.
+    beq +
+    brl .released
++
 
-    ; Only check new press with gamestates 7 & 8
+    ; In map-randomizer gameplay, always distinguish a short reload from a
+    ; long hold. An unavailable checkpoint gets explicit feedback at the hold
+    ; threshold instead of unexpectedly falling through to an immediate reset.
+    lda $0998
+    cmp #$0008
+    beq +
+    brl .immediate_reload
++
+    lda.l config_sm_map_randomization
+    bne +
+    brl .immediate_reload
++
+
+    lda !PORTAL_REVERT_HOLD_ACTIVE
+    bne .continue_hold
+
+    ; Begin timing when the configurable chord first becomes complete.
+    lda $8F
+    and !PORTAL_REVERT_COMBO_MASK
+    bne +
+    brl .noreset
++
+    lda #$0001
+    sta !PORTAL_REVERT_HOLD_ACTIVE
+    stz !PORTAL_REVERT_HOLD_COUNTER
+
+.continue_hold:
+    ; Do not let Start or another configurable chord button trigger ordinary
+    ; gameplay actions while deciding between a short and long press.
+    lda !PORTAL_REVERT_COMBO_MASK
+    eor #$FFFF
+    and $8B
+    sta $8B
+    lda !PORTAL_REVERT_COMBO_MASK
+    eor #$FFFF
+    and $8F
+    sta $8F
+
+    inc !PORTAL_REVERT_HOLD_COUNTER
+    lda !PORTAL_REVERT_HOLD_COUNTER
+    cmp #!PORTAL_REVERT_HOLD_FRAMES
+    bcc .noreset
+
+    stz !PORTAL_REVERT_HOLD_COUNTER
+    stz !PORTAL_REVERT_HOLD_ACTIVE
+
+    jsl sm_portal_checkpoint_is_valid
+    bcc .checkpoint_unavailable
+
+    lda #$0001
+    sta.l !SM_PORTAL_REVERT_DIALOG_ACTIVE
+    lda #$0017                   ; Native save-style blocking yes/no prompt
+    jsl $858080
+    pha
+    lda #$0000
+    sta.l !SM_PORTAL_REVERT_DIALOG_ACTIVE
+    pla
+    bne .noreset                 ; Native result: 0 = Yes, 2 = No
+
+    jsl sm_portal_checkpoint_restore
+    bcc .noreset
+    bra .reset
+
+.checkpoint_unavailable:
+    lda #$0002
+    sta.l !SM_PORTAL_REVERT_DIALOG_ACTIVE
+    lda #$0015                   ; Native short informational interaction
+    jsl $858080
+    lda #$0000
+    sta.l !SM_PORTAL_REVERT_DIALOG_ACTIVE
+    bra .noreset
+
+.released:
+    ; A short press is the existing quick reload, performed when the chord is
+    ; released so it can be distinguished from the long hold.
+    lda !PORTAL_REVERT_HOLD_ACTIVE
+    beq .noreset
+    stz !PORTAL_REVERT_HOLD_COUNTER
+    stz !PORTAL_REVERT_HOLD_ACTIVE
+    bra .reset
+
+.immediate_reload:
+    stz !PORTAL_REVERT_HOLD_COUNTER
+    stz !PORTAL_REVERT_HOLD_ACTIVE
+
+    ; Preserve the old behavior when no portal rollback can be offered.
     lda $0998
     cmp #$0007
     beq .check_newpress
@@ -110,6 +221,10 @@ hook_main:
     lda $8F      ; Newly pressed controller 1 input
     and.l config_reload_button_combo  ; L + R + Select + Start
     bne .reset   ; Reset only if at least one of the inputs is newly pressed
+
+.cancel_hold:
+    stz !PORTAL_REVERT_HOLD_COUNTER
+    stz !PORTAL_REVERT_HOLD_ACTIVE
 .noreset
     plp
     rtl
@@ -139,7 +254,9 @@ hook_main:
     pea $f70d    ; $82f70e = rtl
     jml !deathhook82
 
-warnpc !bank_85_free_space_end
+sm_fast_reload_code_end:
+assert sm_fast_reload_code_end == $B5F35D
+warnpc $B5F800
 
 ; Hook setting up game
 org $80a088

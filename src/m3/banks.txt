@@ -22,6 +22,7 @@ Bank                Content
 84:FE00-FEFF        -- Kraid vomit fix --
 84:FF00-FF7F        -- New reserve tank code --
 85:9650-AFFF        -- Extended message boxes --
+85:FF00-FF07        -- Fast reload input trampoline --
 88:F000-F700        -- Messagebox Lowercase Code and Data --
 8B:F800-FFFF        -- Fast boot --
 8C:FA00-FFFF        -- Titlescreen map --
@@ -36,7 +37,9 @@ Bank                Content
 99:F000-FFFF        -- Boss reward code --
 A3:F320-F3FF        -- Elevator speed --
 B5:F000-F0C1        -- Persistent randomized-map progress --
-B5:F0C2-FFFF        -- Free space --
+B5:F0C2-F1FF        -- Portal rollback checkpoint code --
+B5:F200-F35C        -- Fast reload and portal rollback input --
+B5:F35D-FFFF        -- Free space --
 B7:FD00-FDFF        -- Ending check --
 B8:8000-FFFF        -- Free space --
 
