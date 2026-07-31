@@ -59,13 +59,13 @@ SnesReadJoyPads:
     and.w m1_ControlShoot
     beq +
     lda.w m1_MappedPadTmp
-    ora.w #$0080
+    ora.w #$0040                    ; NES B = shoot
     sta.w m1_MappedPadTmp
 +   lda.w m1_RawPadTmp
     and.w m1_ControlJump
     beq +
     lda.w m1_MappedPadTmp
-    ora.w #$0040
+    ora.w #$0080                    ; NES A = jump
     sta.w m1_MappedPadTmp
 +   lda.w m1_RawPadTmp
     and.w m1_ControlItemSelect

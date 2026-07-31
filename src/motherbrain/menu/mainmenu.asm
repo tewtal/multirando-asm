@@ -364,9 +364,9 @@ m1_open_controller:
     ora.l !M1_CONTROL_ITEM_SELECT
     ora.l !M1_CONTROL_MAP
     bne +
-    lda.w #$8000
-    sta.l !M1_CONTROL_SHOOT
     lda.w #$4000
+    sta.l !M1_CONTROL_SHOOT
+    lda.w #$8000
     sta.l !M1_CONTROL_JUMP
     lda.w #$2000
     sta.l !M1_CONTROL_ITEM_SELECT
