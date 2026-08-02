@@ -8,6 +8,12 @@ incsrc "map_data.asm"
 warnpc $98F000
 org $98F000
 incsrc "transition_tables.asm"
+warnpc $98FF00
+
+; Don't move this - fixed address written by the C# randomizer
+org $98FF00
+incsrc "config.asm"
+warnpc $990000
 
 org $998000
 incsrc "newitems.asm"

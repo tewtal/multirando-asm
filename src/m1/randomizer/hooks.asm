@@ -127,6 +127,14 @@ org $908D3D : rts
 %hook($C922, "jsl RestoreSamusHealth : rts")
 
 ; ============================================================================
+; Per-area start/respawn room orientation (see loadgame.asm)
+; Replaces SamusInit's hardcoded "Brinstar = horizontal, others = vertical":
+;   $C8FC  LDY #$27 : LDA $74 : AND #$0F : BEQ + : LSR $49 : LDY #$2F
+;   $C908  + STY $FA
+; ============================================================================
+%hook($C8FC, "jsl M1StartOrientation : nop #10")
+
+; ============================================================================
 ; Move Up+A (Up+B on SNES) to controller 1. Read the raw physical pad so
 ; controller remapping never changes this shortcut.
 ; ============================================================================
