@@ -18,6 +18,7 @@ incsrc "reserve_hud.asm"
 
 incsrc "map_overhaul/BasicGraphicPatch.asm"
 incsrc "map_overhaul/MapOverhaul.asm"
+incsrc "pause_map_tiles2.asm"  ; Second pause-map tile page (chars $300-$3FF), must follow map_overhaul
 
 ; 
 ; Randomizer things

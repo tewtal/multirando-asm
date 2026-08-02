@@ -57,7 +57,9 @@
     "boss": 269,
     "portal": 271,
     "door": 276,
-    "mapstation": 283
+    "mapstation": 283,
+    "energy": 288,
+    "major": 293
   },
   "groupTileCounts": {
     "topology": 5,
@@ -66,9 +68,11 @@
     "boss": 2,
     "portal": 5,
     "door": 7,
-    "mapstation": 5
+    "mapstation": 5,
+    "energy": 5,
+    "major": 5
   },
-  "tileCount": 32,
+  "tileCount": 48,
   "canonicalConnectionMasks": [
     0,
     1,
@@ -307,6 +311,122 @@
         "hFlip": false,
         "vFlip": false,
         "word": 287
+      }
+    ],
+    "energy": [
+      {
+        "connections": 0,
+        "canonicalConnections": 0,
+        "tile": 288,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 288
+      },
+      {
+        "connections": 1,
+        "canonicalConnections": 1,
+        "tile": 289,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 289
+      },
+      {
+        "connections": 2,
+        "canonicalConnections": 2,
+        "tile": 290,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 290
+      },
+      {
+        "connections": 4,
+        "canonicalConnections": 1,
+        "tile": 289,
+        "hFlip": false,
+        "vFlip": true,
+        "word": 33057
+      },
+      {
+        "connections": 5,
+        "canonicalConnections": 5,
+        "tile": 291,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 291
+      },
+      {
+        "connections": 8,
+        "canonicalConnections": 2,
+        "tile": 290,
+        "hFlip": true,
+        "vFlip": false,
+        "word": 16674
+      },
+      {
+        "connections": 10,
+        "canonicalConnections": 10,
+        "tile": 292,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 292
+      }
+    ],
+    "major": [
+      {
+        "connections": 0,
+        "canonicalConnections": 0,
+        "tile": 293,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 293
+      },
+      {
+        "connections": 1,
+        "canonicalConnections": 1,
+        "tile": 294,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 294
+      },
+      {
+        "connections": 2,
+        "canonicalConnections": 2,
+        "tile": 295,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 295
+      },
+      {
+        "connections": 4,
+        "canonicalConnections": 1,
+        "tile": 294,
+        "hFlip": false,
+        "vFlip": true,
+        "word": 33062
+      },
+      {
+        "connections": 5,
+        "canonicalConnections": 5,
+        "tile": 296,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 296
+      },
+      {
+        "connections": 8,
+        "canonicalConnections": 2,
+        "tile": 295,
+        "hFlip": true,
+        "vFlip": false,
+        "word": 16679
+      },
+      {
+        "connections": 10,
+        "canonicalConnections": 10,
+        "tile": 297,
+        "hFlip": false,
+        "vFlip": false,
+        "word": 297
       }
     ]
   },
