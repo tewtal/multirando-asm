@@ -244,10 +244,10 @@ MSU_FallbackChains:
 
     ; Metroid 1 -> Super Metroid
     dw 301,104,0          ; Intro -> Opening
-    dw 302,110,0          ; Brinstar -> Green Brinstar
-    dw 303,112,0          ; Norfair -> Upper Norfair
-    dw 304,111,0          ; Kraid hideout -> Red Brinstar (Kraid's lair)
-    dw 305,113,0          ; Ridley hideout -> Lower Norfair
+    dw 302,111,0          ; Brinstar -> Green Brinstar
+    dw 303,113,0          ; Norfair -> Upper Norfair
+    dw 304,112,0          ; Kraid hideout -> Red Brinstar (Kraid's lair)
+    dw 305,114,0          ; Ridley hideout -> Lower Norfair
     dw 306,117,0          ; Tourian -> Tourian
     dw 307,103,0          ; Item room -> Item Room
     dw 308,119,0          ; Generic boss -> Big Boss Battle 1
